@@ -9,9 +9,16 @@ const userSchema = new mongoose.Schema(
     password: { type: String },
 
     isFirstTimeLogin: { type: Boolean, default: false },
-    
+
     hasAccess: { type: Boolean, default: true },
 
+    facultyId: {
+      type: mongoose.Types.ObjectId,
+      ref: "Faculty",
+      unique: true,
+      required: true,
+    },
+    
     resetOtp: String,
     resetOtpExpiry: Date,
   },

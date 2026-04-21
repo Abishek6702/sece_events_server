@@ -5,6 +5,9 @@ const axios = require("axios");
 
 const connectDB = require("./config/db");
 
+const authRoutes = require("./routes/authRoutes");
+const facultyRoutes = require("./routes/facultyRoutes");
+
 dotenv.config();
 
 const app = express();
@@ -29,6 +32,9 @@ app.use(
 connectDB();
 
 app.use(express.json());
+
+app.use("/api/auth", authRoutes);
+app.use("/api/faculty", facultyRoutes);
 
 const PORT = process.env.PORT || 5000;
 
