@@ -306,6 +306,255 @@
         }
       },
       "response": []
+    },
+    {
+      "name": "add-admin",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\":\"Abishek\",\r\n    \"email\":\"abishek.k@sece.ac.in\",\r\n    \"department\":\"venue\",\r\n    \"role\":\"admin\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/add-admin",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "auth",
+            "add-admin"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "post evenues",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"block\": \"Main Block\",\r\n  \"floor\": \"Ground Floor\",\r\n  \"venue\": \"Test Room\",\r\n  \"capacity\": 100,\r\n  \"audio\": {\r\n    \"wiredMic\": 0,\r\n    \"handMic\": 2,\r\n    \"collarMic\": 1,\r\n    \"handSpeaker\": 1,\r\n    \"speakerWithMixer\": 0,\r\n    \"paSystem\": 1,\r\n    \"podiumWithMic\": 0\r\n  },\r\n  \"seating\": {\r\n    \"withoutProctoring\": 80,\r\n    \"withProctoring\": 60\r\n  },\r\n  \"remarks\": \"Test entry\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/venues",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "venues"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "get venues",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"block\": \"Main Block\",\r\n  \"floor\": \"Ground Floor\",\r\n  \"venue\": \"Test Room\",\r\n  \"capacity\": 100,\r\n  \"audio\": {\r\n    \"wiredMic\": 0,\r\n    \"handMic\": 2,\r\n    \"collarMic\": 1,\r\n    \"handSpeaker\": 1,\r\n    \"speakerWithMixer\": 0,\r\n    \"paSystem\": 1,\r\n    \"podiumWithMic\": 0\r\n  },\r\n  \"seating\": {\r\n    \"withoutProctoring\": 80,\r\n    \"withProctoring\": 60\r\n  },\r\n  \"remarks\": \"Test entry\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/venues",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "venues"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "venues edit",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"block\": \"Main Block\",\r\n  \"floor\": \"Ground Floor\",\r\n  \"venue\": \"Test Room1\",\r\n  \"capacity\": 100,\r\n  \"audio\": {\r\n    \"wiredMic\": 0,\r\n    \"handMic\": 2,\r\n    \"collarMic\": 1,\r\n    \"handSpeaker\": 1,\r\n    \"speakerWithMixer\": 0,\r\n    \"paSystem\": 1,\r\n    \"podiumWithMic\": 0\r\n  },\r\n  \"seating\": {\r\n    \"withoutProctoring\": 80,\r\n    \"withProctoring\": 60\r\n  },\r\n  \"remarks\": \"Test entry\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/venues/69ef4a160563acddced76b40",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "venues",
+            "69ef4a160563acddced76b40"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "venues delete",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"block\": \"Main Block\",\r\n  \"floor\": \"Ground Floor\",\r\n  \"venue\": \"Test Room1\",\r\n  \"capacity\": 100,\r\n  \"audio\": {\r\n    \"wiredMic\": 0,\r\n    \"handMic\": 2,\r\n    \"collarMic\": 1,\r\n    \"handSpeaker\": 1,\r\n    \"speakerWithMixer\": 0,\r\n    \"paSystem\": 1,\r\n    \"podiumWithMic\": 0\r\n  },\r\n  \"seating\": {\r\n    \"withoutProctoring\": 80,\r\n    \"withProctoring\": 60\r\n  },\r\n  \"remarks\": \"Test entry\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/venues/69ef48d38914e1d7bdee90aa",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "venues",
+            "69ef48d38914e1d7bdee90aa"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "get venue by id",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"block\": \"Main Block\",\r\n  \"floor\": \"Ground Floor\",\r\n  \"venue\": \"Test Room\",\r\n  \"capacity\": 100,\r\n  \"audio\": {\r\n    \"wiredMic\": 0,\r\n    \"handMic\": 2,\r\n    \"collarMic\": 1,\r\n    \"handSpeaker\": 1,\r\n    \"speakerWithMixer\": 0,\r\n    \"paSystem\": 1,\r\n    \"podiumWithMic\": 0\r\n  },\r\n  \"seating\": {\r\n    \"withoutProctoring\": 80,\r\n    \"withProctoring\": 60\r\n  },\r\n  \"remarks\": \"Test entry\"\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/venues/69ef4a160563acddced76b40",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "venues",
+            "69ef4a160563acddced76b40"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "venues excel",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "uuid": "edbb2e3b-8400-40d9-a3c5-493679716c9a",
+              "src": "/E:/Events/server/venues.xlsx"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/venues/import",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "venues",
+            "import"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "venue filters",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "uuid": "edbb2e3b-8400-40d9-a3c5-493679716c9a",
+              "src": "/E:/Events/server/venues.xlsx"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/venues/options?minCapacity=100&type=audio",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "venues",
+            "options"
+          ],
+          "query": [
+            {
+              "key": "minCapacity",
+              "value": "100"
+            },
+            {
+              "key": "type",
+              "value": "audio"
+            }
+          ]
+        }
+      },
+      "response": []
     }
   ]
 }
