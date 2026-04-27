@@ -15,10 +15,14 @@ const userSchema = new mongoose.Schema(
     facultyId: {
       type: mongoose.Types.ObjectId,
       ref: "Faculty",
-      unique: true,
-      required: true,
     },
-    
+
+    department: { type: String, required: true },
+
+    role: { type: String, required: true, default: "faculty" },
+
+    isadmin: { type: Boolean, default: false },
+
     resetOtp: String,
     resetOtpExpiry: Date,
   },

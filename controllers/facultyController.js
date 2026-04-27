@@ -66,6 +66,9 @@ exports.importExcelFaculty = async (req, res) => {
         name: facultyData.name,
         email: facultyData.email,
         password: hashed,
+        department: faculty.department,
+        role: "faculty",
+        isadmin: false,
         facultyId: faculty._id,
         isFirstTimeLogin: true,
       });
@@ -153,6 +156,9 @@ exports.addIndividualFaculty = async (req, res) => {
       name,
       email,
       password: hashed,
+      department: faculty.department,
+      role: "faculty",
+      isadmin: false,
       facultyId: faculty._id,
       isFirstTimeLogin: true,
     });
