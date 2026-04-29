@@ -3,7 +3,10 @@
   "requestDetails": {
     "organizerDetails": {
       "previousEventDocumentation": true,
-      "previousEventDocumentationDetails": "https://cloudinary.com/uploaded-doc.pdf",
+      "previousEventDocumentationDetails": {
+        "url": "https://cloudinary.com/uploaded-doc.pdf",
+        "publicId": "events/uploaded-doc"
+      },
       "previousEventReason": "Successful previous workshop on AI",
       "isBudgetApproved": true,
       "financeRequired": true,
@@ -469,9 +472,19 @@
         "typeOfMedia": ["poster", "video"],
         "poster": {
           "posterContent": "Event announcement with schedule",
-          "referencePosterFiles": ["https://cloudinary.com/poster1.jpg"],
+          "referencePosterFiles": [
+            {
+              "url": "https://cloudinary.com/poster1.jpg",
+              "publicId": "events/poster1"
+            }
+          ],
           "certificateContent": "Participation certificate template",
-          "referenceCertificateFiles": ["https://cloudinary.com/cert1.jpg"],
+          "referenceCertificateFiles": [
+            {
+              "url": "https://cloudinary.com/cert1.jpg",
+              "publicId": "events/cert1"
+            }
+          ],
           "trophyContent": "Winner trophy design",
           "displayNeeded": ["Campus", "Department"],
           "sizes": [
@@ -488,7 +501,12 @@
           "eventCoverage": ["Full day recording"],
           "postEventVideos": ["Highlights reel"],
           "specialVideos": ["Guest interviews"],
-          "referenceFiles": ["https://cloudinary.com/ref1.mp4"],
+          "referenceFiles": [
+            {
+              "url": "https://cloudinary.com/ref1.mp4",
+              "publicId": "events/ref1"
+            }
+          ],
           "deliveryDate": "2026-04-28T00:00:00.000Z",
           "priority": "Medium",
           "specialRequirements": "Professional editing required"

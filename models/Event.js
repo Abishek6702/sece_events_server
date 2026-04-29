@@ -1,10 +1,18 @@
 const mongoose = require("mongoose");
 
+const fileReferenceSchema = new mongoose.Schema(
+  {
+    url: { type: String },
+    publicId: { type: String },
+  },
+  { _id: false },
+);
+
 // organizerDetails (finalized)
 const organizerSchema = new mongoose.Schema(
   {
     previousEventDocumentation: { type: Boolean, default: false },
-    previousEventDocumentationDetails: { type: String }, // uploaded file cloudinary url
+    previousEventDocumentationDetails: fileReferenceSchema,
     previousEventReason: { type: String },
 
     isBudgetApproved: { type: Boolean, default: false },
@@ -438,10 +446,10 @@ const mediaRequirementSchema = new mongoose.Schema(
 
         poster: {
           posterContent: String,
-          referencePosterFiles: [String],
+          referencePosterFiles: [fileReferenceSchema],
 
           certificateContent: String,
-          referenceCertificateFiles: [String],
+          referenceCertificateFiles: [fileReferenceSchema],
 
           trophyContent: String,
 
@@ -468,7 +476,7 @@ const mediaRequirementSchema = new mongoose.Schema(
           postEventVideos: [String],
           specialVideos: [String],
 
-          referenceFiles: [String],
+          referenceFiles: [fileReferenceSchema],
 
           deliveryDate: Date,
           priority: String,

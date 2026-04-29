@@ -8,6 +8,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const facultyRoutes = require("./routes/facultyRoutes");
 const venueRoutes = require("./routes/venueRoutes");
+const eventRoutes = require("./routes/eventRoutes");
 
 dotenv.config();
 
@@ -37,7 +38,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/faculty", facultyRoutes);
 app.use("/api/venues", venueRoutes);
-
+app.use("/api/events", eventRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
