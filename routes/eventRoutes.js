@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const upload = require("../middlewares/multerConfig.js");
+const upload = require("../middleware/multerConfig.js");
 
 const Event = require("../models/Event.js");
 const eventController = require("../controllers/eventController.js");
