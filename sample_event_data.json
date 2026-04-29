@@ -1,0 +1,563 @@
+{
+  "organizerId": "507f1f77bcf86cd799439011", 
+  "requestDetails": {
+    "organizerDetails": {
+      "previousEventDocumentation": true,
+      "previousEventDocumentationDetails": "https://cloudinary.com/uploaded-doc.pdf",
+      "previousEventReason": "Successful previous workshop on AI",
+      "isBudgetApproved": true,
+      "financeRequired": true,
+      "organizingDepartment": "Computer Science",
+      "organizerCount": 3,
+      "organizers": [
+        {
+          "name": "Dr. John Doe",
+          "department": "CSE",
+          "mobile": 9876543210,
+          "designation": "Professor",
+          "email": "john.doe@college.edu",
+          "empId": "EMP001",
+          "facultyId": "507f1f77bcf86cd799439012" 
+        },
+        {
+          "name": "Jane Smith",
+          "department": "CSE",
+          "mobile": 9876543211,
+          "designation": "Assistant Professor",
+          "email": "jane.smith@college.edu",
+          "empId": "EMP002",
+          "facultyId": "507f1f77bcf86cd799439013" 
+        },
+        {
+          "name": "Bob Johnson",
+          "department": "CSE",
+          "mobile": 9876543212,
+          "designation": "Lecturer",
+          "email": "bob.johnson@college.edu",
+          "empId": "EMP003",
+          "facultyId": "507f1f77bcf86cd799439014" 
+        }
+      ]
+    },
+    "eventDetails": {
+      "eventName": "Advanced Machine Learning Workshop",
+      "tagging": ["Technical", "Workshop", "AI"],
+      "taggingDetails": [
+        "Hands-on sessions",
+        "Industry experts",
+        "Certification"
+      ],
+      "eventType": "Workshop",
+      "eventTypeOther": "",
+      "professionalSociety": ["IEEE", "ACM"],
+      "professionalSocietyOther": "",
+      "logosInPoster": ["College Logo", "IEEE Logo"],
+      "logosOther": "",
+      "targetAudience": "Students/Faculty",
+      "numberOfDays": 3,
+      "eventSchedule": [
+        {
+          "eventDate": "2026-05-01T00:00:00.000Z",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "totalGuests": 2,
+          "guests": [
+            {
+              "name": "Dr. Alice Cooper",
+              "organization": "Tech Corp",
+              "designation": "Senior Engineer",
+              "mobile": 9876543213,
+              "gender": "Female"
+            },
+            {
+              "name": "Mr. Charlie Brown",
+              "organization": "Data Solutions Inc",
+              "designation": "Data Scientist",
+              "mobile": 9876543214,
+              "gender": "Male"
+            }
+          ]
+        },
+        {
+          "eventDate": "2026-05-02T00:00:00.000Z",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "totalGuests": 1,
+          "guests": [
+            {
+              "name": "Prof. Diana Prince",
+              "organization": "University of Tech",
+              "designation": "Associate Professor",
+              "mobile": 9876543215,
+              "gender": "Female"
+            }
+          ]
+        },
+        {
+          "eventDate": "2026-05-03T00:00:00.000Z",
+          "startTime": "09:00",
+          "endTime": "15:00",
+          "totalGuests": 0,
+          "guests": []
+        }
+      ]
+    },
+    "requirementDetails": {
+      "venueRequired": true,
+      "audioRequired": true,
+      "ictsRequired": true,
+      "transportRequired": true,
+      "accommodationRequired": true,
+      "mediaRequired": true
+    }
+  },
+  "venueDetails": {
+    "totalParticipants": 150,
+    "venues": [
+      {
+        "dayIndex": 0,
+        "venueName": "Seminar Hall A",
+        "numberOfParticipants": 100,
+        "seatingCapacity": 120,
+        "hallRequirements": [
+          { "type": "Projector", "quantity": 1 },
+          { "type": "Whiteboard", "quantity": 2 },
+          { "type": "Microphone", "quantity": 3 }
+        ],
+        "specialRequirements": "High-speed internet required"
+      },
+      {
+        "dayIndex": 1,
+        "venueName": "Lab 101",
+        "numberOfParticipants": 50,
+        "seatingCapacity": 60,
+        "hallRequirements": [
+          { "type": "Computer", "quantity": 50 },
+          { "type": "Projector", "quantity": 1 }
+        ],
+        "specialRequirements": "Access to development tools"
+      },
+      {
+        "dayIndex": 2,
+        "venueName": "Auditorium",
+        "numberOfParticipants": 150,
+        "seatingCapacity": 200,
+        "hallRequirements": [
+          { "type": "Stage", "quantity": 1 },
+          { "type": "Sound System", "quantity": 1 }
+        ],
+        "specialRequirements": "Valedictory ceremony setup"
+      }
+    ]
+  },
+  "ictsDetails": {
+    "ictses": [
+      {
+        "dayIndex": 0,
+        "venueId": "507f1f77bcf86cd799439015", 
+        "venueName": "Seminar Hall A",
+        "desktopLaptop": true,
+        "internetFacility": "WiFi",
+        "expectedInternetUsers": 100,
+        "proctoringUsers": 0,
+        "guestWifiNeeded": true,
+        "guestWifiExceed5": false,
+        "totalGuestCount": 2,
+        "requirements": ["High-speed internet", "Presentation tools"],
+        "otherRequirements": "Video conferencing setup",
+        "specialRequirements": "Backup power for equipment"
+      },
+      {
+        "dayIndex": 1,
+        "venueId": "507f1f77bcf86cd799439016", 
+        "venueName": "Lab 101",
+        "desktopLaptop": true,
+        "internetFacility": "LAN",
+        "expectedInternetUsers": 50,
+        "proctoringUsers": 0,
+        "guestWifiNeeded": false,
+        "guestWifiExceed5": false,
+        "totalGuestCount": 1,
+        "requirements": ["Development environment", "Code repositories"],
+        "otherRequirements": "",
+        "specialRequirements": "Software licenses for ML tools"
+      },
+      {
+        "dayIndex": 2,
+        "venueId": "507f1f77bcf86cd799439017", 
+        "venueName": "Auditorium",
+        "desktopLaptop": false,
+        "internetFacility": "WiFi",
+        "expectedInternetUsers": 150,
+        "proctoringUsers": 0,
+        "guestWifiNeeded": true,
+        "guestWifiExceed5": true,
+        "totalGuestCount": 0,
+        "requirements": ["Presentation equipment"],
+        "otherRequirements": "",
+        "specialRequirements": "Live streaming setup"
+      }
+    ]
+  },
+  "audioDetails": {
+    "audios": [
+      {
+        "dayIndex": 0,
+        "venueId": "507f1f77bcf86cd799439015", 
+        "venueName": "Seminar Hall A",
+        "audioItems": [
+          { "type": "Microphone", "quantity": 3 },
+          { "type": "Speaker", "quantity": 2 },
+          { "type": "Mixer", "quantity": 1 }
+        ],
+        "otherRequirements": "Wireless microphones",
+        "specialRequirements": "Sound check before event"
+      },
+      {
+        "dayIndex": 1,
+        "venueId": "507f1f77bcf86cd799439016", 
+        "venueName": "Lab 101",
+        "audioItems": [
+          { "type": "Headphones", "quantity": 50 },
+          { "type": "Microphone", "quantity": 2 }
+        ],
+        "otherRequirements": "",
+        "specialRequirements": "Quiet environment for sessions"
+      },
+      {
+        "dayIndex": 2,
+        "venueId": "507f1f77bcf86cd799439017", 
+        "venueName": "Auditorium",
+        "audioItems": [
+          { "type": "Microphone", "quantity": 5 },
+          { "type": "Speaker", "quantity": 4 },
+          { "type": "Amplifier", "quantity": 2 }
+        ],
+        "otherRequirements": "Stage lighting",
+        "specialRequirements": "Professional sound engineering"
+      }
+    ]
+  },
+  "transportDetails": {
+    "transports": [
+      {
+        "pickupDateTime": "2026-05-01T07:00:00.000Z",
+        "dropDateTime": "2026-05-01T18:00:00.000Z",
+        "pickupLocation": "Railway Station",
+        "checkpoints": [{ "location": "Airport" }, { "location": "Bus Stand" }],
+        "dropLocation": "College Campus",
+        "totalPassengers": 5,
+        "vehicles": [
+          { "type": "Car", "count": 2 },
+          { "type": "Bus", "count": 1 }
+        ],
+        "accompanyingStaff": [
+          { "name": "Staff Member 1", "mobile": 9876543216 },
+          { "name": "Staff Member 2", "mobile": 9876543217 }
+        ],
+        "specialRequirements": "VIP transport for guests"
+      }
+    ]
+  },
+  "refreshmentDetails": {
+    "refreshments": [
+      {
+        "date": "2026-05-01T00:00:00.000Z",
+        "resourcePersonType": ["Guest Speaker", "Faculty"],
+        "numberOfResourcePersons": 3,
+        "numberOfInternalAccompanyingStaff": 2,
+        "accompanyingStaff": [
+          { "name": "Staff 1", "mobile": 9876543218 },
+          { "name": "Staff 2", "mobile": 9876543219 }
+        ],
+        "foodTypes": [
+          {
+            "type": "Lunch",
+            "participants": { "vegCount": 80, "nonVegCount": 20 },
+            "vipGuests": { "vegCount": 2, "nonVegCount": 0 }
+          },
+          {
+            "type": "Tea",
+            "participants": { "vegCount": 100, "nonVegCount": 0 },
+            "vipGuests": { "vegCount": 2, "nonVegCount": 0 }
+          }
+        ],
+        "specialRequirements": "Dietary restrictions to be considered"
+      },
+      {
+        "date": "2026-05-02T00:00:00.000Z",
+        "resourcePersonType": ["Workshop Instructor"],
+        "numberOfResourcePersons": 2,
+        "numberOfInternalAccompanyingStaff": 1,
+        "accompanyingStaff": [{ "name": "Staff 3", "mobile": 9876543220 }],
+        "foodTypes": [
+          {
+            "type": "Lunch",
+            "participants": { "vegCount": 40, "nonVegCount": 10 },
+            "vipGuests": { "vegCount": 1, "nonVegCount": 0 }
+          }
+        ],
+        "specialRequirements": ""
+      },
+      {
+        "date": "2026-05-03T00:00:00.000Z",
+        "resourcePersonType": ["Chief Guest"],
+        "numberOfResourcePersons": 1,
+        "numberOfInternalAccompanyingStaff": 3,
+        "accompanyingStaff": [
+          { "name": "Staff 4", "mobile": 9876543221 },
+          { "name": "Staff 5", "mobile": 9876543222 },
+          { "name": "Staff 6", "mobile": 9876543223 }
+        ],
+        "foodTypes": [
+          {
+            "type": "Lunch",
+            "participants": { "vegCount": 120, "nonVegCount": 30 },
+            "vipGuests": { "vegCount": 0, "nonVegCount": 0 }
+          },
+          {
+            "type": "Dinner",
+            "participants": { "vegCount": 100, "nonVegCount": 50 },
+            "vipGuests": { "vegCount": 0, "nonVegCount": 0 }
+          }
+        ],
+        "specialRequirements": "Valedictory dinner with certificates"
+      }
+    ]
+  },
+  "accommodationDetails": {
+    "accommodations": [
+      {
+        "checkInDateTime": "2026-04-30T18:00:00.000Z",
+        "checkOutDateTime": "2026-05-03T12:00:00.000Z",
+        "guests": [
+          {
+            "guestId": "507f1f77bcf86cd799439018",
+            "name": "Dr. Alice Cooper",
+            "mobile": 9876543213,
+            "gender": "Female"
+          },
+          {
+            "guestId": "507f1f77bcf86cd799439019", 
+            "name": "Mr. Charlie Brown",
+            "mobile": 9876543214,
+            "gender": "Male"
+          },
+          {
+            "guestId": "507f1f77bcf86cd799439020", 
+            "name": "Prof. Diana Prince",
+            "mobile": 9876543215,
+            "gender": "Female"
+          }
+        ],
+        "roomOccupancy": [
+          { "type": "Single", "count": 1 },
+          { "type": "Double", "count": 1 }
+        ],
+        "roomCategory": [
+          { "type": "AC", "count": 2 },
+          { "type": "Non-AC", "count": 0 }
+        ],
+        "dineInRequired": true,
+        "dineInCounts": [
+          { "type": "Breakfast", "count": 3 },
+          { "type": "Dinner", "count": 3 }
+        ],
+        "specialRequirements": "Near conference venue"
+      }
+    ]
+  },
+  "purchaseDetails": {
+    "purchases": [
+      {
+        "dayIndex": 0,
+        "requirementNeeded": [
+          { "type": "Laptop", "hardCount": 2, "softCount": 0 },
+          { "type": "Projector", "hardCount": 1, "softCount": 0 }
+        ],
+        "requiredFor": ["Presentations", "Demos"],
+        "students": {
+          "giftItems": [
+            {
+              "giftType": "Certificate",
+              "trophy": [],
+              "cashPrizeAmount": 0,
+              "voucherAmount": 0
+            }
+          ],
+          "registrationKitNeeded": true,
+          "registrationKitQty": 100,
+          "specialRequirements": "Include event schedule"
+        },
+        "guests": {
+          "giftItems": [
+            {
+              "giftType": "Memento",
+              "trophy": [],
+              "glassCupQty": 2,
+              "voucherAmount": 1000
+            }
+          ],
+          "registrationKitNeeded": false,
+          "registrationKitQty": 0,
+          "specialRequirements": "Personalized gifts"
+        }
+      },
+      {
+        "dayIndex": 1,
+        "requirementNeeded": [
+          { "type": "Software License", "hardCount": 50, "softCount": 0 }
+        ],
+        "requiredFor": ["Hands-on sessions"],
+        "students": {
+          "giftItems": [],
+          "registrationKitNeeded": false,
+          "registrationKitQty": 0,
+          "specialRequirements": ""
+        },
+        "guests": {
+          "giftItems": [],
+          "registrationKitNeeded": false,
+          "registrationKitQty": 0,
+          "specialRequirements": ""
+        }
+      },
+      {
+        "dayIndex": 2,
+        "requirementNeeded": [
+          { "type": "Trophy", "hardCount": 3, "softCount": 0 },
+          { "type": "Certificate", "hardCount": 150, "softCount": 0 }
+        ],
+        "requiredFor": ["Awards ceremony"],
+        "students": {
+          "giftItems": [
+            {
+              "giftType": "Trophy",
+              "trophy": [
+                { "trophyType": "First Prize", "quantity": 1 },
+                { "trophyType": "Second Prize", "quantity": 1 },
+                { "trophyType": "Third Prize", "quantity": 1 }
+              ],
+              "cashPrizeAmount": 5000,
+              "voucherAmount": 1000
+            }
+          ],
+          "registrationKitNeeded": false,
+          "registrationKitQty": 0,
+          "specialRequirements": "Engraved names"
+        },
+        "guests": {
+          "giftItems": [
+            {
+              "giftType": "Certificate",
+              "trophy": [],
+              "glassCupQty": 0,
+              "voucherAmount": 0
+            }
+          ],
+          "registrationKitNeeded": false,
+          "registrationKitQty": 0,
+          "specialRequirements": "Appreciation certificates"
+        }
+      }
+    ]
+  },
+  "mediaRequirementDetails": {
+    "mediaRequirements": [
+      {
+        "dayIndex": 0,
+        "typeOfMedia": ["poster", "video"],
+        "poster": {
+          "posterContent": "Event announcement with schedule",
+          "referencePosterFiles": ["https://cloudinary.com/poster1.jpg"],
+          "certificateContent": "Participation certificate template",
+          "referenceCertificateFiles": ["https://cloudinary.com/cert1.jpg"],
+          "trophyContent": "Winner trophy design",
+          "displayNeeded": ["Campus", "Department"],
+          "sizes": [
+            { "type": "A3", "value": 10 },
+            { "type": "A4", "value": 50 }
+          ],
+          "deliveryDate": "2026-04-25T00:00:00.000Z",
+          "priority": "High",
+          "specialRequirements": "Include sponsor logos"
+        },
+        "video": {
+          "videoContent": "Promotional video for the workshop",
+          "preEventVideos": ["https://cloudinary.com/pre1.mp4"],
+          "eventCoverage": ["Full day recording"],
+          "postEventVideos": ["Highlights reel"],
+          "specialVideos": ["Guest interviews"],
+          "referenceFiles": ["https://cloudinary.com/ref1.mp4"],
+          "deliveryDate": "2026-04-28T00:00:00.000Z",
+          "priority": "Medium",
+          "specialRequirements": "Professional editing required"
+        }
+      },
+      {
+        "dayIndex": 1,
+        "typeOfMedia": ["video"],
+        "poster": {
+          "posterContent": "",
+          "referencePosterFiles": [],
+          "certificateContent": "",
+          "referenceCertificateFiles": [],
+          "trophyContent": "",
+          "displayNeeded": [],
+          "sizes": [],
+          "deliveryDate": null,
+          "priority": "",
+          "specialRequirements": ""
+        },
+        "video": {
+          "videoContent": "Session recordings",
+          "preEventVideos": [],
+          "eventCoverage": ["All technical sessions"],
+          "postEventVideos": ["Tutorial compilation"],
+          "specialVideos": [],
+          "referenceFiles": [],
+          "deliveryDate": "2026-05-05T00:00:00.000Z",
+          "priority": "High",
+          "specialRequirements": "High quality recording"
+        }
+      },
+      {
+        "dayIndex": 2,
+        "typeOfMedia": ["poster", "video"],
+        "poster": {
+          "posterContent": "Valedictory ceremony poster",
+          "referencePosterFiles": ["https://cloudinary.com/valedictory.jpg"],
+          "certificateContent": "Completion certificate",
+          "referenceCertificateFiles": [
+            "https://cloudinary.com/completion.jpg"
+          ],
+          "trophyContent": "Award ceremony design",
+          "displayNeeded": ["Auditorium"],
+          "sizes": [
+            { "type": "A2", "value": 5 },
+            { "type": "A3", "value": 20 }
+          ],
+          "deliveryDate": "2026-05-02T00:00:00.000Z",
+          "priority": "High",
+          "specialRequirements": "Include all sponsor logos"
+        },
+        "video": {
+          "videoContent": "Valedictory ceremony recording",
+          "preEventVideos": [],
+          "eventCoverage": ["Full ceremony"],
+          "postEventVideos": ["Event summary"],
+          "specialVideos": ["Guest speech"],
+          "referenceFiles": [],
+          "deliveryDate": "2026-05-06T00:00:00.000Z",
+          "priority": "High",
+          "specialRequirements": "Live streaming and recording"
+        }
+      }
+    ]
+  },
+  "isSubmitted": true,
+  "isHodApproved": true,
+  "adminApproval": true,
+  "finalApproval": true,
+  "status": "FinalApproved"
+}
