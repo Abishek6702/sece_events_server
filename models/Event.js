@@ -23,12 +23,12 @@ const organizerSchema = new mongoose.Schema(
 
     organizers: [
       {
-        name: { type: String, required: true },
-        department: { type: String, required: true },
-        mobile: { type: Number, required: true },
-        designation: { type: String, required: true },
-        email: { type: String, required: true },
-        empId: { type: String, required: true },
+        name: { type: String },
+        department: { type: String },
+        mobile: { type: Number },
+        designation: { type: String },
+        email: { type: String },
+        empId: { type: String },
         facultyId: {
           type: mongoose.Types.ObjectId,
           ref: "Faculty",
@@ -43,11 +43,11 @@ const organizerSchema = new mongoose.Schema(
 // guest Schema (finalized)
 const guestSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    organization: { type: String, required: true },
-    designation: { type: String, required: true },
-    mobile: { type: Number, required: true },
-    gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
+    name: { type: String },
+    organization: { type: String },
+    designation: { type: String },
+    mobile: { type: Number },
+    gender: { type: String, enum: ["Male", "Female", "Other"] },
   },
   { _id: false },
 );
@@ -55,9 +55,9 @@ const guestSchema = new mongoose.Schema(
 // event day schema (finalized)
 const eventDaySchema = new mongoose.Schema(
   {
-    eventDate: { type: Date, required: true },
-    startTime: { type: String, required: true },
-    endTime: { type: String, required: true },
+    eventDate: { type: Date },
+    startTime: { type: String },
+    endTime: { type: String },
 
     totalGuests: { type: Number, default: 0 },
 
@@ -69,27 +69,26 @@ const eventDaySchema = new mongoose.Schema(
 // eventDetails (finalized)
 const eventDetailsSchema = new mongoose.Schema(
   {
-    eventName: { type: String, required: true, trim: true },
+    eventName: { type: String, trim: true },
 
-    tagging: { type: [String], required: true },
+    tagging: { type: [String] },
     taggingDetails: { type: [String] },
 
-    eventType: { type: String, required: true },
+    eventType: { type: String },
     eventTypeOther: { type: String },
 
-    professionalSociety: { type: [String], required: true },
+    professionalSociety: { type: [String] },
     professionalSocietyOther: { type: String },
 
-    logosInPoster: { type: [String], required: true },
+    logosInPoster: { type: [String] },
     logosOther: { type: String },
 
     targetAudience: {
       type: String,
       enum: ["Students", "Faculty", "Students/Faculty", "Others"],
-      required: true,
     },
 
-    numberOfDays: { type: Number, required: true },
+    numberOfDays: { type: Number },
 
     // multi-day events
     eventSchedule: [eventDaySchema],
@@ -157,14 +156,13 @@ const ictsSchema = new mongoose.Schema(
   {
     ictses: [
       {
-        dayIndex: { type: Number, required: true },
+        dayIndex: { type: Number },
 
         venueId: {
-          type: mongoose.Types.ObjectId,
-          required: true,
+          type: mongoose.Types.ObjectId
         },
 
-        venueName: { type: String, required: true, trim: true },
+        venueName: { type: String, trim: true },
 
         desktopLaptop: {
           type: Boolean,
@@ -207,23 +205,21 @@ const audioSchema = new mongoose.Schema(
   {
     audios: [
       {
-        dayIndex: { type: Number, required: true },
+        dayIndex: { type: Number },
 
         venueId: {
-          type: mongoose.Types.ObjectId,
-          required: true,
+          type: mongoose.Types.ObjectId
         },
 
-        venueName: { type: String, required: true, trim: true },
+        venueName: { type: String, trim: true },
 
         audioItems: {
           type: [
             {
               type: {
-                type: String,
-                required: true,
+                type: String
               },
-              quantity: { type: Number, required: true, min: 1 },
+              quantity: { type: Number, min: 1 },
             },
           ],
           validate: (v) => v.length > 0,

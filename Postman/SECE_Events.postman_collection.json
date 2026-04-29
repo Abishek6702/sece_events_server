@@ -5,6 +5,16 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "43278742"
   },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5005"
+    },
+    {
+      "key": "eventId",
+      "value": "69f1d016f8664fa492f205d0"
+    }
+  ],
   "item": [
     {
       "name": "Faculty",
@@ -343,6 +353,143 @@
                 "api",
                 "auth",
                 "add-admin"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Event Flow",
+      "item": [
+        {
+          "name": "Create Draft Event",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "organizerId",
+                  "value": "507f1f77bcf86cd799439011",
+                  "type": "text"
+                },
+                {
+                  "key": "requestDetails",
+                  "value": "{\"organizerDetails\":{\"previousEventDocumentation\":false,\"previousEventReason\":\"Initial draft reason\",\"isBudgetApproved\":false,\"financeRequired\":false,\"organizerCount\":1,\"organizers\":[{\"name\":\"Test Organizer\",\"department\":\"CSE\",\"mobile\":1234567890,\"designation\":\"Assistant Professor\",\"email\":\"test@example.com\",\"empId\":\"EMP001\",\"facultyId\":\"507f1f77bcf86cd799439013\"}]},\"eventDetails\":{\"eventName\":\"Draft Event\",\"tagging\":[\"Draft\"],\"taggingDetails\":[],\"professionalSociety\":[],\"logosInPoster\":[],\"eventSchedule\":[]},\"requirementDetails\":{\"venueRequired\":false,\"audioRequired\":false,\"ictsRequired\":false,\"transportRequired\":false,\"accommodationRequired\":false,\"mediaRequired\":false}}",
+                  "type": "text"
+                },
+                {
+                  "key": "mediaRequirementDetails",
+                  "value": "{\"mediaRequirements\":[{\"poster\":{\"posterContent\":\"Draft poster content\",\"referencePosterFiles\":[],\"referenceCertificateFiles\":[]},\"video\":{\"videoContent\":\"\",\"referenceFiles\":[]}}]}",
+                  "type": "text"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "src": "C:\\path\\to\\draft-reference.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "events"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Draft Event",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "requestDetails",
+                  "value": "{\"organizerDetails\":{\"previousEventReason\":\"Updated draft reason\",\"isBudgetApproved\":false,\"financeRequired\":false,\"organizerCount\":2,\"organizers\":[{\"name\":\"Updated Organizer\",\"department\":\"CSE\",\"mobile\":9876543210,\"designation\":\"Assistant Professor\",\"email\":\"updated@example.com\",\"empId\":\"EMP002\",\"facultyId\":\"507f1f77bcf86cd799439013\"}]},\"eventDetails\":{\"eventName\":\"Updated Draft Event\",\"tagging\":[\"Draft\",\"Updated\"],\"taggingDetails\":[],\"professionalSociety\":[],\"logosInPoster\":[],\"eventSchedule\":[]}}",
+                  "type": "text"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "src": "C:\\path\\to\\update-reference.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Draft Event",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "isSubmitted",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "requestDetails",
+                  "value": "{\"eventDetails\":{\"eventType\":\"Conference\",\"numberOfDays\":2}}",
+                  "type": "text"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "src": "C:\\path\\to\\submit-reference.pdf"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/events/{{eventId}}/submit",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "events",
+                "{{eventId}}",
+                "submit"
               ]
             }
           },

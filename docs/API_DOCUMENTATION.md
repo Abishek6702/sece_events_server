@@ -695,6 +695,26 @@ The backend allows requests from:
 - `http://localhost:5173`
 - `http://localhost:5174`
 
+## Event Endpoints
+
+- `POST /api/events`
+  - Create a new event draft or submit with `isSubmitted: true`.
+  - Supports multipart form-data for file uploads.
+- `PUT /api/events/:id`
+  - Update an existing event draft.
+  - Allows new file uploads to attach to the existing record.
+- `PATCH /api/events/:id/submit`
+  - Submit an existing draft event.
+  - Marks `status` as `Submitted` and `isSubmitted` as `true`.
+- `GET /api/events`
+  - Fetch all events.
+- `GET /api/events/:id`
+  - Fetch a single event by ID.
+- `DELETE /api/events/:id`
+  - Delete an event record.
+
+Use the Postman collection below to run the draft / update / submit flow in one place.
+
 ## Notes
 
 - The `uploads/` directory is created automatically by multer middleware.

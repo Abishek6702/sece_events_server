@@ -2,9 +2,14 @@ const express = require("express");
 const router = express.Router();
 
 const upload = require("../middleware/multerConfig.js");
-
-const Event = require("../models/Event.js");
-const eventController = require("../controllers/eventController.js");
+const {
+  createEvent,
+  getAllEvents,
+  getEventById,
+  updateEvent,
+  submitEvent,
+  deleteEvent,
+} = require("../controllers/eventController.js");
 
 const uploadFields = upload.fields([
   { name: "previousEventDocumentation", maxCount: 1 },
@@ -13,8 +18,11 @@ const uploadFields = upload.fields([
   { name: "referenceFiles", maxCount: 5 },
 ]);
 
-router.post("/", uploadFields, eventController.createEvent);
-router.get("/", eventController.getAllEvents);
-router.get("/:id", eventController.getEventById);
-router.put("/:id", uploadFields, eventController.updateEvent);
-router.delete("/:id", eventController.deleteEvent);
+router.post("/", uploadFields, createEvent);
+router.get("/", getAllEvents);
+router.put("/:id", uploadFields, updateEvent);
+router.patch("/:id/submit", uploadFields, submitEvent);
+router.delete("/:id", deleteEvent);
+router.get("/:id", getEventById);
+
+module.exports = router;

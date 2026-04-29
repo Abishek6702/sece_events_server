@@ -256,7 +256,7 @@ A Postman collection is available in `Postman/SECE_Events.postman_collection.jso
 
 ## API Documentation
 
-Detailed API documentation is available in [API_DOCUMENTATION.md](API_DOCUMENTATION.md).
+Detailed API documentation is available in [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md).
 
 ---
 
