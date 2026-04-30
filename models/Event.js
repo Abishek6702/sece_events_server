@@ -1,5 +1,14 @@
 const mongoose = require("mongoose");
 
+const departmentStatusSchema = new mongoose.Schema({
+  status: {
+    type: String,
+    enum: ["Acknowledged", "Waiting for Acknowledge"],
+    default: "Waiting for Acknowledge",
+  },
+  remarks: { type: String },
+});
+
 const fileReferenceSchema = new mongoose.Schema(
   {
     url: { type: String },
@@ -71,8 +80,7 @@ const eventDetailsSchema = new mongoose.Schema(
   {
     eventName: { type: String, trim: true },
 
-    tagging: { type: [String] },
-    taggingDetails: { type: [String] },
+    involvedIIC: { type: Boolean, default: false },
 
     eventType: { type: String },
     eventTypeOther: { type: String },
@@ -147,6 +155,7 @@ const venueSchema = new mongoose.Schema(
         specialRequirements: { type: String },
       },
     ],
+    status: departmentStatusSchema,
   },
   { _id: false },
 );
@@ -159,7 +168,7 @@ const ictsSchema = new mongoose.Schema(
         dayIndex: { type: Number },
 
         venueId: {
-          type: mongoose.Types.ObjectId
+          type: mongoose.Types.ObjectId,
         },
 
         venueName: { type: String, trim: true },
@@ -196,6 +205,7 @@ const ictsSchema = new mongoose.Schema(
         specialRequirements: { type: String },
       },
     ],
+    status: departmentStatusSchema,
   },
   { _id: false },
 );
@@ -208,7 +218,7 @@ const audioSchema = new mongoose.Schema(
         dayIndex: { type: Number },
 
         venueId: {
-          type: mongoose.Types.ObjectId
+          type: mongoose.Types.ObjectId,
         },
 
         venueName: { type: String, trim: true },
@@ -217,7 +227,7 @@ const audioSchema = new mongoose.Schema(
           type: [
             {
               type: {
-                type: String
+                type: String,
               },
               quantity: { type: Number, min: 1 },
             },
@@ -229,6 +239,7 @@ const audioSchema = new mongoose.Schema(
         specialRequirements: { type: String },
       },
     ],
+    status: departmentStatusSchema,
   },
   { _id: false },
 );
@@ -266,6 +277,7 @@ const transportSchema = new mongoose.Schema(
         specialRequirements: { type: String, trim: true },
       },
     ],
+    status: departmentStatusSchema,
   },
   { _id: false },
 );
@@ -309,6 +321,7 @@ const refreshmentSchema = new mongoose.Schema(
         specialRequirements: String,
       },
     ],
+    status: departmentStatusSchema,
   },
   { _id: false },
 );
@@ -358,6 +371,7 @@ const accommodationSchema = new mongoose.Schema(
         specialRequirements: String,
       },
     ],
+    status: departmentStatusSchema,
   },
   { _id: false },
 );
@@ -428,6 +442,7 @@ const purchaseSchema = new mongoose.Schema(
         },
       },
     ],
+    status: departmentStatusSchema,
   },
   { _id: false },
 );
@@ -481,6 +496,7 @@ const mediaRequirementSchema = new mongoose.Schema(
         },
       },
     ],
+    status: departmentStatusSchema,
   },
   { _id: false },
 );
