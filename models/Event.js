@@ -262,7 +262,7 @@ const transportSchema = new mongoose.Schema(
 
         vehicles: [
           {
-            type: String,
+            type: { type: String },
             count: Number,
           },
         ],
@@ -304,7 +304,7 @@ const refreshmentSchema = new mongoose.Schema(
 
         foodTypes: [
           {
-            type: String,
+            type: { type: String },
 
             participants: {
               vegCount: Number,
@@ -347,14 +347,14 @@ const accommodationSchema = new mongoose.Schema(
 
         roomOccupancy: [
           {
-            type: String,
+            type: { type: String },
             count: Number,
           },
         ],
 
         roomCategory: [
           {
-            type: String,
+            type: { type: String },
             count: Number,
           },
         ],
@@ -363,7 +363,7 @@ const accommodationSchema = new mongoose.Schema(
 
         dineInCounts: [
           {
-            type: String,
+            type: { type: String },
             count: Number,
           },
         ],
@@ -385,7 +385,7 @@ const purchaseSchema = new mongoose.Schema(
 
         requirementNeeded: [
           {
-            type: String,
+            type: { type: String },
             hardCount: Number,
             softCount: Number,
           },
@@ -468,7 +468,7 @@ const mediaRequirementSchema = new mongoose.Schema(
 
           sizes: [
             {
-              type: String,
+              type: { type: String },
               value: Number,
             },
           ],
@@ -534,9 +534,8 @@ const eventSchema = new mongoose.Schema(
         "Draft",
         "Submitted",
         "HodApproved",
-        "AdminApproved",
         "DepartmentReview",
-        "FinalApproved",
+        "Approved",
         "Closed",
         "Rejected",
       ],
