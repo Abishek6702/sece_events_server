@@ -595,72 +595,72 @@ const deleteJson = async (url) => {
 
     console.log('Cloudinary file links validated');
 
-    // const draftUpdate = await putForm({
-    //   url: `${serverUrl}/api/events/${eventId}`,
-    //   fields: {
-    //     requestDetails: {
-    //       organizerDetails: {
-    //         previousEventReason: 'Updated draft reason',
-    //         organizerCount: 2,
-    //         organizers: [
-    //           {
-    //             name: 'Updated Organizer',
-    //             department: 'CSE',
-    //             mobile: 9876543210,
-    //             designation: 'Assistant Professor',
-    //             email: 'updated@example.com',
-    //             empId: 'EMP002',
-    //             facultyId: '507f1f77bcf86cd799439013',
-    //           },
-    //         ],
-    //       },
-    //       eventDetails: {
-    //         eventName: 'Updated Draft Event',
-    //         tagging: ['Draft', 'Updated'],
-    //       },
-    //     },
-    //   },
-    //   files: {
-    //     referenceCertificateFiles: { path: testPng, filename: 'draft-cert.png' },
-    //   },
-    // });
+    const draftUpdate = await putForm({
+      url: `${serverUrl}/api/events/${eventId}`,
+      fields: {
+        requestDetails: {
+          organizerDetails: {
+            previousEventReason: 'Updated draft reason',
+            organizerCount: 2,
+            organizers: [
+              {
+                name: 'Updated Organizer',
+                department: 'CSE',
+                mobile: 9876543210,
+                designation: 'Assistant Professor',
+                email: 'updated@example.com',
+                empId: 'EMP002',
+                facultyId: '507f1f77bcf86cd799439013',
+              },
+            ],
+          },
+          eventDetails: {
+            eventName: 'Updated Draft Event',
+            tagging: ['Draft', 'Updated'],
+          },
+        },
+      },
+      files: {
+        referenceCertificateFiles: { path: testPng, filename: 'draft-cert.png' },
+      },
+    });
 
-    // console.log('UPDATE DRAFT RESPONSE:', draftUpdate.status);
-    // console.log(JSON.stringify(draftUpdate.body, null, 2));
+    console.log('UPDATE DRAFT RESPONSE:', draftUpdate.status);
+    console.log(JSON.stringify(draftUpdate.body, null, 2));
 
-    // const getAfterUpdate = await getJson(`${serverUrl}/api/events/${eventId}`);
-    // console.log('GET AFTER UPDATE RESPONSE:', getAfterUpdate.status);
-    // console.log(JSON.stringify(getAfterUpdate.body, null, 2));
+    const getAfterUpdate = await getJson(`${serverUrl}/api/events/${eventId}`);
+    console.log('GET AFTER UPDATE RESPONSE:', getAfterUpdate.status);
+    console.log(JSON.stringify(getAfterUpdate.body, null, 2));
 
-    // const submitData = await patchForm({
-    //   url: `${serverUrl}/api/events/${eventId}/submit`,
-    //   fields: {
-    //     requestDetails: {
-    //       eventDetails: {
-    //         eventType: 'Conference',
-    //         numberOfDays: 2,
-    //       },
-    //     },
-    //   },
-    //   files: {
-    //     referenceFiles: { path: testPdf, filename: 'draft-ref.pdf' },
-    //   },
-    // });
+    const submitData = await patchForm({
+      url: `${serverUrl}/api/events/${eventId}/submit`,
+      fields: {
+        requestDetails: {
+          eventDetails: {
+            eventType: 'Conference',
+            numberOfDays: 2,
+          },
+        },
+      },
+      files: {
+        referenceFiles: { path: testPdf, filename: 'draft-ref.pdf' },
+      },
+    });
 
-    // console.log('SUBMIT RESPONSE:', submitData.status);
-    // console.log(JSON.stringify(submitData.body, null, 2));
+    console.log('SUBMIT RESPONSE:', submitData.status);
+    console.log(JSON.stringify(submitData.body, null, 2));
 
-    // const getAfterSubmit = await getJson(`${serverUrl}/api/events/${eventId}`);
-    // console.log('GET AFTER SUBMIT RESPONSE:', getAfterSubmit.status);
-    // console.log(JSON.stringify(getAfterSubmit.body, null, 2));
+    const getAfterSubmit = await getJson(`${serverUrl}/api/events/${eventId}`);
+    console.log('GET AFTER SUBMIT RESPONSE:', getAfterSubmit.status);
+    console.log(JSON.stringify(getAfterSubmit.body, null, 2));
 
-    // const deleteResponse = await deleteJson(`${serverUrl}/api/events/${eventId}`);
-    // console.log('DELETE RESPONSE:', deleteResponse.status);
-    // console.log(JSON.stringify(deleteResponse.body, null, 2));
+    const deleteResponse = await deleteJson(`${serverUrl}/api/events/${eventId}`);
+    console.log('DELETE RESPONSE:', deleteResponse.status);
+    console.log(JSON.stringify(deleteResponse.body, null, 2));
 
-    // const getAfterDelete = await getJson(`${serverUrl}/api/events/${eventId}`);
-    // console.log('GET AFTER DELETE RESPONSE:', getAfterDelete.status);
-    // console.log(JSON.stringify(getAfterDelete.body, null, 2));
+    const getAfterDelete = await getJson(`${serverUrl}/api/events/${eventId}`);
+    console.log('GET AFTER DELETE RESPONSE:', getAfterDelete.status);
+    console.log(JSON.stringify(getAfterDelete.body, null, 2));
   } catch (err) {
     console.error('TEST ERROR:', err);
     process.exit(1);
