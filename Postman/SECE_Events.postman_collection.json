@@ -5,16 +5,6 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "43278742"
   },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:5005"
-    },
-    {
-      "key": "eventId",
-      "value": "69f1d016f8664fa492f205d0"
-    }
-  ],
   "item": [
     {
       "name": "Faculty",
@@ -190,6 +180,67 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Delete Profile image",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/faculty/69eb77eb24e52ee13e40f077/profile-image",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "faculty",
+                "69eb77eb24e52ee13e40f077",
+                "profile-image"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add profile image",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "profileImage",
+                  "type": "file",
+                  "uuid": "08a456db-0dac-42f9-b829-1473784a1b01",
+                  "src": "/C:/Users/USER/Downloads/pms/jpg1.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/faculty/69eb77eb24e52ee13e40f077/profile-image",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "faculty",
+                "69eb77eb24e52ee13e40f077",
+                "profile-image"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -353,143 +404,6 @@
                 "api",
                 "auth",
                 "add-admin"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Event Flow",
-      "item": [
-        {
-          "name": "Create Draft Event",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "organizerId",
-                  "value": "507f1f77bcf86cd799439011",
-                  "type": "text"
-                },
-                {
-                  "key": "requestDetails",
-                  "value": "{\"organizerDetails\":{\"previousEventDocumentation\":false,\"previousEventReason\":\"Initial draft reason\",\"isBudgetApproved\":false,\"financeRequired\":false,\"organizerCount\":1,\"organizers\":[{\"name\":\"Test Organizer\",\"department\":\"CSE\",\"mobile\":1234567890,\"designation\":\"Assistant Professor\",\"email\":\"test@example.com\",\"empId\":\"EMP001\",\"facultyId\":\"507f1f77bcf86cd799439013\"}]},\"eventDetails\":{\"eventName\":\"Draft Event\",\"tagging\":[\"Draft\"],\"taggingDetails\":[],\"professionalSociety\":[],\"logosInPoster\":[],\"eventSchedule\":[]},\"requirementDetails\":{\"venueRequired\":false,\"audioRequired\":false,\"ictsRequired\":false,\"transportRequired\":false,\"accommodationRequired\":false,\"mediaRequired\":false}}",
-                  "type": "text"
-                },
-                {
-                  "key": "mediaRequirementDetails",
-                  "value": "{\"mediaRequirements\":[{\"poster\":{\"posterContent\":\"Draft poster content\",\"referencePosterFiles\":[],\"referenceCertificateFiles\":[]},\"video\":{\"videoContent\":\"\",\"referenceFiles\":[]}}]}",
-                  "type": "text"
-                },
-                {
-                  "key": "referenceFiles",
-                  "type": "file",
-                  "src": "C:\\path\\to\\draft-reference.pdf"
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/events",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5005",
-              "path": [
-                "api",
-                "events"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Draft Event",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "requestDetails",
-                  "value": "{\"organizerDetails\":{\"previousEventReason\":\"Updated draft reason\",\"isBudgetApproved\":false,\"financeRequired\":false,\"organizerCount\":2,\"organizers\":[{\"name\":\"Updated Organizer\",\"department\":\"CSE\",\"mobile\":9876543210,\"designation\":\"Assistant Professor\",\"email\":\"updated@example.com\",\"empId\":\"EMP002\",\"facultyId\":\"507f1f77bcf86cd799439013\"}]},\"eventDetails\":{\"eventName\":\"Updated Draft Event\",\"tagging\":[\"Draft\",\"Updated\"],\"taggingDetails\":[],\"professionalSociety\":[],\"logosInPoster\":[],\"eventSchedule\":[]}}",
-                  "type": "text"
-                },
-                {
-                  "key": "referenceFiles",
-                  "type": "file",
-                  "src": "C:\\path\\to\\update-reference.pdf"
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/events/{{eventId}}",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5005",
-              "path": [
-                "api",
-                "events",
-                "{{eventId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Submit Draft Event",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "PATCH",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "isSubmitted",
-                  "value": "true",
-                  "type": "text"
-                },
-                {
-                  "key": "requestDetails",
-                  "value": "{\"eventDetails\":{\"eventType\":\"Conference\",\"numberOfDays\":2}}",
-                  "type": "text"
-                },
-                {
-                  "key": "referenceFiles",
-                  "type": "file",
-                  "src": "C:\\path\\to\\submit-reference.pdf"
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/events/{{eventId}}/submit",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "5005",
-              "path": [
-                "api",
-                "events",
-                "{{eventId}}",
-                "submit"
               ]
             }
           },
@@ -711,6 +625,571 @@
                   "key": "type",
                   "value": "audio"
                 }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Event",
+      "item": [
+        {
+          "name": "Submit event",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "organizerId",
+                  "value": "507f1f77bcf86cd799439011",
+                  "type": "text",
+                  "uuid": "8607f6ba-e87a-421f-b52f-ef1353e65a67"
+                },
+                {
+                  "key": "requestDetails",
+                  "value": "{\n  \"organizerDetails\": {\n    \"previousEventDocumentation\": true,\n    \"previousEventReason\": \"Full test\",\n    \"isBudgetApproved\": true,\n    \"financeRequired\": true,\n    \"organizingDepartment\": \"ECE\",\n    \"organizerCount\": 1,\n    \"organizers\": [\n      {\n        \"name\": \"John\",\n        \"department\": \"CSE\",\n        \"mobile\": 9876543210,\n        \"designation\": \"Professor\",\n        \"email\": \"john@example.com\",\n        \"empId\": \"EMP100\",\n        \"facultyId\": \"507f1f77bcf86cd799439012\"\n      }\n    ]\n  },\n  \"eventDetails\": {\n    \"eventName\": \"Full Event\",\n    \"tagging\": [\"Tech\"],\n    \"taggingDetails\": [\"AI\"],\n    \"eventType\": \"Workshop\",\n    \"eventTypeOther\": \"\",\n    \"professionalSociety\": [\"IEEE\"],\n    \"professionalSocietyOther\": \"\",\n    \"logosInPoster\": [\"College Logo\"],\n    \"logosOther\": \"\",\n    \"targetAudience\": \"Students\",\n    \"numberOfDays\": 1,\n    \"eventSchedule\": [\n      {\n        \"eventDate\": \"2026-05-01\",\n        \"startTime\": \"10:00\",\n        \"endTime\": \"16:00\",\n        \"totalGuests\": 1,\n        \"guests\": [\n          {\n            \"name\": \"Guest 1\",\n            \"organization\": \"ABC\",\n            \"designation\": \"Speaker\",\n            \"mobile\": 9999999999,\n            \"gender\": \"Male\"\n          }\n        ]\n      }\n    ]\n  },\n  \"requirementDetails\": {\n    \"venueRequired\": true,\n    \"audioRequired\": true,\n    \"ictsRequired\": true,\n    \"transportRequired\": true,\n    \"accommodationRequired\": true,\n    \"mediaRequired\": true\n  }\n}",
+                  "type": "text",
+                  "uuid": "88da58a1-7f6e-411c-880f-7a0866bb0c87"
+                },
+                {
+                  "key": "venueDetails",
+                  "value": "{\n  \"totalParticipants\": 100,\n  \"venues\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"numberOfParticipants\": 100,\n      \"seatingCapacity\": 120,\n      \"hallRequirements\": [\n        { \"type\": \"Projector\", \"quantity\": 1 }\n      ],\n      \"specialRequirements\": \"AC\"\n    }\n  ]\n}",
+                  "type": "text",
+                  "uuid": "f019b15e-e955-448a-921d-e089758a2941"
+                },
+                {
+                  "key": "ictsDetails",
+                  "value": "{\n  \"ictses\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"desktopLaptop\": true,\n      \"internetFacility\": \"High Speed\",\n      \"expectedInternetUsers\": 50,\n      \"proctoringUsers\": 10,\n      \"guestWifiNeeded\": true,\n      \"guestWifiExceed5\": false,\n      \"totalGuestCount\": 10,\n      \"requirements\": [\"WiFi\"],\n      \"otherRequirements\": \"\",\n      \"specialRequirements\": \"\"\n    }\n  ]\n}",
+                  "type": "text",
+                  "uuid": "2128ee74-21f6-44c1-aee9-5d0307245b41"
+                },
+                {
+                  "key": "audioDetails",
+                  "value": "{\n  \"audios\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"audioItems\": [\n        { \"type\": \"Mic\", \"quantity\": 2 }\n      ],\n      \"otherRequirements\": \"\",\n      \"specialRequirements\": \"\"\n    }\n  ]\n}",
+                  "type": "text",
+                  "uuid": "6718a1b8-20c4-49dc-b889-76342cdd4b6c"
+                },
+                {
+                  "key": "refreshmentDetails",
+                  "value": "{\"refreshments\":[{\"date\":\"2026-05-01\",\"resourcePersonType\":[\"Speaker\"],\"numberOfResourcePersons\":1,\"numberOfInternalAccompanyingStaff\":2,\"foodTypes\":[{\"type\":\"Lunch\",\"participants\":{\"vegCount\":50,\"nonVegCount\":20},\"vipGuests\":{\"vegCount\":5,\"nonVegCount\":2}}]}]}",
+                  "type": "text"
+                },
+                {
+                  "key": "accommodationDetails",
+                  "value": "{\"accommodations\":[{\"checkInDateTime\":\"2026-05-01T10:00:00.000Z\",\"checkOutDateTime\":\"2026-05-02T10:00:00.000Z\",\"guests\":[{\"name\":\"Guest1\",\"mobile\":9999999999,\"gender\":\"Male\"}],\"roomOccupancy\":[{\"type\":\"Double\",\"count\":2}],\"roomCategory\":[{\"type\":\"AC\",\"count\":2}],\"dineInRequired\":true,\"dineInCounts\":[{\"type\":\"Lunch\",\"count\":2}]}]}",
+                  "type": "text",
+                  "uuid": "21fb6ae8-6f12-4fe7-beb2-ecc5c60fae5b"
+                },
+                {
+                  "key": "purchaseDetails",
+                  "value": "{\"purchases\":[{\"dayIndex\":0,\"requirementNeeded\":[{\"type\":\"Kit\",\"hardCount\":10,\"softCount\":0}],\"requiredFor\":[\"Students\"],\"students\":{\"registrationKitNeeded\":true,\"registrationKitQty\":10},\"guests\":{\"registrationKitNeeded\":false,\"registrationKitQty\":0}}]}",
+                  "type": "text",
+                  "uuid": "fd9068bb-2b6f-4b67-af9f-e20d762f1626"
+                },
+                {
+                  "key": "mediaRequirementDetails",
+                  "value": "{\"mediaRequirements\":[{\"dayIndex\":0,\"typeOfMedia\":[\"poster\",\"video\"],\"poster\":{\"posterContent\":\"Poster content\",\"certificateContent\":\"Certificate content\",\"sizes\":[{\"type\":\"A3\",\"value\":1}]},\"video\":{\"videoContent\":\"Video content\"}}]}",
+                  "type": "text",
+                  "uuid": "ee73a374-e9ae-4818-8c2a-65bfd3caedca"
+                },
+                {
+                  "key": "previousEventDocumentation",
+                  "type": "file",
+                  "uuid": "2b995934-2fb7-4599-9aeb-cb4f7b8cac1a",
+                  "src": "/C:/Users/USER/Downloads/pms/pdf.pdf"
+                },
+                {
+                  "key": "referencePosterFiles",
+                  "type": "file",
+                  "uuid": "72d24de7-7ffb-4390-a3c0-8d4e2bde0d0f",
+                  "src": [
+                    "/C:/Users/USER/Downloads/pms/jpg.jpg",
+                    "/C:/Users/USER/Downloads/pms/jpg1.jpg"
+                  ]
+                },
+                {
+                  "key": "referenceCertificateFiles",
+                  "type": "file",
+                  "uuid": "7e0d8208-183b-4009-8a61-3f5125c4ce47",
+                  "src": "/C:/Users/USER/Downloads/pms/png.png"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "uuid": "afeec15a-033f-4ffc-859d-4a194cefd3aa",
+                  "src": "/C:/Users/USER/Downloads/pms/jpeg.jpeg"
+                },
+                {
+                  "key": "transportDetails",
+                  "value": "{\"transports\":[{\"pickupDateTime\":\"2026-05-01T08:00:00.000Z\",\"dropDateTime\":\"2026-05-01T18:00:00.000Z\",\"pickupLocation\":\"College\",\"dropLocation\":\"College\",\"totalPassengers\":10,\"vehicles\":[{\"type\":\"Bus\",\"count\":1}],\"accompanyingStaff\":[{\"name\":\"Staff1\",\"mobile\":8888888888}]}]}",
+                  "type": "text",
+                  "uuid": "55f6af99-0ea6-443e-a709-6bf098f9f9d7"
+                },
+                {
+                  "key": "isSubmitted",
+                  "value": "true",
+                  "type": "text",
+                  "uuid": "d4f85764-51ff-4144-977c-be0912e572e3"
+                },
+                {
+                  "key": "status",
+                  "value": "Submitted",
+                  "type": "text",
+                  "uuid": "f315675d-b130-48c7-81ea-46e6707e20d9"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/events/69f58aa5d016229057a730d8/submit",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "events",
+                "69f58aa5d016229057a730d8",
+                "submit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get all events",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/events",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "events"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get event by id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/events/69f2ddff5a25d78e78399737",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "events",
+                "69f2ddff5a25d78e78399737"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Event Create",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "organizerId",
+                  "value": "507f1f77bcf86cd799439011",
+                  "type": "text",
+                  "uuid": "8607f6ba-e87a-421f-b52f-ef1353e65a67"
+                },
+                {
+                  "key": "requestDetails",
+                  "value": "{\n  \"organizerDetails\": {\n    \"previousEventDocumentation\": true,\n    \"previousEventReason\": \"Full test\",\n    \"isBudgetApproved\": true,\n    \"financeRequired\": true,\n    \"organizingDepartment\": \"EEE\",\n    \"organizerCount\": 1,\n    \"organizers\": [\n      {\n        \"name\": \"John\",\n        \"department\": \"CSE\",\n        \"mobile\": 9876543210,\n        \"designation\": \"Professor\",\n        \"email\": \"john@example.com\",\n        \"empId\": \"EMP100\",\n        \"facultyId\": \"507f1f77bcf86cd799439012\"\n      }\n    ]\n  },\n  \"eventDetails\": {\n    \"eventName\": \"Full Event\",\n    \"tagging\": [\"Tech\"],\n    \"taggingDetails\": [\"AI\"],\n    \"eventType\": \"Workshop\",\n    \"eventTypeOther\": \"\",\n    \"professionalSociety\": [\"IEEE\"],\n    \"professionalSocietyOther\": \"\",\n    \"logosInPoster\": [\"College Logo\"],\n    \"logosOther\": \"\",\n    \"targetAudience\": \"Students\",\n    \"numberOfDays\": 1,\n    \"eventSchedule\": [\n      {\n        \"eventDate\": \"2026-05-01\",\n        \"startTime\": \"10:00\",\n        \"endTime\": \"16:00\",\n        \"totalGuests\": 1,\n        \"guests\": [\n          {\n            \"name\": \"Guest 1\",\n            \"organization\": \"ABC\",\n            \"designation\": \"Speaker\",\n            \"mobile\": 9999999999,\n            \"gender\": \"Male\"\n          }\n        ]\n      }\n    ]\n  },\n  \"requirementDetails\": {\n    \"venueRequired\": true,\n    \"audioRequired\": true,\n    \"ictsRequired\": true,\n    \"transportRequired\": true,\n    \"accommodationRequired\": true,\n    \"mediaRequired\": true\n  }\n}",
+                  "type": "text",
+                  "uuid": "88da58a1-7f6e-411c-880f-7a0866bb0c87"
+                },
+                {
+                  "key": "venueDetails",
+                  "value": "{\n  \"totalParticipants\": 100,\n  \"venues\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"numberOfParticipants\": 100,\n      \"seatingCapacity\": 120,\n      \"hallRequirements\": [\n        { \"type\": \"Projector\", \"quantity\": 1 }\n      ],\n      \"specialRequirements\": \"AC\"\n    }\n  ]\n}",
+                  "type": "text",
+                  "uuid": "f019b15e-e955-448a-921d-e089758a2941"
+                },
+                {
+                  "key": "ictsDetails",
+                  "value": "{\n  \"ictses\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"desktopLaptop\": true,\n      \"internetFacility\": \"High Speed\",\n      \"expectedInternetUsers\": 50,\n      \"proctoringUsers\": 10,\n      \"guestWifiNeeded\": true,\n      \"guestWifiExceed5\": false,\n      \"totalGuestCount\": 10,\n      \"requirements\": [\"WiFi\"],\n      \"otherRequirements\": \"\",\n      \"specialRequirements\": \"\"\n    }\n  ]\n}",
+                  "type": "text",
+                  "uuid": "2128ee74-21f6-44c1-aee9-5d0307245b41"
+                },
+                {
+                  "key": "audioDetails",
+                  "value": "{\n  \"audios\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"audioItems\": [\n        { \"type\": \"Mic\", \"quantity\": 2 }\n      ],\n      \"otherRequirements\": \"\",\n      \"specialRequirements\": \"\"\n    }\n  ]\n}",
+                  "type": "text",
+                  "uuid": "6718a1b8-20c4-49dc-b889-76342cdd4b6c"
+                },
+                {
+                  "key": "refreshmentDetails",
+                  "value": "{\"refreshments\":[{\"date\":\"2026-05-01\",\"resourcePersonType\":[\"Speaker\"],\"numberOfResourcePersons\":1,\"numberOfInternalAccompanyingStaff\":2,\"foodTypes\":[{\"type\":\"Lunch\",\"participants\":{\"vegCount\":50,\"nonVegCount\":20},\"vipGuests\":{\"vegCount\":5,\"nonVegCount\":2}}]}]}",
+                  "type": "text"
+                },
+                {
+                  "key": "accommodationDetails",
+                  "value": "{\"accommodations\":[{\"checkInDateTime\":\"2026-05-01T10:00:00.000Z\",\"checkOutDateTime\":\"2026-05-02T10:00:00.000Z\",\"guests\":[{\"name\":\"Guest1\",\"mobile\":9999999999,\"gender\":\"Male\"}],\"roomOccupancy\":[{\"type\":\"Double\",\"count\":2}],\"roomCategory\":[{\"type\":\"AC\",\"count\":2}],\"dineInRequired\":true,\"dineInCounts\":[{\"type\":\"Lunch\",\"count\":2}]}]}",
+                  "type": "text",
+                  "uuid": "21fb6ae8-6f12-4fe7-beb2-ecc5c60fae5b"
+                },
+                {
+                  "key": "purchaseDetails",
+                  "value": "{\"purchases\":[{\"dayIndex\":0,\"requirementNeeded\":[{\"type\":\"Kit\",\"hardCount\":10,\"softCount\":0}],\"requiredFor\":[\"Students\"],\"students\":{\"registrationKitNeeded\":true,\"registrationKitQty\":10},\"guests\":{\"registrationKitNeeded\":false,\"registrationKitQty\":0}}]}",
+                  "type": "text",
+                  "uuid": "fd9068bb-2b6f-4b67-af9f-e20d762f1626"
+                },
+                {
+                  "key": "mediaRequirementDetails",
+                  "value": "{\"mediaRequirements\":[{\"dayIndex\":0,\"typeOfMedia\":[\"poster\",\"video\"],\"poster\":{\"posterContent\":\"Poster content\",\"certificateContent\":\"Certificate content\",\"sizes\":[{\"type\":\"A3\",\"value\":1}]},\"video\":{\"videoContent\":\"Video content\"}}]}",
+                  "type": "text",
+                  "uuid": "ee73a374-e9ae-4818-8c2a-65bfd3caedca"
+                },
+                {
+                  "key": "previousEventDocumentation",
+                  "type": "file",
+                  "uuid": "2b995934-2fb7-4599-9aeb-cb4f7b8cac1a",
+                  "src": "/C:/Users/USER/Downloads/pms/pdf.pdf"
+                },
+                {
+                  "key": "referencePosterFiles",
+                  "type": "file",
+                  "uuid": "72d24de7-7ffb-4390-a3c0-8d4e2bde0d0f",
+                  "src": [
+                    "/C:/Users/USER/Downloads/pms/jpg.jpg",
+                    "/C:/Users/USER/Downloads/pms/jpg1.jpg"
+                  ]
+                },
+                {
+                  "key": "referenceCertificateFiles",
+                  "type": "file",
+                  "uuid": "7e0d8208-183b-4009-8a61-3f5125c4ce47",
+                  "src": "/C:/Users/USER/Downloads/pms/png.png"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "uuid": "afeec15a-033f-4ffc-859d-4a194cefd3aa",
+                  "src": "/C:/Users/USER/Downloads/pms/jpeg.jpeg"
+                },
+                {
+                  "key": "transportDetails",
+                  "value": "{\"transports\":[{\"pickupDateTime\":\"2026-05-01T08:00:00.000Z\",\"dropDateTime\":\"2026-05-01T18:00:00.000Z\",\"pickupLocation\":\"College\",\"dropLocation\":\"College\",\"totalPassengers\":10,\"vehicles\":[{\"type\":\"Bus\",\"count\":1}],\"accompanyingStaff\":[{\"name\":\"Staff1\",\"mobile\":8888888888}]}]}",
+                  "type": "text",
+                  "uuid": "55f6af99-0ea6-443e-a709-6bf098f9f9d7"
+                },
+                {
+                  "key": "isSubmitted",
+                  "value": "true",
+                  "type": "text",
+                  "uuid": "d4f85764-51ff-4144-977c-be0912e572e3",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "Submitted",
+                  "type": "text",
+                  "uuid": "f315675d-b130-48c7-81ea-46e6707e20d9",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/events",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "events"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editevent",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "organizerId",
+                  "value": "507f1f77bcf86cd799439011",
+                  "type": "text",
+                  "uuid": "8607f6ba-e87a-421f-b52f-ef1353e65a67"
+                },
+                {
+                  "key": "requestDetails",
+                  "value": "{\n  \"organizerDetails\": {\n    \"previousEventDocumentation\": true,\n    \"previousEventReason\": \"Full test\",\n    \"isBudgetApproved\": true,\n    \"financeRequired\": true,\n    \"organizingDepartment\": \"ECE\",\n    \"organizerCount\": 1,\n    \"organizers\": [\n      {\n        \"name\": \"John\",\n        \"department\": \"CSE\",\n        \"mobile\": 9876543210,\n        \"designation\": \"Professor\",\n        \"email\": \"john@example.com\",\n        \"empId\": \"EMP100\",\n        \"facultyId\": \"507f1f77bcf86cd799439012\"\n      }\n    ]\n  },\n  \"eventDetails\": {\n    \"eventName\": \"Full\",\n    \"tagging\": [\"Tech\"],\n    \"taggingDetails\": [\"AI\"],\n    \"eventType\": \"Workshop\",\n    \"eventTypeOther\": \"\",\n    \"professionalSociety\": [\"IEEE\"],\n    \"professionalSocietyOther\": \"\",\n    \"logosInPoster\": [\"College Logo\"],\n    \"logosOther\": \"\",\n    \"targetAudience\": \"Students\",\n    \"numberOfDays\": 1,\n    \"eventSchedule\": [\n      {\n        \"eventDate\": \"2026-05-01\",\n        \"startTime\": \"10:00\",\n        \"endTime\": \"16:00\",\n        \"totalGuests\": 1,\n        \"guests\": [\n          {\n            \"name\": \"Guest 1\",\n            \"organization\": \"ABC\",\n            \"designation\": \"Speaker\",\n            \"mobile\": 9999999999,\n            \"gender\": \"Male\"\n          }\n        ]\n      }\n    ]\n  },\n  \"requirementDetails\": {\n    \"venueRequired\": true,\n    \"audioRequired\": true,\n    \"ictsRequired\": true,\n    \"transportRequired\": true,\n    \"accommodationRequired\": true,\n    \"mediaRequired\": true\n  }\n}",
+                  "type": "text",
+                  "uuid": "88da58a1-7f6e-411c-880f-7a0866bb0c87"
+                },
+                {
+                  "key": "venueDetails",
+                  "value": "{\n  \"totalParticipants\": 100,\n  \"venues\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"numberOfParticipants\": 100,\n      \"seatingCapacity\": 120,\n      \"hallRequirements\": [\n        { \"type\": \"Projector\", \"quantity\": 1 }\n      ],\n      \"specialRequirements\": \"AC\"\n    }\n  ]\n}",
+                  "type": "text",
+                  "uuid": "f019b15e-e955-448a-921d-e089758a2941"
+                },
+                {
+                  "key": "ictsDetails",
+                  "value": "{\n  \"ictses\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"desktopLaptop\": true,\n      \"internetFacility\": \"High Speed\",\n      \"expectedInternetUsers\": 50,\n      \"proctoringUsers\": 10,\n      \"guestWifiNeeded\": true,\n      \"guestWifiExceed5\": false,\n      \"totalGuestCount\": 10,\n      \"requirements\": [\"WiFi\"],\n      \"otherRequirements\": \"\",\n      \"specialRequirements\": \"\"\n    }\n  ]\n}",
+                  "type": "text",
+                  "uuid": "2128ee74-21f6-44c1-aee9-5d0307245b41"
+                },
+                {
+                  "key": "audioDetails",
+                  "value": "{\n  \"audios\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"audioItems\": [\n        { \"type\": \"Mic\", \"quantity\": 2 }\n      ],\n      \"otherRequirements\": \"\",\n      \"specialRequirements\": \"\"\n    }\n  ]\n}",
+                  "type": "text",
+                  "uuid": "6718a1b8-20c4-49dc-b889-76342cdd4b6c"
+                },
+                {
+                  "key": "refreshmentDetails",
+                  "value": "{\"refreshments\":[{\"date\":\"2026-05-01\",\"resourcePersonType\":[\"Speaker\"],\"numberOfResourcePersons\":1,\"numberOfInternalAccompanyingStaff\":2,\"foodTypes\":[{\"type\":\"Lunch\",\"participants\":{\"vegCount\":50,\"nonVegCount\":20},\"vipGuests\":{\"vegCount\":5,\"nonVegCount\":2}}]}]}",
+                  "type": "text"
+                },
+                {
+                  "key": "accommodationDetails",
+                  "value": "{\"accommodations\":[{\"checkInDateTime\":\"2026-05-01T10:00:00.000Z\",\"checkOutDateTime\":\"2026-05-02T10:00:00.000Z\",\"guests\":[{\"name\":\"Guest1\",\"mobile\":9999999999,\"gender\":\"Male\"}],\"roomOccupancy\":[{\"type\":\"Double\",\"count\":2}],\"roomCategory\":[{\"type\":\"AC\",\"count\":2}],\"dineInRequired\":true,\"dineInCounts\":[{\"type\":\"Lunch\",\"count\":2}]}]}",
+                  "type": "text",
+                  "uuid": "21fb6ae8-6f12-4fe7-beb2-ecc5c60fae5b"
+                },
+                {
+                  "key": "purchaseDetails",
+                  "value": "{\"purchases\":[{\"dayIndex\":0,\"requirementNeeded\":[{\"type\":\"Kit\",\"hardCount\":10,\"softCount\":0}],\"requiredFor\":[\"Students\"],\"students\":{\"registrationKitNeeded\":true,\"registrationKitQty\":10},\"guests\":{\"registrationKitNeeded\":false,\"registrationKitQty\":0}}]}",
+                  "type": "text",
+                  "uuid": "fd9068bb-2b6f-4b67-af9f-e20d762f1626"
+                },
+                {
+                  "key": "mediaRequirementDetails",
+                  "value": "{\"mediaRequirements\":[{\"dayIndex\":0,\"typeOfMedia\":[\"poster\",\"video\"],\"poster\":{\"posterContent\":\"Poster content\",\"certificateContent\":\"Certificate content\",\"sizes\":[{\"type\":\"A3\",\"value\":1}]},\"video\":{\"videoContent\":\"Video content\"}}]}",
+                  "type": "text",
+                  "uuid": "ee73a374-e9ae-4818-8c2a-65bfd3caedca"
+                },
+                {
+                  "key": "previousEventDocumentation",
+                  "type": "file",
+                  "uuid": "2b995934-2fb7-4599-9aeb-cb4f7b8cac1a",
+                  "src": "/C:/Users/USER/Downloads/pms/pdf.pdf"
+                },
+                {
+                  "key": "referencePosterFiles",
+                  "type": "file",
+                  "uuid": "72d24de7-7ffb-4390-a3c0-8d4e2bde0d0f",
+                  "src": [
+                    "/C:/Users/USER/Downloads/pms/jpg.jpg",
+                    "/C:/Users/USER/Downloads/pms/jpg1.jpg"
+                  ]
+                },
+                {
+                  "key": "referenceCertificateFiles",
+                  "type": "file",
+                  "uuid": "7e0d8208-183b-4009-8a61-3f5125c4ce47",
+                  "src": "/C:/Users/USER/Downloads/pms/png.png"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "uuid": "afeec15a-033f-4ffc-859d-4a194cefd3aa",
+                  "src": "/C:/Users/USER/Downloads/pms/jpeg.jpeg"
+                },
+                {
+                  "key": "transportDetails",
+                  "value": "{\"transports\":[{\"pickupDateTime\":\"2026-05-01T08:00:00.000Z\",\"dropDateTime\":\"2026-05-01T18:00:00.000Z\",\"pickupLocation\":\"College\",\"dropLocation\":\"College\",\"totalPassengers\":10,\"vehicles\":[{\"type\":\"Bus\",\"count\":1}],\"accompanyingStaff\":[{\"name\":\"Staff1\",\"mobile\":8888888888}]}]}",
+                  "type": "text",
+                  "uuid": "55f6af99-0ea6-443e-a709-6bf098f9f9d7"
+                },
+                {
+                  "key": "isSubmitted",
+                  "value": "true",
+                  "type": "text",
+                  "uuid": "d4f85764-51ff-4144-977c-be0912e572e3"
+                },
+                {
+                  "key": "status",
+                  "value": "Submitted",
+                  "type": "text",
+                  "uuid": "f315675d-b130-48c7-81ea-46e6707e20d9"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/events/69f58b28d016229057a730d9",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "events",
+                "69f58b28d016229057a730d9"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "event filter based",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/events/filter?department=EEE&module=icts&eventType=Game",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "events",
+                "filter"
+              ],
+              "query": [
+                {
+                  "key": "department",
+                  "value": "EEE"
+                },
+                {
+                  "key": "module",
+                  "value": "icts"
+                },
+                {
+                  "key": "eventType",
+                  "value": "Game"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update status for all stage",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"adminApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n// {\r\n//   \"action\": \"close\"\r\n// }\r\n{\r\n  \"action\": \"acknowledge\",\r\n  \"module\": \"media\",\r\n  \"remarks\": \"Poster allocated\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/events/69f58a1fd016229057a730d7/status",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "events",
+                "69f58a1fd016229057a730d7",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Department-Wise-Pie",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/dashboard/department-wise",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "dashboard",
+                "department-wise"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "icts",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Department-Wise-Stats",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/dashboard/stats",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "dashboard",
+                "stats"
               ]
             }
           },
