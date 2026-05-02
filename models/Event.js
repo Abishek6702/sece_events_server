@@ -3,8 +3,8 @@ const mongoose = require("mongoose");
 const departmentStatusSchema = new mongoose.Schema({
   status: {
     type: String,
-    enum: ["Acknowledged", "Waiting for Acknowledge"],
-    default: "Waiting for Acknowledge",
+    enum: ["Acknowledged", "Pending for Acknowledge"],
+    default: "Pending for Acknowledge",
   },
   remarks: { type: String },
 });
@@ -525,7 +525,6 @@ const eventSchema = new mongoose.Schema(
     // approvals
     isHodApproved: { type: Boolean, default: false },
     adminApproval: { type: Boolean, default: false },
-    finalApproval: { type: Boolean, default: false },
 
     // status
     status: {
@@ -534,8 +533,8 @@ const eventSchema = new mongoose.Schema(
         "Draft",
         "Submitted",
         "HodApproved",
-        "DepartmentReview",
         "Approved",
+        "DepartmentReview",
         "Closed",
         "Rejected",
       ],

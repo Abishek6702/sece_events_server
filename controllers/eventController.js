@@ -210,7 +210,7 @@ const applyUploadedFiles = (event, files) => {
 };
 
 exports.createEvent = async (req, res) => {
-  console.log("BODY:", req.body);
+  // console.log("BODY:", req.body);
   try {
     const payload = {};
 
@@ -452,6 +452,7 @@ exports.getAllEvents = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 exports.getEventById = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
@@ -491,5 +492,165 @@ exports.deleteEvent = async (req, res) => {
       success: false,
       message: "Server error",
     });
+  }
+};
+
+exports.getFilteredEvents = async (req, res) => {
+  try {
+    const { department, eventType, module, status } = req.query;
+
+    // 🔹 FILTER
+    let filter = {};
+
+    if (department) {
+      filter["requestDetails.organizerDetails.organizingDepartment"] =
+        department;
+    }
+
+    if (eventType) {
+      filter["requestDetails.eventDetails.eventType"] = eventType;
+    }
+
+    if (status) {
+      filter["status"] = status;
+    }
+
+    let events;
+
+    // ✅ If module is provided → use projection
+    if (module) {
+      let projection = {
+        requestDetails: 1,
+        status: 1,
+      };
+
+      switch (module) {
+        case "venue":
+          projection["venueDetails"] = 1;
+          break;
+        case "icts":
+          projection["ictsDetails"] = 1;
+          break;
+        case "audio":
+          projection["audioDetails"] = 1;
+          break;
+        case "transport":
+          projection["transportDetails"] = 1;
+          break;
+        case "refreshment":
+          projection["refreshmentDetails"] = 1;
+          break;
+        case "accommodation":
+          projection["accommodationDetails"] = 1;
+          break;
+        case "purchase":
+          projection["purchaseDetails"] = 1;
+          break;
+        case "media":
+          projection["mediaRequirementDetails"] = 1;
+          break;
+      }
+
+      events = await Event.find(filter).select(projection);
+    } else {
+      // ✅ No module → return full document
+      events = await Event.find(filter);
+    }
+
+    res.status(200).json({
+      message: "Events fetched successfully",
+      count: events.length,
+      data: events,
+    });
+  } catch (error) {
+    console.error("Error fetching events:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.updateEventStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, module, remarks } = req.body;
+
+    const event = await Event.findById(id);
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    switch (action) {
+      case "submit":
+        event.isSubmitted = true;
+        event.status = "Submitted";
+        break;
+
+      case "hodApprove":
+        event.isHodApproved = true;
+        event.status = "HodApproved";
+        break;
+
+      case "adminApprove":
+        event.adminApproval = true;
+        event.status = "Approved";
+        break;
+
+      case "reject":
+        event.status = "Rejected";
+        break;
+
+      case "close":
+        event.status = "Closed";
+        break;
+
+        case "acknowledge":
+          if (!module) {
+            return res.status(400).json({
+              message: "Module is required for acknowledgement",
+            });
+          }
+        
+          const moduleMap = {
+            venue: "venueDetails",
+            icts: "ictsDetails",
+            audio: "audioDetails",
+            transport: "transportDetails",
+            refreshment: "refreshmentDetails",
+            accommodation: "accommodationDetails",
+            purchase: "purchaseDetails",
+            media: "mediaRequirementDetails",
+          };
+        
+          const path = moduleMap[module];
+        
+          if (!path) {
+            return res.status(400).json({ message: "Invalid module" });
+          }
+        
+          if (!event[path]) {
+            event[path] = {};
+          }
+        
+          if (!event[path].status) {
+            event[path].status = {};
+          }
+        
+          event[path].status.status = "Acknowledged";
+          event[path].status.remarks = remarks || "";
+        
+          break;
+      default:
+        return res.status(400).json({ message: "Invalid action" });
+    }
+
+    await event.save();
+
+    res.status(200).json({
+      message: "Status updated successfully",
+      data: event,
+    });
+  } catch (error) {
+    console.error("Status update error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
