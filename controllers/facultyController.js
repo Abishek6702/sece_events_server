@@ -3,6 +3,8 @@ const bcrypt = require("bcryptjs");
 
 const Faculty = require("../models/Faculty");
 const User = require("../models/User");
+const cloudinary = require("cloudinary").v2;
+
 
 // helper to generate default password
 const generatePassword = async (empId) => {
@@ -253,5 +255,67 @@ exports.deleteFaculty = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+
+exports.uploadProfileImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const faculty = await Faculty.findById(id);
+    if (!faculty) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    if (faculty.profileImage?.publicId) {
+      await cloudinary.uploader.destroy(faculty.profileImage.publicId);
+    }
+
+    faculty.profileImage = {
+      url: req.file.path,
+      publicId: req.file.filename,
+    };
+
+    await faculty.save();
+
+    res.status(200).json({
+      message: "Profile image uploaded successfully",
+      data: faculty.profileImage,
+    });
+  } catch (err) {
+    console.error("Upload error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.deleteProfileImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const faculty = await Faculty.findById(id);
+    if (!faculty) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
+
+    if (!faculty.profileImage?.publicId) {
+      return res.status(400).json({ message: "No image to delete" });
+    }
+
+    await cloudinary.uploader.destroy(faculty.profileImage.publicId);
+
+    faculty.profileImage = null;
+    await faculty.save();
+
+    res.status(200).json({
+      message: "Profile image deleted successfully",
+    });
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

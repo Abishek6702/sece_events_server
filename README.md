@@ -3,7 +3,7 @@
 This repository contains the backend API for the SECE Events management system. It provides authentication, faculty management, and venue management endpoints built with Express and MongoDB.
 
 ---
-
+live-url: https://sece-events.onrender.com
 ## Table of Contents
 
 - [Features](#features)
