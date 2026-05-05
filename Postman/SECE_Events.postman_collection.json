@@ -52,7 +52,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"name\": \"Abishek K\",\r\n  \"empId\": \"Sece124\",\r\n  \"email\": \"abishekkrishnat@gmail.com\",\r\n  \"phone\": 8098616038,\r\n  \"department\": \"ECE\",\r\n  \"dob\": \"2002-07-06\",\r\n  \"gender\": \"Male\",\r\n  \"doj\": \"2024-12-01\",\r\n  \"designation\": \"Full Stack Developer\",\r\n  \"employeeCategory\": \"Non-Teaching\",\r\n  \"location\": \"Chennai\"\r\n}",
+              "raw": "{\r\n  \"name\": \"Chandru R\",\r\n  \"empId\": \"Sece129\",\r\n  \"email\": \"chandru.r@sece.ac.in\",\r\n  \"phone\": 6382073665,\r\n  \"department\": \"Placement\",\r\n  \"dob\": \"2002-07-06\",\r\n  \"gender\": \"Male\",\r\n  \"doj\": \"2024-12-01\",\r\n  \"designation\": \"Full Stack Developer\",\r\n  \"employeeCategory\": \"Non-Teaching\",\r\n  \"location\": \"Chennai\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -362,7 +362,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"name\":\"Abishek\",\r\n    \"email\":\"abishek.k@sece.ac.in\",\r\n    \"department\":\"venue\",\r\n    \"role\":\"admin\"\r\n}",
+              "raw": "{\r\n    \"name\":\"Placement Admin\",\r\n    \"email\":\"placement@sece.ac.in\",\r\n    \"phone\":\"7550120108\",\r\n    \"department\":\"Placement\",\r\n    \"role\":\"hod\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1058,7 +1058,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"adminApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n// {\r\n//   \"action\": \"close\"\r\n// }\r\n{\r\n  \"action\": \"acknowledge\",\r\n  \"module\": \"media\",\r\n  \"remarks\": \"Poster allocated\"\r\n}",
+              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"adminApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n// {\r\n//   \"action\": \"close\"\r\n// }\r\n// {\r\n//   \"action\": \"acknowledge\",\r\n//   \"module\": \"media\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n{\r\n  \"action\": \"complete\",\r\n  \"module\": \"venue\",\r\n  \"remarks\": \"Poster allocated\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1066,14 +1066,14 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/events/69f58a1fd016229057a730d7/status",
+              "raw": "{{base_url}}/api/events/69f2ddff5a25d78e78399737/status",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "events",
-                "69f58a1fd016229057a730d7",
+                "69f2ddff5a25d78e78399737",
                 "status"
               ]
             }

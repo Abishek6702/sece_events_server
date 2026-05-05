@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const departmentStatusSchema = new mongoose.Schema({
   status: {
     type: String,
-    enum: ["Acknowledged", "Pending for Acknowledge"],
+    enum: ["Acknowledged", "Pending for Acknowledge","Completed"],
     default: "Pending for Acknowledge",
   },
   remarks: { type: String },

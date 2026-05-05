@@ -579,6 +579,17 @@ exports.updateEventStatus = async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
+    const moduleMap = {
+      venue: "venueDetails",
+      icts: "ictsDetails",
+      audio: "audioDetails",
+      transport: "transportDetails",
+      refreshment: "refreshmentDetails",
+      accommodation: "accommodationDetails",
+      purchase: "purchaseDetails",
+      media: "mediaRequirementDetails",
+    };
+
     switch (action) {
       case "submit":
         event.isSubmitted = true;
@@ -603,42 +614,58 @@ exports.updateEventStatus = async (req, res) => {
         event.status = "Closed";
         break;
 
-        case "acknowledge":
-          if (!module) {
-            return res.status(400).json({
-              message: "Module is required for acknowledgement",
-            });
-          }
-        
-          const moduleMap = {
-            venue: "venueDetails",
-            icts: "ictsDetails",
-            audio: "audioDetails",
-            transport: "transportDetails",
-            refreshment: "refreshmentDetails",
-            accommodation: "accommodationDetails",
-            purchase: "purchaseDetails",
-            media: "mediaRequirementDetails",
-          };
-        
-          const path = moduleMap[module];
-        
-          if (!path) {
-            return res.status(400).json({ message: "Invalid module" });
-          }
-        
-          if (!event[path]) {
-            event[path] = {};
-          }
-        
-          if (!event[path].status) {
-            event[path].status = {};
-          }
-        
-          event[path].status.status = "Acknowledged";
-          event[path].status.remarks = remarks || "";
-        
-          break;
+      case "acknowledge": {
+        if (!module) {
+          return res.status(400).json({
+            message: "Module is required for acknowledgement",
+          });
+        }
+
+        const path = moduleMap[module];
+
+        if (!path) {
+          return res.status(400).json({ message: "Invalid module" });
+        }
+
+        if (!event[path]) {
+          event[path] = {};
+        }
+
+        if (!event[path].status) {
+          event[path].status = {};
+        }
+
+        event[path].status.status = "Acknowledged";
+        event[path].status.remarks = remarks || "";
+
+        break;
+      }
+      case "complete": {
+        if (!module) {
+          return res.status(400).json({
+            message: "Module is required for completion",
+          });
+        }
+
+        const path = moduleMap[module];
+
+        if (!path) {
+          return res.status(400).json({ message: "Invalid module" });
+        }
+
+        if (!event[path]) {
+          event[path] = {};
+        }
+
+        if (!event[path].status) {
+          event[path].status = {};
+        }
+
+        event[path].status.status = "Completed";
+        event[path].status.remarks = remarks || "";
+
+        break;
+      }
       default:
         return res.status(400).json({ message: "Invalid action" });
     }
