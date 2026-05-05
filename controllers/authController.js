@@ -114,9 +114,9 @@ exports.changePassword = async (req, res) => {
 
 exports.createAdmin = async (req, res) => {
   try {
-    const { name, email, department, role } = req.body;
+    const { name, email, department, role,phone } = req.body;
 
-    if (!name || !email) {
+    if (!name || !email || !phone) {
       return res.status(400).json({ message: "All fields required" });
     }
 
@@ -132,6 +132,7 @@ exports.createAdmin = async (req, res) => {
     const admin = await User.create({
       name,
       email,
+      phone,
       password: hashed,
       isFirstTimeLogin: true,
       department,

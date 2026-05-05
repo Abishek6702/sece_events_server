@@ -23,7 +23,7 @@ exports.importExcelFaculty = async (req, res) => {
     }
 
     // 👉 read excel buffer
-    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    const workbook = XLSX.readFile(req.file.path);
 
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
@@ -67,9 +67,10 @@ exports.importExcelFaculty = async (req, res) => {
       await User.create({
         name: facultyData.name,
         email: facultyData.email,
+        phone: facultyData.phone,
         password: hashed,
         department: faculty.department,
-        role: "faculty",
+        role: data.role?.toLowerCase() === "hod" ? "hod" : "faculty",
         isadmin: false,
         facultyId: faculty._id,
         isFirstTimeLogin: true,
@@ -103,6 +104,7 @@ exports.addIndividualFaculty = async (req, res) => {
       employeeCategory,
       location,
       profileImage,
+      role,
     } = req.body;
 
     // ✅ Validation
@@ -157,9 +159,10 @@ exports.addIndividualFaculty = async (req, res) => {
     await User.create({
       name,
       email,
+      phone,
       password: hashed,
       department: faculty.department,
-      role: "faculty",
+      role: role === "hod" ? "hod" : "faculty",
       isadmin: false,
       facultyId: faculty._id,
       isFirstTimeLogin: true,

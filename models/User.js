@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true },
 
     email: { type: String, required: true, unique: true },
+    phone: { type: String, required: true, unique: true },
 
     password: { type: String },
 
@@ -15,6 +16,8 @@ const userSchema = new mongoose.Schema(
     facultyId: {
       type: mongoose.Types.ObjectId,
       ref: "Faculty",
+      unique: true,
+      sparse: true
     },
 
     department: { type: String, required: true },
