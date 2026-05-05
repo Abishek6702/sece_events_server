@@ -6,6 +6,8 @@ This document describes the backend API for the SECE Events server, including au
 
 `http://localhost:<PORT>/api`
 
+`https://sece-events.onrender.com`
+
 ## Authentication
 
 ### POST /auth/login
