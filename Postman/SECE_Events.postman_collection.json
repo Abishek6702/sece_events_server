@@ -29,12 +29,10 @@
               ]
             },
             "url": {
-              "raw": "http://localhost:5000/api/faculty/import-faculty",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/faculty/import-faculty",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "faculty",
@@ -62,12 +60,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/faculty/",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/faculty/",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "faculty",
@@ -86,12 +82,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5000/api/faculty/69e71ad143efebd19aadc05d",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/faculty/69e71ad143efebd19aadc05d",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "faculty",
@@ -110,12 +104,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5000/api/faculty",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/faculty",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "faculty"
@@ -142,12 +134,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/faculty/69e71ad143efebd19aadc05d",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/faculty/69e71ad143efebd19aadc05d",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "faculty",
@@ -166,12 +156,10 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "http://localhost:5000/api/faculty/69e71ad143efebd19aadc05d",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/faculty/69e71ad143efebd19aadc05d",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "faculty",
@@ -190,12 +178,10 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "http://localhost:5005/api/faculty/69eb77eb24e52ee13e40f077/profile-image",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/faculty/69eb77eb24e52ee13e40f077/profile-image",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5005",
               "path": [
                 "api",
                 "faculty",
@@ -226,12 +212,10 @@
               ]
             },
             "url": {
-              "raw": "http://localhost:5005/api/faculty/69eb77eb24e52ee13e40f077/profile-image",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/faculty/69eb77eb24e52ee13e40f077/profile-image",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5005",
               "path": [
                 "api",
                 "faculty",
@@ -265,12 +249,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/auth/login",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/auth/login",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "auth",
@@ -298,12 +280,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/auth/change-password",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/auth/change-password",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "auth",
@@ -328,12 +308,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/auth/reset-password",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/auth/reset-password",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "auth",
@@ -361,12 +339,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/auth/forgot-password",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/auth/forgot-password",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "auth",
@@ -394,12 +370,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/auth/add-admin",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/auth/add-admin",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "auth",
@@ -429,12 +403,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/venues",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/venues",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "venues"
@@ -456,12 +428,10 @@
               "raw": "{\r\n  \"block\": \"Main Block\",\r\n  \"floor\": \"Ground Floor\",\r\n  \"venue\": \"Test Room\",\r\n  \"capacity\": 100,\r\n  \"audio\": {\r\n    \"wiredMic\": 0,\r\n    \"handMic\": 2,\r\n    \"collarMic\": 1,\r\n    \"handSpeaker\": 1,\r\n    \"speakerWithMixer\": 0,\r\n    \"paSystem\": 1,\r\n    \"podiumWithMic\": 0\r\n  },\r\n  \"seating\": {\r\n    \"withoutProctoring\": 80,\r\n    \"withProctoring\": 60\r\n  },\r\n  \"remarks\": \"Test entry\"\r\n}"
             },
             "url": {
-              "raw": "http://localhost:5000/api/venues",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/venues",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "venues"
@@ -485,12 +455,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/venues/69ef4a160563acddced76b40",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/venues/69ef4a160563acddced76b40",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "venues",
@@ -510,12 +478,10 @@
               "raw": "{\r\n  \"block\": \"Main Block\",\r\n  \"floor\": \"Ground Floor\",\r\n  \"venue\": \"Test Room1\",\r\n  \"capacity\": 100,\r\n  \"audio\": {\r\n    \"wiredMic\": 0,\r\n    \"handMic\": 2,\r\n    \"collarMic\": 1,\r\n    \"handSpeaker\": 1,\r\n    \"speakerWithMixer\": 0,\r\n    \"paSystem\": 1,\r\n    \"podiumWithMic\": 0\r\n  },\r\n  \"seating\": {\r\n    \"withoutProctoring\": 80,\r\n    \"withProctoring\": 60\r\n  },\r\n  \"remarks\": \"Test entry\"\r\n}"
             },
             "url": {
-              "raw": "http://localhost:5000/api/venues/69ef48d38914e1d7bdee90aa",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/venues/69ef48d38914e1d7bdee90aa",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "venues",
@@ -538,12 +504,10 @@
               "raw": "{\r\n  \"block\": \"Main Block\",\r\n  \"floor\": \"Ground Floor\",\r\n  \"venue\": \"Test Room\",\r\n  \"capacity\": 100,\r\n  \"audio\": {\r\n    \"wiredMic\": 0,\r\n    \"handMic\": 2,\r\n    \"collarMic\": 1,\r\n    \"handSpeaker\": 1,\r\n    \"speakerWithMixer\": 0,\r\n    \"paSystem\": 1,\r\n    \"podiumWithMic\": 0\r\n  },\r\n  \"seating\": {\r\n    \"withoutProctoring\": 80,\r\n    \"withProctoring\": 60\r\n  },\r\n  \"remarks\": \"Test entry\"\r\n}"
             },
             "url": {
-              "raw": "http://localhost:5000/api/venues/69ef4a160563acddced76b40",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/venues/69ef4a160563acddced76b40",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "venues",
@@ -570,12 +534,10 @@
               ]
             },
             "url": {
-              "raw": "http://localhost:5000/api/venues/import",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/venues/import",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "venues",
@@ -605,12 +567,10 @@
               ]
             },
             "url": {
-              "raw": "http://localhost:5000/api/venues/options?minCapacity=100&type=audio",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/venues/options?minCapacity=100&type=audio",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5000",
               "path": [
                 "api",
                 "venues",
@@ -744,12 +704,10 @@
               ]
             },
             "url": {
-              "raw": "http://localhost:5005/api/events/69f58aa5d016229057a730d8/submit",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/events/69f58aa5d016229057a730d8/submit",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5005",
               "path": [
                 "api",
                 "events",
@@ -769,12 +727,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5005/api/events",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/events",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5005",
               "path": [
                 "api",
                 "events"
@@ -792,12 +748,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5005/api/events/69f2ddff5a25d78e78399737",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/events/69f2ddff5a25d78e78399737",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5005",
               "path": [
                 "api",
                 "events",
@@ -921,12 +875,10 @@
               ]
             },
             "url": {
-              "raw": "http://localhost:5005/api/events",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/events",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5005",
               "path": [
                 "api",
                 "events"
@@ -1047,12 +999,10 @@
               ]
             },
             "url": {
-              "raw": "http://localhost:5005/api/events/69f58b28d016229057a730d9",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/events/69f58b28d016229057a730d9",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5005",
               "path": [
                 "api",
                 "events",
@@ -1071,12 +1021,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5005/api/events/filter?department=EEE&module=icts&eventType=Game",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/events/filter?department=EEE&module=icts&eventType=Game",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5005",
               "path": [
                 "api",
                 "events",
@@ -1118,12 +1066,10 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5005/api/events/69f58a1fd016229057a730d7/status",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/events/69f58a1fd016229057a730d7/status",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5005",
               "path": [
                 "api",
                 "events",
@@ -1148,12 +1094,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5005/api/dashboard/department-wise",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/dashboard/department-wise",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5005",
               "path": [
                 "api",
                 "dashboard",
@@ -1180,12 +1124,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5005/api/dashboard/stats",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/dashboard/stats",
               "host": [
-                "localhost"
+                "{{base_url}}"
               ],
-              "port": "5005",
               "path": [
                 "api",
                 "dashboard",

@@ -8,6 +8,8 @@ This document describes the backend API for the SECE Events server, including au
 
 `https://sece-events.onrender.com`
 
+
+
 ## Authentication
 
 ### POST /auth/login
