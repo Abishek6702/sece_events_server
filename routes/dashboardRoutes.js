@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const protect = require('../middleware/protect');
-const { getDashboardStats,getDepartmentWiseStats } = require("../controllers/dashboardController");
+const { getDashboardStats,getDepartmentWiseStats,getDepartmentWiseFacultyCount } = require("../controllers/dashboardController");
 
 router.get('/stats', getDashboardStats);
 router.get("/department-wise", getDepartmentWiseStats);
+router.get("/department-wise-faculty", getDepartmentWiseFacultyCount);
 
 module.exports = router;

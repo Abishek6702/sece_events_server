@@ -559,7 +559,7 @@ const deleteJson = async (url) => {
       },
     });
 
-    console.log('CREATE DRAFT RESPONSE:', draftCreate.status);
+    console.log('CREATE DRAFT   RESPONSE:', draftCreate.status);
     console.log(JSON.stringify(draftCreate.body, null, 2));
 
     const eventId = draftCreate.body?.data?._id;

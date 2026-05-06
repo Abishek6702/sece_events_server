@@ -1,4 +1,5 @@
 const Event = require("../models/Event");
+const Faculty = require("../models/Faculty");
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -119,5 +120,39 @@ exports.getDepartmentWiseStats = async (req, res) => {
   } catch (error) {
     console.error("Pie chart error:", error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getDepartmentWiseFacultyCount = async (req, res) => {
+  try {
+    const data = await Faculty.aggregate([
+      {
+        $group: {
+          _id: "$department",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          department: "$_id",
+          count: 1,
+        },
+      },
+      {
+        $sort: { department: 1 },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      totalDepartments: data.length,
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

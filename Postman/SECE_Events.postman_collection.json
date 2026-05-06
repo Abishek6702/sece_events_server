@@ -24,7 +24,7 @@
                   "key": "faculties",
                   "type": "file",
                   "uuid": "23ff8874-e452-436d-a64d-68d06c1d3a78",
-                  "src": "/F:/sece_events/server/Faculty_Details.xlsx"
+                  "src": "/E:/Events/server/files/Faculty_Details.xlsx"
                 }
               ]
             },
@@ -1132,6 +1132,36 @@
                 "api",
                 "dashboard",
                 "stats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Department-Wise-faculty",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/department-wise-faculty",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "department-wise-faculty"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "icts",
+                  "type": "text",
+                  "disabled": true
+                }
               ]
             }
           },
