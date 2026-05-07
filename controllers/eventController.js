@@ -1,4 +1,12 @@
 const Event = require("../models/Event.js");
+const {
+  notifyEventCreation,
+  notifyHODApproval,
+  notifyAdminApproval,
+  notifyDepartmentHeads,
+  notifyEventRejection,
+  notifyEventClosure,
+} = require("../utils/eventNotifications.js");
 require("dotenv").config();
 const mongoose = require("mongoose");
 
@@ -275,6 +283,11 @@ exports.createEvent = async (req, res) => {
     eventData.mediaRequirementDetails.mediaRequirements[0] = mediaDetails;
 
     const event = await Event.create(eventData);
+
+    // 📧 Send notification for event creation
+    if (normalizedStatus === "Submitted") {
+      await notifyEventCreation(event);
+    }
 
     res
       .status(201)
@@ -571,7 +584,7 @@ exports.getFilteredEvents = async (req, res) => {
 exports.updateEventStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { action, module, remarks } = req.body;
+    const { action, module, remarks, reason } = req.body;
 
     const event = await Event.findById(id);
 
@@ -594,24 +607,35 @@ exports.updateEventStatus = async (req, res) => {
       case "submit":
         event.isSubmitted = true;
         event.status = "Submitted";
+        // 📧 Send notification for event creation/submission
+        await notifyEventCreation(event);
         break;
 
       case "hodApprove":
         event.isHodApproved = true;
         event.status = "HodApproved";
+        // 📧 Send notification for HOD approval
+        await notifyHODApproval(event);
         break;
 
       case "adminApprove":
         event.adminApproval = true;
         event.status = "Approved";
+        // 📧 Send notification for admin approval and to department heads
+        await notifyAdminApproval(event);
+        await notifyDepartmentHeads(event);
         break;
 
       case "reject":
         event.status = "Rejected";
+        // 📧 Send notification for rejection
+        await notifyEventRejection(event, reason || "");
         break;
 
       case "close":
         event.status = "Closed";
+        // 📧 Send notification for event closure
+        await notifyEventClosure(event, reason || "");
         break;
 
       case "acknowledge": {
