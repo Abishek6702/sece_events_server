@@ -67,6 +67,26 @@ const fixArrays = (data) => {
       if (typeof p.requirementNeeded === "string") {
         p.requirementNeeded = JSON.parse(p.requirementNeeded);
       }
+
+      // Parse giftItems if sent as strings
+      ["students", "guests"].forEach((category) => {
+        if (p[category]?.giftItems) {
+          if (typeof p[category].giftItems === "string") {
+            p[category].giftItems = JSON.parse(p[category].giftItems);
+          }
+
+          if (Array.isArray(p[category].giftItems)) {
+            p[category].giftItems.forEach((item) => {
+              if (typeof item.trophy === "string") {
+                item.trophy = JSON.parse(item.trophy);
+              }
+              if (typeof item.voucher === "string") {
+                item.voucher = JSON.parse(item.voucher);
+              }
+            });
+          }
+        }
+      });
     });
   }
 

@@ -407,7 +407,12 @@ const purchaseSchema = new mongoose.Schema(
 
               cashPrizeAmount: Number,
 
-              voucherAmount: Number,
+              voucher: [
+                {
+                  voucherWorth  : String,
+                  quantity: Number,
+                },
+              ],
             },
           ],
 
@@ -431,7 +436,12 @@ const purchaseSchema = new mongoose.Schema(
 
               glassCupQty: Number,
 
-              voucherAmount: Number,
+              voucher: [
+                {
+                  voucherWorth: String,
+                  quantity: Number,
+                },
+              ],
             },
           ],
 

@@ -436,7 +436,12 @@ const deleteJson = async (url) => {
                     giftType: 'Certificate',
                     trophy: [],
                     cashPrizeAmount: 0,
-                    voucherAmount: 0,
+                    voucher: [
+                      {
+                        voucherWorth: "0",
+                        quantity: 0,
+                      },
+                    ],
                   },
                 ],
                 registrationKitNeeded: true,
@@ -449,7 +454,12 @@ const deleteJson = async (url) => {
                     giftType: 'Memento',
                     trophy: [],
                     glassCupQty: 2,
-                    voucherAmount: 1000,
+                    voucher: [
+                      {
+                        voucherWorth: "1000",
+                        quantity: 1,
+                      },
+                    ],
                   },
                 ],
                 registrationKitNeeded: false,
@@ -493,7 +503,12 @@ const deleteJson = async (url) => {
                       { trophyType: 'Third Prize', quantity: 1 },
                     ],
                     cashPrizeAmount: 5000,
-                    voucherAmount: 1000,
+                    voucher: [
+                      {
+                        voucherWorth: "1000",
+                        quantity: 1,
+                      },
+                    ],
                   },
                 ],
                 registrationKitNeeded: false,
@@ -506,7 +521,12 @@ const deleteJson = async (url) => {
                     giftType: 'Certificate',
                     trophy: [],
                     glassCupQty: 0,
-                    voucherAmount: 0,
+                    voucher: [
+                      {
+                        voucherWorth: "0",
+                        quantity: 0,
+                      },
+                    ],
                   },
                 ],
                 registrationKitNeeded: false,
