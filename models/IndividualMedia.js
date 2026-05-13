@@ -5,7 +5,7 @@ const fileReferenceSchema = new mongoose.Schema(
     fileUrl: String,
     fileName: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 const sizeSchema = new mongoose.Schema(
@@ -19,14 +19,14 @@ const sizeSchema = new mongoose.Schema(
       type: Number,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const individualMediaSchema = new mongoose.Schema(
   {
     employee: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Employee",
+      ref: "Faculty",
       required: true,
     },
 
@@ -150,10 +150,7 @@ const individualMediaSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-module.exports = mongoose.model(
-  "IndividualMedia",
-  individualMediaSchema
-);
+module.exports = mongoose.model("IndividualMedia", individualMediaSchema);
