@@ -11,6 +11,7 @@ const {
   deleteEvent,
   getFilteredEvents,
   updateEventStatus,
+  getRequirementDetails,
 } = require("../controllers/eventController.js");
 
 const uploadFields = upload.fields([
@@ -23,10 +24,14 @@ const uploadFields = upload.fields([
 router.post("/", uploadFields, createEvent);
 router.get("/", getAllEvents);
 router.get("/filter", getFilteredEvents);
+
+router.get("/requirements/:id", getRequirementDetails);
+
 router.patch("/:id/status", updateEventStatus);
 router.put("/:id", uploadFields, updateEvent);
 router.patch("/:id/submit", uploadFields, submitEvent);
 router.delete("/:id", deleteEvent);
 router.get("/:id", getEventById);
+
 
 module.exports = router;

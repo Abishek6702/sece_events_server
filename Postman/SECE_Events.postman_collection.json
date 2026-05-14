@@ -748,14 +748,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/events/69f2ddff5a25d78e78399737",
+              "raw": "{{base_url}}/api/events/6a05532560b052b1fe18c0b4",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "events",
-                "69f2ddff5a25d78e78399737"
+                "6a05532560b052b1fe18c0b4"
               ]
             }
           },
@@ -1075,6 +1075,29 @@
                 "events",
                 "69f2ddff5a25d78e78399737",
                 "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get event by id requirements list",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/events/requirements/6a05532560b052b1fe18c0b4",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "requirements",
+                "6a05532560b052b1fe18c0b4"
               ]
             }
           },

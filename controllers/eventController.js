@@ -725,3 +725,37 @@ exports.updateEventStatus = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+
+exports.getRequirementDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const event = await Event.findById(id).select(
+      "requestDetails.requirementDetails"
+    );
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      requirementDetails:
+        event.requestDetails?.requirementDetails || {},
+    });
+  } catch (error) {
+    console.error("Error fetching requirement details:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+;
