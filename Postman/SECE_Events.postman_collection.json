@@ -1208,16 +1208,152 @@
             "method": "POST",
             "header": [],
             "body": {
-              "mode": "raw",
-              "raw": "{\r\n  \"employee\": \"664f1d2c9a1234567890abcd\",\r\n  \"dayIndex\": 1,\r\n\r\n  \"typeOfMedia\": [\"Poster\", \"Video\"],\r\n\r\n  \"poster\": {\r\n    \"posterContent\": \"Need promotional poster for annual event\",\r\n\r\n    \"referencePosterFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster1.jpg\",\r\n        \"fileName\": \"poster1.jpg\"\r\n      },\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster2.jpg\",\r\n        \"fileName\": \"poster2.jpg\"\r\n      }\r\n    ],\r\n\r\n    \"certificateContent\": \"Certificate design for winners\",\r\n\r\n    \"referenceCertificateFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/certificate.pdf\",\r\n        \"fileName\": \"certificate.pdf\"\r\n      }\r\n    ],\r\n\r\n    \"trophyContent\": \"Golden trophy design with company logo\",\r\n\r\n    \"displayNeeded\": [\r\n      \"Digital Signage\",\r\n      \"Standee\",\r\n      \"Social Media\"\r\n    ],\r\n\r\n    \"sizes\": [\r\n      {\r\n        \"type\": \"Width\",\r\n        \"value\": 1920\r\n      },\r\n      {\r\n        \"type\": \"Height\",\r\n        \"value\": 1080\r\n      },\r\n      {\r\n        \"type\": \"Banner\",\r\n        \"value\": 12\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-20T00:00:00.000Z\",\r\n\r\n    \"priority\": \"High\",\r\n\r\n    \"specialRequirements\": \"Use company brand colors and modern style\"\r\n  },\r\n\r\n  \"video\": {\r\n    \"videoContent\": \"Need event teaser and full coverage video\",\r\n\r\n    \"preEventVideos\": [\r\n      \"Invitation Video\",\r\n      \"Promo Teaser\"\r\n    ],\r\n\r\n    \"eventCoverage\": [\r\n      \"Stage Performance\",\r\n      \"Audience Reactions\",\r\n      \"Award Ceremony\"\r\n    ],\r\n\r\n    \"postEventVideos\": [\r\n      \"Highlights Video\",\r\n      \"Thank You Video\"\r\n    ],\r\n\r\n    \"specialVideos\": [\r\n      \"CEO Speech Edit\",\r\n      \"Instagram Reel\"\r\n    ],\r\n\r\n    \"referenceFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/video-reference.mp4\",\r\n        \"fileName\": \"video-reference.mp4\"\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-25T00:00:00.000Z\",\r\n\r\n    \"priority\": \"Urgent\",\r\n\r\n    \"specialRequirements\": \"Need cinematic editing with subtitles\"\r\n  },\r\n\r\n  \"status\": \"Pending\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "employee",
+                  "value": "6a0411af4579d3137b255e70",
+                  "type": "text"
+                },
+                {
+                  "key": "dayIndex",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "Pending",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Poster",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Video",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[posterContent]",
+                  "value": "Need promotional poster",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[certificateContent]",
+                  "value": "Certificate design for winners",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[trophyContent]",
+                  "value": "Golden trophy design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[priority]",
+                  "value": "High",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[specialRequirements]",
+                  "value": "Modern design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Digital Signage",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Standee",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Social Media",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][type]",
+                  "value": "Width",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][value]",
+                  "value": "1920",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][type]",
+                  "value": "Height",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][value]",
+                  "value": "1080",
+                  "type": "text"
+                },
+                {
+                  "key": "video[videoContent]",
+                  "value": "Need teaser video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[priority]",
+                  "value": "Urgent",
+                  "type": "text"
+                },
+                {
+                  "key": "video[specialRequirements]",
+                  "value": "Cinematic editing",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]",
+                  "value": "Invitation Video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]Promo Teaser",
+                  "value": "Promo Teaser",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Stage Performance",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Audience Reactions",
+                  "type": "text"
+                },
+                {
+                  "key": "referencePosterFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/consolidated (8).pdf"
+                },
+                {
+                  "key": "referencePosterFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/consolidated (8).pdf"
+                },
+                {
+                  "key": "referenceCertificateFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/service (3).pdf"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/consolidated (8).pdf"
                 }
-              }
+              ]
             },
             "url": {
-              "raw": "http://localhost:5005/api/individual-media",
+              "raw": "http://localhost:5005/api/individual-media/create",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -1225,7 +1361,8 @@
               "port": "5005",
               "path": [
                 "api",
-                "individual-media"
+                "individual-media",
+                "create"
               ]
             }
           },
@@ -1257,7 +1394,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5005/api/individual-media/6a0422f69722b1ad7987d3cb",
+              "raw": "http://localhost:5005/api/individual-media/6a057a52379a47020636ab7a",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -1266,7 +1403,7 @@
               "path": [
                 "api",
                 "individual-media",
-                "6a0422f69722b1ad7987d3cb"
+                "6a057a52379a47020636ab7a"
               ]
             }
           },
@@ -1312,7 +1449,7 @@
               "raw": "{\r\n  \"employee\": \"664f1d2c9a1234567890abcd\",\r\n  \"dayIndex\": 1,\r\n\r\n  \"typeOfMedia\": [\"Poster\", \"Video\"],\r\n\r\n  \"poster\": {\r\n    \"posterContent\": \"Need promotional poster for annual eventsssss\",\r\n\r\n    \"referencePosterFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster1.jpg\",\r\n        \"fileName\": \"poster1.jpg\"\r\n      },\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster2.jpg\",\r\n        \"fileName\": \"poster2.jpg\"\r\n      }\r\n    ],\r\n\r\n    \"certificateContent\": \"Certificate design for winners\",\r\n\r\n    \"referenceCertificateFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/certificate.pdf\",\r\n        \"fileName\": \"certificate.pdf\"\r\n      }\r\n    ],\r\n\r\n    \"trophyContent\": \"Golden trophy design with company logo\",\r\n\r\n    \"displayNeeded\": [\r\n      \"Digital Signage\",\r\n      \"Standee\",\r\n      \"Social Media\"\r\n    ],\r\n\r\n    \"sizes\": [\r\n      {\r\n        \"type\": \"Width\",\r\n        \"value\": 1920\r\n      },\r\n      {\r\n        \"type\": \"Height\",\r\n        \"value\": 1080\r\n      },\r\n      {\r\n        \"type\": \"Banner\",\r\n        \"value\": 12\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-20T00:00:00.000Z\",\r\n\r\n    \"priority\": \"High\",\r\n\r\n    \"specialRequirements\": \"Use company brand colors and modern style\"\r\n  },\r\n\r\n  \"video\": {\r\n    \"videoContent\": \"Need event teaser and full coverage video\",\r\n\r\n    \"preEventVideos\": [\r\n      \"Invitation Video\",\r\n      \"Promo Teaser\"\r\n    ],\r\n\r\n    \"eventCoverage\": [\r\n      \"Stage Performance\",\r\n      \"Audience Reactions\",\r\n      \"Award Ceremony\"\r\n    ],\r\n\r\n    \"postEventVideos\": [\r\n      \"Highlights Video\",\r\n      \"Thank You Video\"\r\n    ],\r\n\r\n    \"specialVideos\": [\r\n      \"CEO Speech Edit\",\r\n      \"Instagram Reel\"\r\n    ],\r\n\r\n    \"referenceFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/video-reference.mp4\",\r\n        \"fileName\": \"video-reference.mp4\"\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-25T00:00:00.000Z\",\r\n\r\n    \"priority\": \"Urgent\",\r\n\r\n    \"specialRequirements\": \"Need cinematic editing with subtitles\"\r\n  },\r\n\r\n  \"status\": \"Pending\"\r\n}"
             },
             "url": {
-              "raw": "http://localhost:5005/api/individual-media/6a0422f69722b1ad7987d3cb",
+              "raw": "http://localhost:5005/api/individual-media/6a057a52379a47020636ab7a",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -1321,7 +1458,7 @@
               "path": [
                 "api",
                 "individual-media",
-                "6a0422f69722b1ad7987d3cb"
+                "6a057a52379a47020636ab7a"
               ]
             }
           },
@@ -1347,6 +1484,461 @@
                 "api",
                 "individual-media",
                 "6a0422f69722b1ad7987d3cb"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "IndividualPurchase",
+      "item": [
+        {
+          "name": "purchaseCreate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"employee\": \"6a0411af4579d3137b255e70\",\r\n\r\n\"purchases\": [\r\n{\r\n\"dayIndex\": 1,\r\n  \"deliveryDate\": \"2026-05-25T00:00:00.000Z\",\r\n\r\n  \"requirementNeeded\": [\r\n    {\r\n      \"type\": \"Certificate\",\r\n      \"hardCount\": 52,\r\n      \"softCount\": 100\r\n    },\r\n    {\r\n      \"type\": \"ID Card\",\r\n      \"hardCount\": 30,\r\n      \"softCount\": 0\r\n    }\r\n  ],\r\n\r\n  \"requiredFor\": [\r\n    \"Students\",\r\n    \"Guests\"\r\n  ],\r\n\r\n  \"students\": {\r\n    \"giftItems\": [\r\n      {\r\n        \"giftType\": \"Trophy\",\r\n\r\n        \"trophy\": [\r\n          {\r\n            \"trophyType\": \"Basic\",\r\n            \"quantity\": 2\r\n          },\r\n          {\r\n            \"trophyType\": \"Elite\",\r\n            \"quantity\": 1\r\n          }\r\n        ],\r\n\r\n        \"cashPrizeAmount\": 250\r\n      },\r\n\r\n      {\r\n        \"giftType\": \"Voucher\",\r\n\r\n        \"voucher\": [\r\n          {\r\n            \"voucherWorth\": \"5000\",\r\n            \"quantity\": 2\r\n          }\r\n        ]\r\n      }\r\n    ],\r\n\r\n    \"registrationKitNeeded\": true,\r\n    \"registrationKitQty\": 30,\r\n\r\n    \"specialRequirements\": \"Need premium quality student kit\"\r\n  },\r\n\r\n  \"guests\": {\r\n    \"giftItems\": [\r\n      {\r\n        \"giftType\": \"Glass Cup\",\r\n\r\n        \"trophy\": [\r\n          {\r\n            \"trophyType\": \"Elite\",\r\n            \"quantity\": 2\r\n          }\r\n        ],\r\n\r\n        \"cashPrizeAmount\": 500\r\n      },\r\n\r\n      {\r\n        \"giftType\": \"Voucher\",\r\n\r\n        \"voucher\": [\r\n          {\r\n            \"voucherWorth\": \"1000\",\r\n            \"quantity\": 5\r\n          }\r\n        ]\r\n      }\r\n    ],\r\n\r\n    \"registrationKitNeeded\": true,\r\n    \"registrationKitQty\": 10,\r\n\r\n    \"specialRequirements\": \"VIP guest kit required\"\r\n  }\r\n}\r\n\r\n]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/purchase/create",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "purchase",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "purchaseget",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/purchase",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "purchase"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET SINGLE PURCHASE",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/purchase/6a05815c41003a323d6c7677",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "purchase",
+                "6a05815c41003a323d6c7677"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "UPDATE PURCHASE",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"employee\": \"6a0411af4579d3137b255e70\",\r\n\r\n\"purchases\": [\r\n{\r\n\"dayIndex\": 1,\r\n  \"deliveryDate\": \"2026-05-25T00:00:00.000Z\",\r\n\r\n  \"requirementNeeded\": [\r\n    {\r\n      \"type\": \"Certificate\",\r\n      \"hardCount\": 52,\r\n      \"softCount\": 100\r\n    },\r\n    {\r\n      \"type\": \"ID Card\",\r\n      \"hardCount\": 30,\r\n      \"softCount\": 0\r\n    }\r\n  ],\r\n\r\n  \"requiredFor\": [\r\n    \"Students\",\r\n    \"Guests\"\r\n  ],\r\n\r\n  \"students\": {\r\n    \"giftItems\": [\r\n      {\r\n        \"giftType\": \"Trophy\",\r\n\r\n        \"trophy\": [\r\n          {\r\n            \"trophyType\": \"Basic\",\r\n            \"quantity\": 2\r\n          },\r\n          {\r\n            \"trophyType\": \"Elite\",\r\n            \"quantity\": 1\r\n          }\r\n        ],\r\n\r\n        \"cashPrizeAmount\": 250\r\n      },\r\n\r\n      {\r\n        \"giftType\": \"Voucher\",\r\n\r\n        \"voucher\": [\r\n          {\r\n            \"voucherWorth\": \"5000\",\r\n            \"quantity\": 2\r\n          }\r\n        ]\r\n      }\r\n    ],\r\n\r\n    \"registrationKitNeeded\": true,\r\n    \"registrationKitQty\": 30,\r\n\r\n    \"specialRequirements\": \"Need premium quality student kittesting..................\"\r\n  },\r\n\r\n  \"guests\": {\r\n    \"giftItems\": [\r\n      {\r\n        \"giftType\": \"Glass Cup\",\r\n\r\n        \"trophy\": [\r\n          {\r\n            \"trophyType\": \"Elite\",\r\n            \"quantity\": 2\r\n          }\r\n        ],\r\n\r\n        \"cashPrizeAmount\": 500\r\n      },\r\n\r\n      {\r\n        \"giftType\": \"Voucher\",\r\n\r\n        \"voucher\": [\r\n          {\r\n            \"voucherWorth\": \"1000\",\r\n            \"quantity\": 5\r\n          }\r\n        ]\r\n      }\r\n    ],\r\n\r\n    \"registrationKitNeeded\": true,\r\n    \"registrationKitQty\": 10,\r\n\r\n    \"specialRequirements\": \"VIP guest kit required\"\r\n  }\r\n}\r\n\r\n]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/purchase/6a05815c41003a323d6c7677",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "purchase",
+                "6a05815c41003a323d6c7677"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "deletepurchase",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/purchase/6a05815c41003a323d6c7677",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "purchase",
+                "6a05815c41003a323d6c7677"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH API",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"status\": {\r\n\"admin\": \"Approved\",\r\n\"accounts\": \"Approved\",\r\n\"purchase\": \"Pending\"\r\n}\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/purchase/6a0584d299c187967aac85e4",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "purchase",
+                "6a0584d299c187967aac85e4"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "IndividualFood",
+      "item": [
+        {
+          "name": "CREATE FOOD",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"employee\": \"6a0411af4579d3137b255e70\",\r\n\r\n\"date\": \"2026-05-25T00:00:00.000Z\",\r\n\r\n\"resourcePersonType\": [\r\n\"Chief Guest\",\r\n\"Trainer\"\r\n],\r\n\r\n\"numberOfResourcePersons\": 3,\r\n\r\n\"numberOfInternalAccompanyingStaff\": 2,\r\n\r\n\"accompanyingStaff\": [\r\n{\r\n\"name\": \"Arun Kumar\",\r\n\"mobile\": 9876543210\r\n},\r\n{\r\n\"name\": \"Priya\",\r\n\"mobile\": 9123456780\r\n}\r\n],\r\n\r\n\"foodTypes\": [\r\n{\r\n\"foodTypes\": [\r\n{\r\n\"type\": \"Breakfast\",\r\n\r\n\r\n      \"participants\": {\r\n        \"vegCount\": 100,\r\n        \"nonVegCount\": 20\r\n      },\r\n\r\n      \"vipGuests\": {\r\n        \"vegCount\": 10,\r\n        \"nonVegCount\": 5\r\n      }\r\n    },\r\n\r\n    {\r\n      \"type\": \"Lunch\",\r\n\r\n      \"participants\": {\r\n        \"vegCount\": 120,\r\n        \"nonVegCount\": 30\r\n      },\r\n\r\n      \"vipGuests\": {\r\n        \"vegCount\": 15,\r\n        \"nonVegCount\": 5\r\n      }\r\n    }\r\n  ],\r\n\r\n  \"participants\": {\r\n    \"vegCount\": 220,\r\n    \"nonVegCount\": 50\r\n  },\r\n\r\n  \"vipGuests\": {\r\n    \"vegCount\": 25,\r\n    \"nonVegCount\": 10\r\n  }\r\n}\r\n\r\n\r\n],\r\n\r\n\"specialRequirements\": \"Need separate VIP counter\",\r\n\r\n\"status\": \"Pending\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/foods",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "foods"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET ALL FOODS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/foods",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "foods"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET SINGLE FOOD",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/foods/6a0597146b7e172a484f15c3",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "foods",
+                "6a0597146b7e172a484f15c3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "UPDATE FOOD",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/foods/6a0597146b7e172a484f15c3",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "foods",
+                "6a0597146b7e172a484f15c3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH FOOD",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"status\": \"Completed\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/foods/6a0597146b7e172a484f15c3",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "foods",
+                "6a0597146b7e172a484f15c3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE FOOD",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"status\": \"Completed\"\r\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/foods/6a0597146b7e172a484f15c3",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "foods",
+                "6a0597146b7e172a484f15c3"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "IndividualTransport",
+      "item": [
+        {
+          "name": "CREATE TRANSPORT",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"employee\": \"6a0411af4579d3137b255e70\",\r\n\r\n\"pickupDateTime\": \"2026-05-25T08:00:00.000Z\",\r\n\r\n\"dropDateTime\": \"2026-05-25T20:00:00.000Z\",\r\n\r\n\"pickupLocation\": \"SECE College Main Gate\",\r\n\r\n\"checkpoints\": [\r\n{\r\n\"location\": \"Gandhipuram\"\r\n},\r\n{\r\n\"location\": \"Ukkadam\"\r\n},\r\n{\r\n\"location\": \"Pollachi\"\r\n}\r\n],\r\n\r\n\"dropLocation\": \"Codissia Trade Center\",\r\n\r\n\"totalPassengers\": 120,\r\n\r\n\"vehicles\": [\r\n{\r\n\"type\": \"Bus\",\r\n\"count\": 2\r\n},\r\n{\r\n\"type\": \"Van\",\r\n\"count\": 1\r\n}\r\n],\r\n\r\n\"numberOfBusNeeded\": 2,\r\n\r\n\"numberOfAccompanyingStaff\": 3,\r\n\r\n\"accompanyingStaff\": [\r\n{\r\n\"name\": \"Arun Kumar\",\r\n\"mobile\": 9876543210\r\n},\r\n{\r\n\"name\": \"Priya\",\r\n\"mobile\": 9123456780\r\n}\r\n],\r\n\r\n\"specialRequirements\": \"Need AC buses with mike system\",\r\n\r\n\"status\": \"Pending\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/transports",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "transports"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET ALL TRANSPORTS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/transports",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "transports"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET SINGLE TRANSPORT",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/transports/6a0599af6b7e172a484f15c4",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "transports",
+                "6a0599af6b7e172a484f15c4"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "UPDATE TRANSPORT",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/transports/6a0599af6b7e172a484f15c4",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "transports",
+                "6a0599af6b7e172a484f15c4"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH TRANSPORT",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\"status\": \"Approved\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/transports/6a0599af6b7e172a484f15c4",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "transports",
+                "6a0599af6b7e172a484f15c4"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE TRANSPORT",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/transports/6a0599af6b7e172a484f15c4",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "transports",
+                "6a0599af6b7e172a484f15c4"
               ]
             }
           },
