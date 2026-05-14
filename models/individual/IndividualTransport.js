@@ -81,4 +81,4 @@ const transportSchema = new mongoose.Schema(
   },
 );
 
-module.exports = mongoose.model("Transport", transportSchema);
+module.exports = mongoose.model("IndividualTransport", transportSchema);

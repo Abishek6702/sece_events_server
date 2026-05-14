@@ -13,6 +13,9 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const foodRoutes = require("./routes/individual/foodRoutes");
 const individualMediaRoutes = require("./routes/individual/mediaRoutes");
 const transportRoutes = require("./routes/individual/transportsRoutes");
+const purchaseRoutes = require("./routes/individual/purchaseRoutes");
+
+
 
 
 
@@ -55,6 +58,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/foods", foodRoutes);
 app.use("/api/individual-media", individualMediaRoutes);
 app.use("/api/transports", transportRoutes);
+app.use("/api/purchase", purchaseRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
