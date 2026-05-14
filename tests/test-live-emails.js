@@ -51,6 +51,22 @@ User.findOne = function(query) {
   };
 };
 
+User.find = function(query) {
+  return {
+    select: function(fields) {
+
+      if (query.isadmin) {
+        return Promise.resolve([
+          { email: "abishek.k@sece.ac.in" },
+          { email: "abishektkrishna@gmail.com" }
+        ]);
+      }
+
+      return Promise.resolve([]);
+    }
+  };
+};
+
 const {
   notifyEventCreation,
   notifyHODApproval,
