@@ -1,0 +1,32 @@
+const express = require("express");
+const router = express.Router();
+
+const {
+  createTransport,
+  getAllTransports,
+  getSingleTransport,
+  updateTransport,
+  deleteTransport,
+  patchTransport
+} = require("../controllers/transportController");
+
+// CREATE
+router.post("/", createTransport);
+
+// GET ALL
+router.get("/", getAllTransports);
+
+// GET SINGLE
+router.get("/:id", getSingleTransport);
+
+// UPDATE
+router.put("/:id", updateTransport);
+
+// DELETE
+router.delete("/:id", deleteTransport);
+//patch
+router.patch(
+  "/:id",patchTransport
+);
+
+module.exports = router;
