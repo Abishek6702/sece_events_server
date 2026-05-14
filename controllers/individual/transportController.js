@@ -1,4 +1,4 @@
-const Transport = require("../models/IndividualTransport");
+const Transport = require("../../models/individual/IndividualTransport");
 
 // ==============================
 // CREATE TRANSPORT

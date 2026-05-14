@@ -10,9 +10,9 @@ const facultyRoutes = require("./routes/facultyRoutes");
 const venueRoutes = require("./routes/venueRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
-const foodRoutes = require("./routes/foodRoutes");
-const individualMediaRoutes = require("./routes/mediaRoutes");
-const transportRoutes = require("./routes/transportsRoutes");
+const foodRoutes = require("./routes/individual/foodRoutes");
+const individualMediaRoutes = require("./routes/individual/mediaRoutes");
+const transportRoutes = require("./routes/individual/transportsRoutes");
 
 
 

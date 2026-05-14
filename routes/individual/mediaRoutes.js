@@ -8,7 +8,7 @@ const {
   updateIndividualMedia,
   deleteIndividualMedia,
   patchIndividualMedia
-} = require("../controllers/mediaController");
+} = require("../../controllers/individual/mediaController");
 
 // CREATE
 router.post("/", createIndividualMedia);

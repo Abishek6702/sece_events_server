@@ -1,6 +1,6 @@
 // controllers/foodController.js
 
-const Food = require("../models/IndividualFood");
+const Food = require("../../models/individual/IndividualFood");
 
 // ==========================================
 // CREATE FOOD

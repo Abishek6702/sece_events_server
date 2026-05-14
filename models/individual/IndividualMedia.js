@@ -1,9 +1,16 @@
 const mongoose = require("mongoose");
 
+// const fileReferenceSchema = new mongoose.Schema(
+//   {
+//     fileUrl: String,
+//     fileName: String,
+//   },
+//   { _id: false },
+// );
 const fileReferenceSchema = new mongoose.Schema(
   {
-    fileUrl: String,
-    fileName: String,
+    url: { type: String },
+    publicId: { type: String },
   },
   { _id: false },
 );
