@@ -1,20 +1,20 @@
-// controllers/transportController.js
+// controllers/purchase/purchaseController.js
 
-const Transport = require("../../models/individual/IndividualTransport");
+const Purchase = require("../../models/individual/IndividualPurchase");
 
 // ==============================
-// CREATE TRANSPORT
+// CREATE
 // ==============================
-exports.createTransport = async (req, res) => {
+exports.createPurchase = async (req, res) => {
   try {
     console.log("BODY =>", req.body);
 
-    const transport = await Transport.create(req.body);
+    const purchase = await Purchase.create(req.body);
 
     res.status(201).json({
       success: true,
-      message: "Transport created successfully",
-      data: transport,
+      message: "Purchase created successfully",
+      data: purchase,
     });
   } catch (error) {
     console.log(error);
@@ -27,18 +27,18 @@ exports.createTransport = async (req, res) => {
 };
 
 // ==============================
-// GET ALL TRANSPORTS
+// GET ALL
 // ==============================
-exports.getAllTransports = async (req, res) => {
+exports.getAllPurchase = async (req, res) => {
   try {
-    const transports = await Transport.find()
+    const purchases = await Purchase.find()
       .populate("employee")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
-      count: transports.length,
-      data: transports,
+      count: purchases.length,
+      data: purchases,
     });
   } catch (error) {
     console.log(error);
@@ -51,24 +51,24 @@ exports.getAllTransports = async (req, res) => {
 };
 
 // ==============================
-// GET SINGLE TRANSPORT
+// GET SINGLE
 // ==============================
-exports.getSingleTransport = async (req, res) => {
+exports.getSinglePurchase = async (req, res) => {
   try {
-    const transport = await Transport.findById(
+    const purchase = await Purchase.findById(
       req.params.id
     ).populate("employee");
 
-    if (!transport) {
+    if (!purchase) {
       return res.status(404).json({
         success: false,
-        message: "Transport not found",
+        message: "Purchase not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: transport,
+      data: purchase,
     });
   } catch (error) {
     console.log(error);
@@ -81,32 +81,30 @@ exports.getSingleTransport = async (req, res) => {
 };
 
 // ==============================
-// UPDATE TRANSPORT
+// UPDATE
 // ==============================
-exports.updateTransport = async (req, res) => {
+exports.updatePurchase = async (req, res) => {
   try {
-    const transport =
-      await Transport.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        {
-          new: true,
-          runValidators: true,
-        }
-      );
+    const purchase = await Purchase.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
-    if (!transport) {
+    if (!purchase) {
       return res.status(404).json({
         success: false,
-        message: "Transport not found",
+        message: "Purchase not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      message:
-        "Transport updated successfully",
-      data: transport,
+      message: "Purchase updated successfully",
+      data: purchase,
     });
   } catch (error) {
     console.log(error);
@@ -119,26 +117,26 @@ exports.updateTransport = async (req, res) => {
 };
 
 // ==============================
-// DELETE TRANSPORT
+// DELETE
 // ==============================
-exports.deleteTransport = async (req, res) => {
+exports.deletePurchase = async (req, res) => {
   try {
-    const transport =
-      await Transport.findByIdAndDelete(
+    const purchase =
+      await Purchase.findByIdAndDelete(
         req.params.id
       );
 
-    if (!transport) {
+    if (!purchase) {
       return res.status(404).json({
         success: false,
-        message: "Transport not found",
+        message: "Purchase not found",
       });
     }
 
     res.status(200).json({
       success: true,
       message:
-        "Transport deleted successfully",
+        "Purchase deleted successfully",
     });
   } catch (error) {
     console.log(error);
@@ -151,12 +149,13 @@ exports.deleteTransport = async (req, res) => {
 };
 
 // ==============================
-// PATCH TRANSPORT
+// PATCH
 // ==============================
-exports.patchTransport = async (req, res) => {
+exports.patchPurchase = async (req, res) => {
   try {
     console.log("BODY =>", req.body);
 
+    // EMPTY BODY CHECK
     if (
       !req.body ||
       Object.keys(req.body).length === 0
@@ -167,29 +166,29 @@ exports.patchTransport = async (req, res) => {
       });
     }
 
-    const transport = await Transport.findById(
+    const purchase = await Purchase.findById(
       req.params.id
     );
 
-    if (!transport) {
+    if (!purchase) {
       return res.status(404).json({
         success: false,
-        message: "Transport not found",
+        message: "Purchase not found",
       });
     }
 
     // UPDATE ONLY SENT FIELDS
     Object.keys(req.body).forEach((key) => {
-      transport[key] = req.body[key];
+      purchase[key] = req.body[key];
     });
 
-    await transport.save();
+    await purchase.save();
 
     res.status(200).json({
       success: true,
       message:
-        "Transport patched successfully",
-      data: transport,
+        "Purchase patched successfully",
+      data: purchase,
     });
   } catch (error) {
     console.log(error);

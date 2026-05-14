@@ -7,6 +7,8 @@ const Food = require("../../models/individual/IndividualFood");
 // ==========================================
 exports.createFood = async (req, res) => {
   try {
+    console.log("BODY =>", req.body);
+
     const food = await Food.create(req.body);
 
     res.status(201).json({
@@ -15,6 +17,8 @@ exports.createFood = async (req, res) => {
       data: food,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: "Failed to create food request",
@@ -38,6 +42,8 @@ exports.getAllFoods = async (req, res) => {
       data: foods,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: "Failed to fetch food requests",
@@ -51,7 +57,8 @@ exports.getAllFoods = async (req, res) => {
 // ==========================================
 exports.getFoodById = async (req, res) => {
   try {
-    const food = await Food.findById(req.params.id).populate("employee");
+    const food = await Food.findById(req.params.id)
+      .populate("employee");
 
     if (!food) {
       return res.status(404).json({
@@ -65,6 +72,8 @@ exports.getFoodById = async (req, res) => {
       data: food,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: "Failed to fetch food request",
@@ -100,6 +109,8 @@ exports.updateFood = async (req, res) => {
       data: food,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: "Failed to update food request",
@@ -113,7 +124,9 @@ exports.updateFood = async (req, res) => {
 // ==========================================
 exports.deleteFood = async (req, res) => {
   try {
-    const food = await Food.findByIdAndDelete(req.params.id);
+    const food = await Food.findByIdAndDelete(
+      req.params.id
+    );
 
     if (!food) {
       return res.status(404).json({
@@ -127,6 +140,8 @@ exports.deleteFood = async (req, res) => {
       message: "Food request deleted successfully",
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: "Failed to delete food request",
@@ -140,6 +155,18 @@ exports.deleteFood = async (req, res) => {
 // ==========================================
 exports.patchFood = async (req, res) => {
   try {
+    console.log("BODY =>", req.body);
+
+    if (
+      !req.body ||
+      Object.keys(req.body).length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Request body is empty",
+      });
+    }
+
     const food = await Food.findById(req.params.id);
 
     if (!food) {
@@ -149,7 +176,7 @@ exports.patchFood = async (req, res) => {
       });
     }
 
-    // update only sent fields
+    // UPDATE ONLY SENT FIELDS
     Object.keys(req.body).forEach((key) => {
       food[key] = req.body[key];
     });
@@ -162,6 +189,8 @@ exports.patchFood = async (req, res) => {
       data: food,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: "Failed to patch food request",

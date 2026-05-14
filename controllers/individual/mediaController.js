@@ -1,18 +1,173 @@
+// controllers/individual/mediaController.js
+
 const IndividualMedia = require("../../models/individual/IndividualMedia");
+
+// ==============================
+// NORMALIZE FILE
+// ==============================
+const normalizeFileReference = (file) => {
+  return {
+    url: file?.path || "",
+    publicId: file?.filename || "",
+  };
+};
+
+// ==============================
+// SAFE ARRAY
+// ==============================
+const makeArray = (value) => {
+  if (!value) return [];
+
+  return Array.isArray(value)
+    ? value
+    : [value];
+};
 
 // ==============================
 // CREATE
 // ==============================
 exports.createIndividualMedia = async (req, res) => {
   try {
-    const media = await IndividualMedia.create(req.body);
+    console.log("BODY =>", req.body);
+    console.log("FILES =>", req.files);
+
+    let body = { ...req.body };
+
+    // ==============================
+    // TYPE OF MEDIA
+    // ==============================
+    body.typeOfMedia = makeArray(
+      body.typeOfMedia
+    );
+
+    // ==============================
+    // POSTER
+    // ==============================
+    body.poster = {
+      posterContent:
+        req.body["poster[posterContent]"] || "",
+
+      certificateContent:
+        req.body["poster[certificateContent]"] || "",
+
+      trophyContent:
+        req.body["poster[trophyContent]"] || "",
+
+      priority:
+        req.body["poster[priority]"] || "Medium",
+
+      specialRequirements:
+        req.body["poster[specialRequirements]"] || "",
+
+      displayNeeded: makeArray(
+        req.body["poster[displayNeeded][]"]
+      ),
+
+      sizes: [],
+
+      deliveryDate:
+        req.body["poster[deliveryDate]"] || null,
+
+      referencePosterFiles: [],
+
+      referenceCertificateFiles: [],
+    };
+
+    // ==============================
+    // SIZES
+    // ==============================
+    if (req.body["poster[sizes][0][type]"]) {
+      body.poster.sizes.push({
+        type:
+          req.body["poster[sizes][0][type]"],
+        value:
+          req.body["poster[sizes][0][value]"],
+      });
+    }
+
+    if (req.body["poster[sizes][1][type]"]) {
+      body.poster.sizes.push({
+        type:
+          req.body["poster[sizes][1][type]"],
+        value:
+          req.body["poster[sizes][1][value]"],
+      });
+    }
+
+    // ==============================
+    // VIDEO
+    // ==============================
+    body.video = {
+      videoContent:
+        req.body["video[videoContent]"] || "",
+
+      priority:
+        req.body["video[priority]"] || "Medium",
+
+      specialRequirements:
+        req.body["video[specialRequirements]"] || "",
+
+      preEventVideos: makeArray(
+        req.body["video[preEventVideos][]"]
+      ),
+
+      eventCoverage: makeArray(
+        req.body["video[eventCoverage][]"]
+      ),
+
+      postEventVideos: makeArray(
+        req.body["video[postEventVideos][]"]
+      ),
+
+      specialVideos: makeArray(
+        req.body["video[specialVideos][]"]
+      ),
+
+      deliveryDate:
+        req.body["video[deliveryDate]"] || null,
+
+      referenceFiles: [],
+    };
+
+    // ==============================
+    // FILES
+    // ==============================
+    if (req.files?.referencePosterFiles) {
+      body.poster.referencePosterFiles =
+        req.files.referencePosterFiles.map(
+          normalizeFileReference
+        );
+    }
+
+    if (req.files?.referenceCertificateFiles) {
+      body.poster.referenceCertificateFiles =
+        req.files.referenceCertificateFiles.map(
+          normalizeFileReference
+        );
+    }
+
+    if (req.files?.referenceFiles) {
+      body.video.referenceFiles =
+        req.files.referenceFiles.map(
+          normalizeFileReference
+        );
+    }
+
+    // ==============================
+    // CREATE
+    // ==============================
+    const media =
+      await IndividualMedia.create(body);
 
     res.status(201).json({
       success: true,
-      message: "Individual media created successfully",
+      message:
+        "Individual media created successfully",
       data: media,
     });
   } catch (error) {
+    console.log("ERROR =>", error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -35,6 +190,8 @@ exports.getAllIndividualMedia = async (req, res) => {
       data: mediaList,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -43,13 +200,13 @@ exports.getAllIndividualMedia = async (req, res) => {
 };
 
 // ==============================
-// GET SINGLE BY ID
+// GET SINGLE
 // ==============================
 exports.getSingleIndividualMedia = async (req, res) => {
   try {
-    const media = await IndividualMedia.findById(req.params.id).populate(
-      "employee"
-    );
+    const media = await IndividualMedia.findById(
+      req.params.id
+    ).populate("employee");
 
     if (!media) {
       return res.status(404).json({
@@ -63,6 +220,8 @@ exports.getSingleIndividualMedia = async (req, res) => {
       data: media,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -93,10 +252,13 @@ exports.updateIndividualMedia = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Individual media updated successfully",
+      message:
+        "Individual media updated successfully",
       data: media,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -109,7 +271,10 @@ exports.updateIndividualMedia = async (req, res) => {
 // ==============================
 exports.deleteIndividualMedia = async (req, res) => {
   try {
-    const media = await IndividualMedia.findByIdAndDelete(req.params.id);
+    const media =
+      await IndividualMedia.findByIdAndDelete(
+        req.params.id
+      );
 
     if (!media) {
       return res.status(404).json({
@@ -120,9 +285,12 @@ exports.deleteIndividualMedia = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Individual media deleted successfully",
+      message:
+        "Individual media deleted successfully",
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -135,7 +303,21 @@ exports.deleteIndividualMedia = async (req, res) => {
 // ==============================
 exports.patchIndividualMedia = async (req, res) => {
   try {
-    const media = await IndividualMedia.findById(req.params.id);
+    console.log("BODY =>", req.body);
+
+    if (
+      !req.body ||
+      Object.keys(req.body).length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Request body is empty",
+      });
+    }
+
+    const media = await IndividualMedia.findById(
+      req.params.id
+    );
 
     if (!media) {
       return res.status(404).json({
@@ -144,7 +326,7 @@ exports.patchIndividualMedia = async (req, res) => {
       });
     }
 
-    // Update only provided fields
+    // UPDATE ONLY SENT FIELDS
     Object.keys(req.body).forEach((key) => {
       media[key] = req.body[key];
     });
@@ -153,129 +335,16 @@ exports.patchIndividualMedia = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Individual media patched successfully",
+      message:
+        "Individual media patched successfully",
       data: media,
     });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
-// CREATE API
-// {
-//   "employee": "664f1d2c9a1234567890abcd",
-//   "dayIndex": 1,
-
-//   "typeOfMedia": ["Poster", "Video"],
-
-//   "poster": {
-//     "posterContent": "Need promotional poster for annual event",
-
-//     "referencePosterFiles": [
-//       {
-//         "fileUrl": "https://example.com/poster1.jpg",
-//         "fileName": "poster1.jpg"
-//       },
-//       {
-//         "fileUrl": "https://example.com/poster2.jpg",
-//         "fileName": "poster2.jpg"
-//       }
-//     ],
-
-//     "certificateContent": "Certificate design for winners",
-
-//     "referenceCertificateFiles": [
-//       {
-//         "fileUrl": "https://example.com/certificate.pdf",
-//         "fileName": "certificate.pdf"
-//       }
-//     ],
-
-//     "trophyContent": "Golden trophy design with company logo",
-
-//     "displayNeeded": [
-//       "Digital Signage",
-//       "Standee",
-//       "Social Media"
-//     ],
-
-//     "sizes": [
-//       {
-//         "type": "Width",
-//         "value": 1920
-//       },
-//       {
-//         "type": "Height",
-//         "value": 1080
-//       },
-//       {
-//         "type": "Banner",
-//         "value": 12
-//       }
-//     ],
-
-//     "deliveryDate": "2026-05-20T00:00:00.000Z",
-
-//     "priority": "High",
-
-//     "specialRequirements": "Use company brand colors and modern style"
-//   },
-
-//   "video": {
-//     "videoContent": "Need event teaser and full coverage video",
-
-//     "preEventVideos": [
-//       "Invitation Video",
-//       "Promo Teaser"
-//     ],
-
-//     "eventCoverage": [
-//       "Stage Performance",
-//       "Audience Reactions",
-//       "Award Ceremony"
-//     ],
-
-//     "postEventVideos": [
-//       "Highlights Video",
-//       "Thank You Video"
-//     ],
-
-//     "specialVideos": [
-//       "CEO Speech Edit",
-//       "Instagram Reel"
-//     ],
-
-//     "referenceFiles": [
-//       {
-//         "fileUrl": "https://example.com/video-reference.mp4",
-//         "fileName": "video-reference.mp4"
-//       }
-//     ],
-
-//     "deliveryDate": "2026-05-25T00:00:00.000Z",
-
-//     "priority": "Urgent",
-
-//     "specialRequirements": "Need cinematic editing with subtitles"
-//   },
-
-//   "status": "Pending"
-// }
-
-// GET
-
-// /api/individual-media
-
-// GET
-
-// /api/individual-media/:id
-
-// PUT
-
-// /api/individual-media/:id
-
-// DELETE
-
-// /api/individual-media/:id

@@ -1,5 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const path = require("path");
+const upload = require("../../middleware/multerConfig");
 
 const {
   createIndividualMedia,
@@ -7,11 +10,23 @@ const {
   getSingleIndividualMedia,
   updateIndividualMedia,
   deleteIndividualMedia,
-  patchIndividualMedia
+  patchIndividualMedia,
 } = require("../../controllers/individual/mediaController");
 
+
+
+// ============================
 // CREATE
-router.post("/", createIndividualMedia);
+// ============================
+router.post(
+  "/create",
+  upload.fields([
+    { name: "referencePosterFiles", maxCount: 10 },
+    { name: "referenceCertificateFiles", maxCount: 10 },
+    { name: "referenceFiles", maxCount: 10 },
+  ]),
+  createIndividualMedia
+);
 
 // GET ALL
 router.get("/", getAllIndividualMedia);
@@ -25,10 +40,7 @@ router.put("/:id", updateIndividualMedia);
 // DELETE
 router.delete("/:id", deleteIndividualMedia);
 
-//patch
-router.patch(
-  "/:id",
-  patchIndividualMedia
-);
+// PATCH
+router.patch("/:id", patchIndividualMedia);
 
 module.exports = router;
