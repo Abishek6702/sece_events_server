@@ -488,16 +488,73 @@ exports.getAllEvents = async (req, res) => {
 
 exports.getEventById = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+    const { id } = req.params;
+    const { module } = req.query;
+
+    let projection = {};
+
+    // ✅ Module based projection
+    if (module) {
+      projection = {
+        requestDetails: 1,
+        status: 1,
+      };
+
+      switch (module) {
+        case "venue":
+          projection["venueDetails"] = 1;
+          break;
+
+        case "icts":
+          projection["ictsDetails"] = 1;
+          break;
+
+        case "audio":
+          projection["audioDetails"] = 1;
+          break;
+
+        case "transport":
+          projection["transportDetails"] = 1;
+          break;
+
+        case "refreshment":
+          projection["refreshmentDetails"] = 1;
+          break;
+
+        case "accommodation":
+          projection["accommodationDetails"] = 1;
+          break;
+
+        case "purchase":
+          projection["purchaseDetails"] = 1;
+          break;
+
+        case "media":
+          projection["mediaRequirementDetails"] = 1;
+          break;
+      }
     }
-    res
-      .status(200)
-      .json({ message: "Event fetched successfully", data: event });
+
+    const event = module
+      ? await Event.findById(id).select(projection)
+      : await Event.findById(id);
+
+    if (!event) {
+      return res.status(404).json({
+        message: "Event not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Event fetched successfully",
+      data: event,
+    });
   } catch (error) {
     console.error("Error fetching event:", error);
-    res.status(500).json({ message: "Server error" });
+
+    res.status(500).json({
+      message: "Server error",
+    });
   }
 };
 

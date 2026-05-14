@@ -748,14 +748,21 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/events/6a05532560b052b1fe18c0b4",
+              "raw": "{{base_url}}/api/events/6a0592ce9b480c88c21860ab?module=transport",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "events",
-                "6a05532560b052b1fe18c0b4"
+                "6a0592ce9b480c88c21860ab"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "transport",
+                  "type": "text"
+                }
               ]
             }
           },
@@ -1185,6 +1192,161 @@
                   "type": "text",
                   "disabled": true
                 }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "IndividualMedia",
+      "item": [
+        {
+          "name": "Media",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"employee\": \"664f1d2c9a1234567890abcd\",\r\n  \"dayIndex\": 1,\r\n\r\n  \"typeOfMedia\": [\"Poster\", \"Video\"],\r\n\r\n  \"poster\": {\r\n    \"posterContent\": \"Need promotional poster for annual event\",\r\n\r\n    \"referencePosterFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster1.jpg\",\r\n        \"fileName\": \"poster1.jpg\"\r\n      },\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster2.jpg\",\r\n        \"fileName\": \"poster2.jpg\"\r\n      }\r\n    ],\r\n\r\n    \"certificateContent\": \"Certificate design for winners\",\r\n\r\n    \"referenceCertificateFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/certificate.pdf\",\r\n        \"fileName\": \"certificate.pdf\"\r\n      }\r\n    ],\r\n\r\n    \"trophyContent\": \"Golden trophy design with company logo\",\r\n\r\n    \"displayNeeded\": [\r\n      \"Digital Signage\",\r\n      \"Standee\",\r\n      \"Social Media\"\r\n    ],\r\n\r\n    \"sizes\": [\r\n      {\r\n        \"type\": \"Width\",\r\n        \"value\": 1920\r\n      },\r\n      {\r\n        \"type\": \"Height\",\r\n        \"value\": 1080\r\n      },\r\n      {\r\n        \"type\": \"Banner\",\r\n        \"value\": 12\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-20T00:00:00.000Z\",\r\n\r\n    \"priority\": \"High\",\r\n\r\n    \"specialRequirements\": \"Use company brand colors and modern style\"\r\n  },\r\n\r\n  \"video\": {\r\n    \"videoContent\": \"Need event teaser and full coverage video\",\r\n\r\n    \"preEventVideos\": [\r\n      \"Invitation Video\",\r\n      \"Promo Teaser\"\r\n    ],\r\n\r\n    \"eventCoverage\": [\r\n      \"Stage Performance\",\r\n      \"Audience Reactions\",\r\n      \"Award Ceremony\"\r\n    ],\r\n\r\n    \"postEventVideos\": [\r\n      \"Highlights Video\",\r\n      \"Thank You Video\"\r\n    ],\r\n\r\n    \"specialVideos\": [\r\n      \"CEO Speech Edit\",\r\n      \"Instagram Reel\"\r\n    ],\r\n\r\n    \"referenceFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/video-reference.mp4\",\r\n        \"fileName\": \"video-reference.mp4\"\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-25T00:00:00.000Z\",\r\n\r\n    \"priority\": \"Urgent\",\r\n\r\n    \"specialRequirements\": \"Need cinematic editing with subtitles\"\r\n  },\r\n\r\n  \"status\": \"Pending\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/individual-media",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "individual-media"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "individual-media",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/individual-media",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "individual-media"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "individual-mediasingle",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5005/api/individual-media/6a0422f69722b1ad7987d3cb",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "individual-media",
+                "6a0422f69722b1ad7987d3cb"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"employee\": \"664f1d2c9a1234567890abcd\",\r\n  \"dayIndex\": 1,\r\n\r\n  \"typeOfMedia\": [\"Poster\", \"Video\"],\r\n\r\n  \"poster\": {\r\n    \"posterContent\": \"Need promotional poster for annual eventsssss\",\r\n\r\n    \"referencePosterFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster1.jpg\",\r\n        \"fileName\": \"poster1.jpg\"\r\n      },\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster2.jpg\",\r\n        \"fileName\": \"poster2.jpg\"\r\n      }\r\n    ],\r\n\r\n    \"certificateContent\": \"Certificate design for winners\",\r\n\r\n    \"referenceCertificateFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/certificate.pdf\",\r\n        \"fileName\": \"certificate.pdf\"\r\n      }\r\n    ],\r\n\r\n    \"trophyContent\": \"Golden trophy design with company logo\",\r\n\r\n    \"displayNeeded\": [\r\n      \"Digital Signage\",\r\n      \"Standee\",\r\n      \"Social Media\"\r\n    ],\r\n\r\n    \"sizes\": [\r\n      {\r\n        \"type\": \"Width\",\r\n        \"value\": 1920\r\n      },\r\n      {\r\n        \"type\": \"Height\",\r\n        \"value\": 1080\r\n      },\r\n      {\r\n        \"type\": \"Banner\",\r\n        \"value\": 12\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-20T00:00:00.000Z\",\r\n\r\n    \"priority\": \"High\",\r\n\r\n    \"specialRequirements\": \"Use company brand colors and modern style\"\r\n  },\r\n\r\n  \"video\": {\r\n    \"videoContent\": \"Need event teaser and full coverage video\",\r\n\r\n    \"preEventVideos\": [\r\n      \"Invitation Video\",\r\n      \"Promo Teaser\"\r\n    ],\r\n\r\n    \"eventCoverage\": [\r\n      \"Stage Performance\",\r\n      \"Audience Reactions\",\r\n      \"Award Ceremony\"\r\n    ],\r\n\r\n    \"postEventVideos\": [\r\n      \"Highlights Video\",\r\n      \"Thank You Video\"\r\n    ],\r\n\r\n    \"specialVideos\": [\r\n      \"CEO Speech Edit\",\r\n      \"Instagram Reel\"\r\n    ],\r\n\r\n    \"referenceFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/video-reference.mp4\",\r\n        \"fileName\": \"video-reference.mp4\"\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-25T00:00:00.000Z\",\r\n\r\n    \"priority\": \"Urgent\",\r\n\r\n    \"specialRequirements\": \"Need cinematic editing with subtitles\"\r\n  },\r\n\r\n  \"status\": \"Pending\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/individual-media/6a0422f69722b1ad7987d3cb",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "individual-media",
+                "6a0422f69722b1ad7987d3cb"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"employee\": \"664f1d2c9a1234567890abcd\",\r\n  \"dayIndex\": 1,\r\n\r\n  \"typeOfMedia\": [\"Poster\", \"Video\"],\r\n\r\n  \"poster\": {\r\n    \"posterContent\": \"Need promotional poster for annual eventsssss\",\r\n\r\n    \"referencePosterFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster1.jpg\",\r\n        \"fileName\": \"poster1.jpg\"\r\n      },\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster2.jpg\",\r\n        \"fileName\": \"poster2.jpg\"\r\n      }\r\n    ],\r\n\r\n    \"certificateContent\": \"Certificate design for winners\",\r\n\r\n    \"referenceCertificateFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/certificate.pdf\",\r\n        \"fileName\": \"certificate.pdf\"\r\n      }\r\n    ],\r\n\r\n    \"trophyContent\": \"Golden trophy design with company logo\",\r\n\r\n    \"displayNeeded\": [\r\n      \"Digital Signage\",\r\n      \"Standee\",\r\n      \"Social Media\"\r\n    ],\r\n\r\n    \"sizes\": [\r\n      {\r\n        \"type\": \"Width\",\r\n        \"value\": 1920\r\n      },\r\n      {\r\n        \"type\": \"Height\",\r\n        \"value\": 1080\r\n      },\r\n      {\r\n        \"type\": \"Banner\",\r\n        \"value\": 12\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-20T00:00:00.000Z\",\r\n\r\n    \"priority\": \"High\",\r\n\r\n    \"specialRequirements\": \"Use company brand colors and modern style\"\r\n  },\r\n\r\n  \"video\": {\r\n    \"videoContent\": \"Need event teaser and full coverage video\",\r\n\r\n    \"preEventVideos\": [\r\n      \"Invitation Video\",\r\n      \"Promo Teaser\"\r\n    ],\r\n\r\n    \"eventCoverage\": [\r\n      \"Stage Performance\",\r\n      \"Audience Reactions\",\r\n      \"Award Ceremony\"\r\n    ],\r\n\r\n    \"postEventVideos\": [\r\n      \"Highlights Video\",\r\n      \"Thank You Video\"\r\n    ],\r\n\r\n    \"specialVideos\": [\r\n      \"CEO Speech Edit\",\r\n      \"Instagram Reel\"\r\n    ],\r\n\r\n    \"referenceFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/video-reference.mp4\",\r\n        \"fileName\": \"video-reference.mp4\"\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-25T00:00:00.000Z\",\r\n\r\n    \"priority\": \"Urgent\",\r\n\r\n    \"specialRequirements\": \"Need cinematic editing with subtitles\"\r\n  },\r\n\r\n  \"status\": \"Pending\"\r\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/individual-media/6a0422f69722b1ad7987d3cb",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "individual-media",
+                "6a0422f69722b1ad7987d3cb"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"employee\": \"664f1d2c9a1234567890abcd\",\r\n  \"dayIndex\": 1,\r\n\r\n  \"typeOfMedia\": [\"Poster\", \"Video\"],\r\n\r\n  \"poster\": {\r\n    \"posterContent\": \"Need promotional poster for annual eventsssss\",\r\n\r\n    \"referencePosterFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster1.jpg\",\r\n        \"fileName\": \"poster1.jpg\"\r\n      },\r\n      {\r\n        \"fileUrl\": \"https://example.com/poster2.jpg\",\r\n        \"fileName\": \"poster2.jpg\"\r\n      }\r\n    ],\r\n\r\n    \"certificateContent\": \"Certificate design for winners\",\r\n\r\n    \"referenceCertificateFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/certificate.pdf\",\r\n        \"fileName\": \"certificate.pdf\"\r\n      }\r\n    ],\r\n\r\n    \"trophyContent\": \"Golden trophy design with company logo\",\r\n\r\n    \"displayNeeded\": [\r\n      \"Digital Signage\",\r\n      \"Standee\",\r\n      \"Social Media\"\r\n    ],\r\n\r\n    \"sizes\": [\r\n      {\r\n        \"type\": \"Width\",\r\n        \"value\": 1920\r\n      },\r\n      {\r\n        \"type\": \"Height\",\r\n        \"value\": 1080\r\n      },\r\n      {\r\n        \"type\": \"Banner\",\r\n        \"value\": 12\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-20T00:00:00.000Z\",\r\n\r\n    \"priority\": \"High\",\r\n\r\n    \"specialRequirements\": \"Use company brand colors and modern style\"\r\n  },\r\n\r\n  \"video\": {\r\n    \"videoContent\": \"Need event teaser and full coverage video\",\r\n\r\n    \"preEventVideos\": [\r\n      \"Invitation Video\",\r\n      \"Promo Teaser\"\r\n    ],\r\n\r\n    \"eventCoverage\": [\r\n      \"Stage Performance\",\r\n      \"Audience Reactions\",\r\n      \"Award Ceremony\"\r\n    ],\r\n\r\n    \"postEventVideos\": [\r\n      \"Highlights Video\",\r\n      \"Thank You Video\"\r\n    ],\r\n\r\n    \"specialVideos\": [\r\n      \"CEO Speech Edit\",\r\n      \"Instagram Reel\"\r\n    ],\r\n\r\n    \"referenceFiles\": [\r\n      {\r\n        \"fileUrl\": \"https://example.com/video-reference.mp4\",\r\n        \"fileName\": \"video-reference.mp4\"\r\n      }\r\n    ],\r\n\r\n    \"deliveryDate\": \"2026-05-25T00:00:00.000Z\",\r\n\r\n    \"priority\": \"Urgent\",\r\n\r\n    \"specialRequirements\": \"Need cinematic editing with subtitles\"\r\n  },\r\n\r\n  \"status\": \"Pending\"\r\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/individual-media/6a0422f69722b1ad7987d3cb",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "individual-media",
+                "6a0422f69722b1ad7987d3cb"
               ]
             }
           },
