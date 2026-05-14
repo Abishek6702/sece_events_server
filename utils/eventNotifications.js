@@ -12,18 +12,26 @@ const DEPARTMENT_HEAD_ROLES = {
   accommodation: "Accommodation Coordinator",
   purchase: "Purchase Coordinator",
   media: "Media Coordinator",
+
+  poster: "Poster Coordinator",
+  video: "Video Coordinator",
 };
 
 /**
  * Get Super Admin email
  */
-const getSuperAdminEmail = async () => {
+const getSuperAdminEmails = async () => {
   try {
-    const superAdmin = await User.findOne({ isadmin: true }).select("email");
-    return superAdmin?.email || process.env.SUPER_ADMIN_EMAIL;
+    const superAdmins = await User.find({
+      isadmin: true,
+      role: { $in: ["super admin 1", "super admin 2"] }
+    }).select("email");
+
+    return superAdmins.map(admin => admin.email);
+
   } catch (error) {
-    console.error("Error fetching super admin:", error);
-    return process.env.SUPER_ADMIN_EMAIL;
+    console.error("Error fetching super admins:", error);
+    return [];
   }
 };
 
@@ -115,19 +123,16 @@ const getAllDepartmentHeadEmails = async (event) => {
       "audio",
       "icts",
       "transport",
-      "accommodationRequired",
-      "mediaRequired",
+      "accommodation",
+      "media",
       "food",
       "purchase",
+      "poster",
+      "video",
     ];
 
     for (const deptType of departmentTypes) {
-      const key = deptType === "accommodationRequired" ? "accommodation" :
-                  deptType === "mediaRequired" ? "media" :
-                  deptType === "transportRequired" ? "transport" :
-                  deptType === "ictsRequired" ? "icts" :
-                  deptType === "audioRequired" ? "audio" :
-                  deptType;
+      const key = deptType;
 
       const isRequired = requirements[`${key}Required`] === true ||
                        requirements[`${key}Required`] === "true" ||
@@ -170,9 +175,9 @@ const notifyEventCreation = async (event) => {
     // Get all recipient emails
     const organizersEmails = getOrganizersEmails(event);
     const hodEmail = await getHODEmail(organizingDepartment);
-    const superAdminEmail = await getSuperAdminEmail();
+    const superAdminEmails = await getSuperAdminEmails();
 
-    const recipients = [...new Set([...organizersEmails, hodEmail, superAdminEmail].filter(Boolean))];
+    const recipients = [...new Set([...organizersEmails, hodEmail,  ...superAdminEmails].filter(Boolean))];
 
     // Send to all recipients
     for (const email of recipients) {
@@ -254,10 +259,10 @@ const notifyAdminApproval = async (event) => {
     });
 
     const organizersEmails = getOrganizersEmails(event);
-    const superAdminEmail = await getSuperAdminEmail();
+    const superAdminEmails = await getSuperAdminEmails();
     const departmentHeadEmails = departmentHeadsList.map(d => d.email);
 
-    const recipients = [...new Set([...organizersEmails, superAdminEmail, ...departmentHeadEmails].filter(Boolean))];
+    const recipients = [...new Set([...organizersEmails,  ...superAdminEmails, ...departmentHeadEmails].filter(Boolean))];
 
     for (const email of recipients) {
       try {
@@ -377,11 +382,11 @@ const notifyEventClosure = async (event, closureReason = "") => {
 
     const organizersEmails = getOrganizersEmails(event);
     const hodEmail = await getHODEmail(organizingDepartment);
-    const superAdminEmail = await getSuperAdminEmail();
+    const superAdminEmails = await getSuperAdminEmails();
     const departmentHeadsList = await getAllDepartmentHeadEmails(event);
     const departmentHeadEmails = departmentHeadsList.map(d => d.email);
 
-    const recipients = [...new Set([...organizersEmails, hodEmail, superAdminEmail, ...departmentHeadEmails].filter(Boolean))];
+    const recipients = [...new Set([...organizersEmails, hodEmail,  ...superAdminEmails, ...departmentHeadEmails].filter(Boolean))];
 
     for (const email of recipients) {
       try {
@@ -408,7 +413,7 @@ module.exports = {
   notifyDepartmentHeads,
   notifyEventRejection,
   notifyEventClosure,
-  getSuperAdminEmail,
+  getSuperAdminEmails,
   getHODEmail,
   getDepartmentHeadEmail,
   getOrganizersEmails,
