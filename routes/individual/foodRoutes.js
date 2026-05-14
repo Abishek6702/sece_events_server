@@ -4,7 +4,7 @@ const express = require("express");
 
 const router = express.Router();
 
-const foodController = require("../controllers/foodController");
+const foodController = require("../../controllers/individual/foodController");
 
 // CREATE
 router.post(

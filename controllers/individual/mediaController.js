@@ -1,5 +1,4 @@
-const IndividualMedia = require("../models/IndividualMedia");
-require("../models/Faculty");
+const IndividualMedia = require("../../models/individual/IndividualMedia");
 
 // ==============================
 // CREATE

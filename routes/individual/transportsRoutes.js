@@ -8,7 +8,7 @@ const {
   updateTransport,
   deleteTransport,
   patchTransport
-} = require("../controllers/transportController");
+} = require("../../controllers/individual/transportController");
 
 // CREATE
 router.post("/", createTransport);
