@@ -1945,6 +1945,105 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Feedback",
+      "item": [
+        {
+          "name": "Create Feedback",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"eventId\": \"6a06bcd99b582499da88448f\",\r\n  \"organizerId\": \"6a0411af4579d3137b255e73\",\r\n  \"sections\": [\r\n    {\r\n      \"sectionKey\": \"venue\",\r\n      \"sectionTitle\": \"Venue Management\",\r\n      \"rating\": 5,\r\n      \"ratingLabel\": \"Excellent\",\r\n      \"comment\": \"Hall arrangement was very good\"\r\n    },\r\n    {\r\n      \"sectionKey\": \"audio\",\r\n      \"sectionTitle\": \"Audio System\",\r\n      \"rating\": 3,\r\n      \"ratingLabel\": \"Neutral\",\r\n      \"comment\": \"Mic issue happened once\"\r\n    },\r\n    {\r\n      \"sectionKey\": \"food\",\r\n      \"sectionTitle\": \"Food & Refreshment\",\r\n      \"rating\": 4,\r\n      \"ratingLabel\": \"Positive\",\r\n      \"comment\": \"Food quality was nice\"\r\n    }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/feedback",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "feedback"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete feedback",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/feedback/6a0a9b123a3fc2e4c9af917d",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "feedback",
+                "6a0a9b123a3fc2e4c9af917d"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get feedback by id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/feedback/6a0a9b6f3a3fc2e4c9af917f",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "feedback",
+                "6a0a9b6f3a3fc2e4c9af917f"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get feedback by event id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/feedback/event/6a06bcd99b582499da88448f",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "feedback",
+                "event",
+                "6a06bcd99b582499da88448f"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

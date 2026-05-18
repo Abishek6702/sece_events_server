@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const departmentStatusSchema = new mongoose.Schema({
   status: {
     type: String,
-    enum: ["Acknowledged", "Pending for Acknowledge","Completed"],
+    enum: ["Acknowledged", "Pending for Acknowledge", "Completed"],
     default: "Pending for Acknowledge",
   },
   remarks: { type: String },
@@ -409,7 +409,7 @@ const purchaseSchema = new mongoose.Schema(
 
               voucher: [
                 {
-                  voucherWorth  : String,
+                  voucherWorth: String,
                   quantity: Number,
                 },
               ],
@@ -550,6 +550,12 @@ const eventSchema = new mongoose.Schema(
       ],
       default: "Draft",
     },
+    feedbacks: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Feedback",
+      },
+    ],
   },
   { timestamps: true },
 );
