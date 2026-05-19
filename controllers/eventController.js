@@ -741,6 +741,31 @@ exports.updateEventStatus = async (req, res) => {
 
         break;
       }
+      case "adminCancel": {
+        if (!module) {
+          return res.status(400).json({
+            message: "Module is required for admin cancellation",
+          });
+        }
+
+        const path = moduleMap[module];
+
+        if (!path) {
+          return res.status(400).json({ message: "Invalid module" });
+        }
+
+        if (!event[path]) {
+          event[path] = {};
+        }
+
+        if (!event[path].status) {
+          event[path].status = {};
+        }
+
+        event[path].status.status = "Admin Cancelled";
+
+        break;
+      }
       case "complete": {
         if (!module) {
           return res.status(400).json({
@@ -767,6 +792,7 @@ exports.updateEventStatus = async (req, res) => {
 
         break;
       }
+
       default:
         return res.status(400).json({ message: "Invalid action" });
     }
@@ -783,14 +809,12 @@ exports.updateEventStatus = async (req, res) => {
   }
 };
 
-
-
 exports.getRequirementDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
     const event = await Event.findById(id).select(
-      "requestDetails.requirementDetails"
+      "requestDetails.requirementDetails",
     );
 
     if (!event) {
@@ -802,8 +826,7 @@ exports.getRequirementDetails = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      requirementDetails:
-        event.requestDetails?.requirementDetails || {},
+      requirementDetails: event.requestDetails?.requirementDetails || {},
     });
   } catch (error) {
     console.error("Error fetching requirement details:", error);
@@ -814,5 +837,3 @@ exports.getRequirementDetails = async (req, res) => {
     });
   }
 };
-
-;
