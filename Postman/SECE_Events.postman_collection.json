@@ -1109,6 +1109,26 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "get draft per user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/events/draft/6a0411af4579d3137b255e73",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "draft",
+                "6a0411af4579d3137b255e73"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },

@@ -837,3 +837,44 @@ exports.getRequirementDetails = async (req, res) => {
     });
   }
 };
+
+// Get draft event for a particular user
+exports.getUserDraftEvents = async (req, res) => {
+  try {
+    const { organizerId } = req.params;
+
+    const draftEvents = await Event.find({
+      organizerId,
+      status: "Draft",
+      isSubmitted: false,
+    }).sort({ updatedAt: -1 });
+
+    // no drafts found
+    if (!draftEvents || draftEvents.length === 0) {
+      return res.status(200).json({
+        success: true,
+        hasDrafts: false,
+        totalDrafts: 0,
+        message: "No draft events found",
+        data: [],
+      });
+    }
+
+    // drafts found
+    return res.status(200).json({
+      success: true,
+      hasDrafts: true,
+      totalDrafts: draftEvents.length,
+      message: "Draft events fetched successfully",
+      data: draftEvents,
+    });
+  } catch (error) {
+    console.error("Get Draft Events Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
