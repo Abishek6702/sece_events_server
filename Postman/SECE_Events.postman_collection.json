@@ -1065,7 +1065,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"adminApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n// {\r\n//   \"action\": \"close\"\r\n// }\r\n// {\r\n//   \"action\": \"acknowledge\",\r\n//   \"module\": \"media\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n{\r\n  \"action\": \"complete\",\r\n  \"module\": \"venue\",\r\n  \"remarks\": \"Poster allocated\"\r\n}",
+              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"adminApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n// {\r\n//   \"action\": \"close\"\r\n// }\r\n// {\r\n//   \"action\": \"acknowledge\",\r\n//   \"module\": \"media\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"complete\",\r\n//   \"module\": \"venue\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n{\r\n  \"action\": \"adminCancel\",\r\n  \"module\": \"icts\"\r\n\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1073,14 +1073,14 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/events/69f2ddff5a25d78e78399737/status",
+              "raw": "{{base_url}}/api/events/6a0be29b08091831920e1cf4/status",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "events",
-                "69f2ddff5a25d78e78399737",
+                "6a0be29b08091831920e1cf4",
                 "status"
               ]
             }
