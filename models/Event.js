@@ -3,7 +3,12 @@ const mongoose = require("mongoose");
 const departmentStatusSchema = new mongoose.Schema({
   status: {
     type: String,
-    enum: ["Acknowledged", "Pending for Acknowledge", "Completed","Admin Cancelled"],
+    enum: [
+      "Acknowledged",
+      "Pending for Acknowledge",
+      "Completed",
+      "Admin Cancelled",
+    ],
     default: "Pending for Acknowledge",
   },
   remarks: { type: String },
@@ -487,6 +492,58 @@ const mediaRequirementSchema = new mongoose.Schema(
           priority: String,
 
           specialRequirements: String,
+          //default staff if wnat changed and updated
+          staff: [
+            {
+              facultyId: {
+                type: mongoose.Types.ObjectId,
+                ref: "Faculty",
+              },
+              name: String,
+              email: String,
+            },
+          ],
+          staffChangeRequest: {
+            requested: {
+              type: Boolean,
+              default: false,
+            },
+          
+            requestedStaff: [
+              {
+                facultyId: {
+                  type: mongoose.Types.ObjectId,
+                  ref: "Faculty",
+                },
+                name: String,
+                email: String,
+              },
+            ],
+          
+            staffChangeStatus: {
+              type: String,
+              enum: [
+                "Pending",
+                "Approved",
+                "Rejected",
+                "Not Requested",
+              ],
+              default: "Not Requested",
+            },
+          
+            staffChangeReason: String,
+          
+            rejectReason: String,
+          
+            approvedAt: Date,
+          },
+          status: {
+            type: String,
+            enum: ["Pending for Acknowledge", "Acknowledged", "Completed"],
+            default: "Pending for Acknowledge",
+          },
+
+       
         },
 
         video: {
@@ -503,10 +560,61 @@ const mediaRequirementSchema = new mongoose.Schema(
           priority: String,
 
           specialRequirements: String,
+          //default staff if wnat changed and updated
+          staff: [
+            {
+              facultyId: {
+                type: mongoose.Types.ObjectId,
+                ref: "Faculty",
+              },
+              name: String,
+              email: String,
+            },
+          ],
+          staffChangeRequest: {
+            requested: {
+              type: Boolean,
+              default: false,
+            },
+          
+            requestedStaff: [
+              {
+                facultyId: {
+                  type: mongoose.Types.ObjectId,
+                  ref: "Faculty",
+                },
+                name: String,
+                email: String,
+              },
+            ],
+          
+            staffChangeStatus: {
+              type: String,
+              enum: [
+                "Pending",
+                "Approved",
+                "Rejected",
+                "Not Requested",
+              ],
+              default: "Not Requested",
+            },
+          
+            staffChangeReason: String,
+          
+            rejectReason: String,
+          
+            approvedAt: Date,
+          },
+          status: {
+            type: String,
+            enum: ["Pending for Acknowledge", "Acknowledged", "Completed"],
+            default: "Pending for Acknowledge",
+          },
+          remarks: String,
         },
       },
     ],
-    status: departmentStatusSchema,
+    
   },
   { _id: false },
 );

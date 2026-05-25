@@ -9,6 +9,9 @@ const {
 } = require("../utils/eventNotifications.js");
 require("dotenv").config();
 const mongoose = require("mongoose");
+const {
+  allocateDefaultMediaStaff,
+} = require("../utils/mediaStaffAllocation");
 
 const deepParse = (data) => {
   if (typeof data === "string") {
@@ -661,7 +664,7 @@ exports.getFilteredEvents = async (req, res) => {
 exports.updateEventStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { action, module, remarks, reason } = req.body;
+    const { action, module, mediaType, remarks, reason } = req.body;
 
     const event = await Event.findById(id);
 
@@ -698,6 +701,7 @@ exports.updateEventStatus = async (req, res) => {
       case "adminApprove":
         event.adminApproval = true;
         event.status = "Approved";
+        await allocateDefaultMediaStaff(event);
         // 📧 Send notification for admin approval and to department heads
         await notifyAdminApproval(event);
         await notifyDepartmentHeads(event);
@@ -732,12 +736,25 @@ exports.updateEventStatus = async (req, res) => {
           event[path] = {};
         }
 
-        if (!event[path].status) {
-          event[path].status = {};
+        if (module === "media") {
+          if (!mediaType || !["poster", "video"].includes(mediaType)) {
+            return res.status(400).json({
+              message: "Valid mediaType is required for media module",
+            });
+          }
+        
+          event[path].mediaRequirements.forEach((media) => {
+            media[mediaType].status = "Acknowledged";
+            media[mediaType].remarks = remarks || "";
+          });
+        } else {
+          if (!event[path].status) {
+            event[path].status = {};
+          }
+        
+          event[path].status.status = "Acknowledged";
+          event[path].status.remarks = remarks || "";
         }
-
-        event[path].status.status = "Acknowledged";
-        event[path].status.remarks = remarks || "";
 
         break;
       }
@@ -758,11 +775,23 @@ exports.updateEventStatus = async (req, res) => {
           event[path] = {};
         }
 
-        if (!event[path].status) {
-          event[path].status = {};
+        if (module === "media") {
+          if (!mediaType || !["poster", "video"].includes(mediaType)) {
+            return res.status(400).json({
+              message: "Valid mediaType is required for media module",
+            });
+          }
+        
+          event[path].mediaRequirements.forEach((media) => {
+            media[mediaType].status = "Admin Cancelled";
+          });
+        } else {
+          if (!event[path].status) {
+            event[path].status = {};
+          }
+        
+          event[path].status.status = "Admin Cancelled";
         }
-
-        event[path].status.status = "Admin Cancelled";
 
         break;
       }
@@ -783,12 +812,25 @@ exports.updateEventStatus = async (req, res) => {
           event[path] = {};
         }
 
-        if (!event[path].status) {
-          event[path].status = {};
+        if (module === "media") {
+          if (!mediaType || !["poster", "video"].includes(mediaType)) {
+            return res.status(400).json({
+              message: "Valid mediaType is required for media module",
+            });
+          }
+        
+          event[path].mediaRequirements.forEach((media) => {
+            media[mediaType].status = "Completed";
+            media[mediaType].remarks = remarks || "";
+          });
+        } else {
+          if (!event[path].status) {
+            event[path].status = {};
+          }
+        
+          event[path].status.status = "Completed";
+          event[path].status.remarks = remarks || "";
         }
-
-        event[path].status.status = "Completed";
-        event[path].status.remarks = remarks || "";
 
         break;
       }
@@ -875,6 +917,68 @@ exports.getUserDraftEvents = async (req, res) => {
       success: false,
       message: "Server Error",
       error: error.message,
+    });
+  }
+};
+
+
+exports.requestMediaStaffChange = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      mediaType,
+      requestedStaff,
+      reason,
+    } = req.body;
+
+    const event = await Event.findById(id);
+
+    if (!event) {
+      return res.status(404).json({
+        message: "Event not found",
+      });
+    }
+
+    if (
+      !mediaType ||
+      !["poster", "video"].includes(mediaType)
+    ) {
+      return res.status(400).json({
+        message: "Valid mediaType is required",
+      });
+    }
+
+    event.mediaRequirementDetails.mediaRequirements.forEach(
+      (media) => {
+
+        media[mediaType].staffChangeRequest = {
+          requested: true,
+
+          requestedStaff,
+
+          staffChangeStatus: "Pending",
+
+          staffChangeReason: reason,
+
+          rejectReason: "",
+
+          approvedAt: null,
+        };
+      }
+    );
+
+    await event.save();
+
+    res.status(200).json({
+      message: `${mediaType} staff change requested successfully`,
+      data: event,
+    });
+  } catch (error) {
+    console.error("Staff change request error:", error);
+
+    res.status(500).json({
+      message: "Server error",
     });
   }
 };
