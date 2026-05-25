@@ -684,6 +684,31 @@ exports.updateEventStatus = async (req, res) => {
 
         break;
       }
+      case "adminCancel": {
+        if (!module) {
+          return res.status(400).json({
+            message: "Module is required for admin cancellation",
+          });
+        }
+
+        const path = moduleMap[module];
+
+        if (!path) {
+          return res.status(400).json({ message: "Invalid module" });
+        }
+
+        if (!event[path]) {
+          event[path] = {};
+        }
+
+        if (!event[path].status) {
+          event[path].status = {};
+        }
+
+        event[path].status.status = "Admin Cancelled";
+
+        break;
+      }
       case "complete": {
         if (!module) {
           return res.status(400).json({
@@ -710,6 +735,7 @@ exports.updateEventStatus = async (req, res) => {
 
         break;
       }
+
       default:
         return res.status(400).json({ message: "Invalid action" });
     }
@@ -726,14 +752,12 @@ exports.updateEventStatus = async (req, res) => {
   }
 };
 
-
-
 exports.getRequirementDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
     const event = await Event.findById(id).select(
-      "requestDetails.requirementDetails"
+      "requestDetails.requirementDetails",
     );
 
     if (!event) {
@@ -745,8 +769,7 @@ exports.getRequirementDetails = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      requirementDetails:
-        event.requestDetails?.requirementDetails || {},
+      requirementDetails: event.requestDetails?.requirementDetails || {},
     });
   } catch (error) {
     console.error("Error fetching requirement details:", error);
@@ -758,4 +781,43 @@ exports.getRequirementDetails = async (req, res) => {
   }
 };
 
-;
+// Get draft event for a particular user
+exports.getUserDraftEvents = async (req, res) => {
+  try {
+    const { organizerId } = req.params;
+
+    const draftEvents = await Event.find({
+      organizerId,
+      status: "Draft",
+      isSubmitted: false,
+    }).sort({ updatedAt: -1 });
+
+    // no drafts found
+    if (!draftEvents || draftEvents.length === 0) {
+      return res.status(200).json({
+        success: true,
+        hasDrafts: false,
+        totalDrafts: 0,
+        message: "No draft events found",
+        data: [],
+      });
+    }
+
+    // drafts found
+    return res.status(200).json({
+      success: true,
+      hasDrafts: true,
+      totalDrafts: draftEvents.length,
+      message: "Draft events fetched successfully",
+      data: draftEvents,
+    });
+  } catch (error) {
+    console.error("Get Draft Events Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
