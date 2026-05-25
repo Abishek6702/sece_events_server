@@ -1065,7 +1065,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"adminApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n// {\r\n//   \"action\": \"close\"\r\n// }\r\n// {\r\n//   \"action\": \"acknowledge\",\r\n//   \"module\": \"media\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"complete\",\r\n//   \"module\": \"venue\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n{\r\n  \"action\": \"adminCancel\",\r\n  \"module\": \"icts\"\r\n\r\n}",
+              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n{\r\n  \"action\": \"adminApprove\"\r\n}\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n// {\r\n//   \"action\": \"close\"\r\n// }\r\n// {\r\n//   \"action\": \"acknowledge\",\r\n//   \"module\": \"media\",\r\n// \"mediaType\": \"poster\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"complete\",\r\n//   \"module\": \"venue\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"adminCancel\",\r\n//   \"module\": \"icts\"\r\n\r\n// }",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1073,14 +1073,14 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/events/6a0be29b08091831920e1cf4/status",
+              "raw": "{{base_url}}/api/events/6a13fe668b1d51ee41e44d3d/status",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "events",
-                "6a0be29b08091831920e1cf4",
+                "6a13fe668b1d51ee41e44d3d",
                 "status"
               ]
             }
@@ -1125,6 +1125,70 @@
                 "events",
                 "draft",
                 "6a0411af4579d3137b255e73"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "staff-change-request",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "// {\r\n//   \"mediaType\": \"poster\",\r\n//   \"reason\": \"Assigned staff unavailable\",\r\n//   \"requestedStaff\": [\r\n//     {\r\n//       \"facultyId\": \"6a0416084579d3137b255e8f\",\r\n//       \"name\": \"Poster Admin1\",\r\n//       \"email\": \"code.with.nishanth031@gmail.com\"\r\n//     }\r\n//   ]\r\n// }\r\n\r\n{\r\n  \"mediaType\": \"video\",\r\n  \"reason\": \"Assigned staff unavailable\",\r\n  \"requestedStaff\": [\r\n    {\r\n      \"facultyId\": \"6a0416c14579d3137b255e91\",\r\n      \"name\": \"Video Admin1\",\r\n      \"email\": \"video1@gmail.com\"\r\n    }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/media-staff-change/6a13fe668b1d51ee41e44d3d/staff-change-request",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "media-staff-change",
+                "6a13fe668b1d51ee41e44d3d",
+                "staff-change-request"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "staff-change-action",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "// {\r\n//   \"mediaType\": \"poster\",\r\n//   \"action\": \"approve\"\r\n// }\r\n\r\n{\r\n  \"mediaType\": \"video\",\r\n  \"action\": \"reject\",\r\n  \"rejectReason\": \"Video staff unavailablehjhgtgjhyj\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/media-staff-change/6a13fe668b1d51ee41e44d3d/staff-change-action",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "media-staff-change",
+                "6a13fe668b1d51ee41e44d3d",
+                "staff-change-action"
               ]
             }
           },
