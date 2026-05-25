@@ -11,6 +11,8 @@ const {
   updateIndividualMedia,
   deleteIndividualMedia,
   patchIndividualMedia,
+  getPosterDashboard,
+  getVideoDashboard,
 } = require("../../controllers/individual/mediaController");
 
 
@@ -42,5 +44,18 @@ router.delete("/:id", deleteIndividualMedia);
 
 // PATCH
 router.patch("/:id", patchIndividualMedia);
+
+//dashboard
+// POSTER
+router.get(
+  "/poster",
+  getPosterDashboard
+);
+
+// VIDEO
+router.get(
+  "/video",
+  getVideoDashboard
+);
 
 module.exports = router;

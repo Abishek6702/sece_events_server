@@ -9,7 +9,7 @@ const {
   getAllPurchase,
   getSinglePurchase,
   updatePurchase,
-  deletePurchase,patchPurchase
+  deletePurchase,patchPurchase,getPurchaseDashboard
 } = require("../../controllers/individual/purchaseController");
 
 // CREATE
@@ -29,5 +29,8 @@ router.delete("/:id", deletePurchase);
 
 // PATCH
 router.patch("/:id", patchPurchase);
+
+//dashboard
+router.get("/", getPurchaseDashboard);
 
 module.exports = router;

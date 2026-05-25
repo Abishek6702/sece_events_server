@@ -7,7 +7,7 @@ const {
   getSingleTransport,
   updateTransport,
   deleteTransport,
-  patchTransport
+  patchTransport,getTransportDashboard
 } = require("../../controllers/individual/transportController");
 
 // CREATE
@@ -28,5 +28,6 @@ router.delete("/:id", deleteTransport);
 router.patch(
   "/:id",patchTransport
 );
-
+//dashboard
+router.get("/", getTransportDashboard);
 module.exports = router;

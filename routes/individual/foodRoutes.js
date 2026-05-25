@@ -37,4 +37,8 @@ router.delete(
 );
 //patch
 router.patch("/:id", foodController.patchFood);
+
+//dashboard
+router.get("/", foodController.getFoodDashboard);
+
 module.exports = router;
