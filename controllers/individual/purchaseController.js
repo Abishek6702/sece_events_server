@@ -199,3 +199,103 @@ exports.patchPurchase = async (req, res) => {
     });
   }
 };
+
+// controllers/purchaseDashboardController.js
+
+exports.getPurchaseDashboard =
+  async (req, res) => {
+    try {
+      // ==============================
+      // CARD COUNTS
+      // ==============================
+
+      const totalRequests =
+        await Purchase.countDocuments();
+
+      const completedRequests =
+        await Purchase.countDocuments({
+          status: "Completed",
+        });
+
+      const acknowledgedRequests =
+        await Purchase.countDocuments({
+          status: "Approved",
+        });
+
+      const pendingAcknowledgementRequests =
+        await Purchase.countDocuments({
+          status: "Pending",
+        });
+
+      // ==============================
+      // DEPARTMENT WISE
+      // ==============================
+
+      const departmentWise =
+        await Purchase.aggregate([
+          {
+            $lookup: {
+              from: "faculties",
+              localField: "employee",
+              foreignField: "_id",
+              as: "facultyData",
+            },
+          },
+
+          {
+            $unwind: "$facultyData",
+          },
+
+          {
+            $group: {
+              _id: "$facultyData.department",
+              total: { $sum: 1 },
+            },
+          },
+
+          {
+            $project: {
+              _id: 0,
+              department: "$_id",
+              total: 1,
+            },
+          },
+        ]);
+
+      // ==============================
+      // LATEST REQUESTS
+      // ==============================
+
+      const latestRequests =
+        await Purchase.find()
+          .populate("employee")
+          .sort({ createdAt: -1 })
+          .limit(10);
+
+      // ==============================
+      // RESPONSE
+      // ==============================
+
+      res.status(200).json({
+        success: true,
+
+        cards: {
+          totalRequests,
+          completedRequests,
+          acknowledgedRequests,
+          pendingAcknowledgementRequests,
+        },
+
+        departmentWise,
+
+        latestRequests,
+      });
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  };
