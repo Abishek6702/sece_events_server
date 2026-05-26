@@ -17,6 +17,7 @@ const purchaseRoutes = require("./routes/individual/purchaseRoutes");
 const feedbackRoutes = require("./routes/feedackRoutes");
 const mediaStaffChangeRoutes = require("./routes/mediaStaffChangeRoutes");
 const transportInventoryRoutes = require("./routes/transportInventoryRoutes");
+const tableRoutes = require("./routes/tableRoutes");
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ app.use("/api/purchase", purchaseRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/media-staff-change", mediaStaffChangeRoutes);
 app.use("/api/transport-inventory", transportInventoryRoutes);
+app.use("/api/table", tableRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
