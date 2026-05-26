@@ -258,7 +258,11 @@ exports.createEvent = async (req, res) => {
         payload.mediaRequirementDetails,
       ),
     });
-
+    if (!eventData.timeline) {
+      eventData.timeline = {
+        departments: {},
+      };
+    }
     const normalizedStatus = normalizeStatus(payload);
     if (normalizedStatus) {
       eventData.status = normalizedStatus;
@@ -362,8 +366,6 @@ exports.updateEvent = async (req, res) => {
 
     const event = await Event.findById(req.params.id);
 
-   
-
     if (!event) {
       return res.status(404).json({
         message: "Event not found",
@@ -404,8 +406,7 @@ exports.updateEvent = async (req, res) => {
         ensureObject(payload.audioDetails),
       );
     }
-    const transportChanged =
-    !!payload.transportDetails;
+    const transportChanged = !!payload.transportDetails;
     if (payload.transportDetails) {
       event.transportDetails = mergeObjects(
         event.transportDetails || {},
@@ -459,48 +460,44 @@ exports.updateEvent = async (req, res) => {
     // =====================================
 
     const becomingSubmitted =
-    !wasSubmitted &&
-    (
-      normalizedStatus === "Submitted" ||
-      payload.isSubmitted === true
-    );
-  
-  
-  // =====================================
-  // FIRST TIME SUBMISSION
-  // =====================================
-  
-  if (becomingSubmitted) {
-  
-    await handleTransportSubmission(event);
-  }
-  
-  
-  // =====================================
-  // TRANSPORT UPDATED AFTER SUBMISSION
-  // =====================================
-  
-  else if (
-    wasSubmitted &&
-    event.isSubmitted &&
-    transportChanged &&
-    !event.transportInventoryRestored
-  ){
-  
-    // RESTORE OLD VEHICLES
-  
-    for (const transport of oldTransports) {
-  
-      await restoreTransportInventory(
-        transport.vehicles
-      );
-    }
-  
-    // DEDUCT NEW VEHICLES
-  
-    await handleTransportSubmission(event);
-  }
+      !wasSubmitted &&
+      (normalizedStatus === "Submitted" || payload.isSubmitted === true);
 
+    if (!event.timeline) {
+      event.timeline = {
+        departments: {},
+      };
+    }
+    // =====================================
+    // FIRST TIME SUBMISSION
+    // =====================================
+    if (becomingSubmitted) {
+      event.timeline.submittedAt = new Date();
+    }
+    if (becomingSubmitted) {
+      await handleTransportSubmission(event);
+    }
+
+    // =====================================
+    // TRANSPORT UPDATED AFTER SUBMISSION
+    // =====================================
+    else if (
+      wasSubmitted &&
+      event.isSubmitted &&
+      transportChanged &&
+      !event.transportInventoryRestored
+    ) {
+      // RESTORE OLD VEHICLES
+
+      for (const transport of oldTransports) {
+        await restoreTransportInventory(transport.vehicles);
+      }
+
+      // DEDUCT NEW VEHICLES
+
+      await handleTransportSubmission(event);
+    }
+    event.timeline.updatedAt = new Date();
     const updatedEvent = await event.save();
     res
       .status(200)
@@ -551,6 +548,12 @@ exports.submitEvent = async (req, res) => {
 
     event.status = normalizedStatus || "Submitted";
     event.isSubmitted = true;
+    if (!event.timeline) {
+      event.timeline = {
+        departments: {},
+      };
+    }
+    event.timeline.submittedAt = new Date();
 
     applyUploadedFiles(event, req.files || {});
 
@@ -787,6 +790,12 @@ exports.updateEventStatus = async (req, res) => {
       case "submit":
         event.isSubmitted = true;
         event.status = "Submitted";
+        if (!event.timeline) {
+          event.timeline = {
+            departments: {},
+          };
+        }
+        event.timeline.submittedAt = new Date();
         // 📧 Send notification for event creation/submission
         await notifyEventCreation(event);
         break;
@@ -794,6 +803,12 @@ exports.updateEventStatus = async (req, res) => {
       case "hodApprove":
         event.isHodApproved = true;
         event.status = "HodApproved";
+        if (!event.timeline) {
+          event.timeline = {
+            departments: {},
+          };
+        }
+        event.timeline.hodApprovedAt = new Date();
         // 📧 Send notification for HOD approval
         await notifyHODApproval(event);
         break;
@@ -801,6 +816,12 @@ exports.updateEventStatus = async (req, res) => {
       case "adminApprove":
         event.adminApproval = true;
         event.status = "Approved";
+        if (!event.timeline) {
+          event.timeline = {
+            departments: {},
+          };
+        }
+        event.timeline.adminApprovedAt = new Date();
         await allocateDefaultMediaStaff(event);
         // 📧 Send notification for admin approval and to department heads
         await notifyAdminApproval(event);
@@ -820,12 +841,24 @@ exports.updateEventStatus = async (req, res) => {
 
           event.transportInventoryRestored = true;
         }
+        if (!event.timeline) {
+          event.timeline = {
+            departments: {},
+          };
+        }
+        event.timeline.rejectedAt = new Date();
         // 📧 Send notification for rejection
         await notifyEventRejection(event, reason || "");
         break;
 
       case "close":
         event.status = "Closed";
+        if (!event.timeline) {
+          event.timeline = {
+            departments: {},
+          };
+        }
+        event.timeline.closedAt = new Date();
         if (
           event.isSubmitted &&
           !event.transportInventoryRestored &&
@@ -857,6 +890,13 @@ exports.updateEventStatus = async (req, res) => {
         if (!event[path]) {
           event[path] = {};
         }
+        if (!event.timeline) {
+          event.timeline = {};
+        }
+
+        if (!event.timeline.departments) {
+          event.timeline.departments = {};
+        }
 
         if (module === "media") {
           if (!mediaType || !["poster", "video"].includes(mediaType)) {
@@ -866,6 +906,11 @@ exports.updateEventStatus = async (req, res) => {
           }
 
           event[path].mediaRequirements.forEach((media) => {
+            if (!event.timeline.departments[mediaType]) {
+              event.timeline.departments[mediaType] = {};
+            }
+
+            event.timeline.departments[mediaType].acknowledgedAt = new Date();
             media[mediaType].status = "Acknowledged";
             media[mediaType].remarks = remarks || "";
           });
@@ -875,6 +920,11 @@ exports.updateEventStatus = async (req, res) => {
           }
 
           event[path].status.status = "Acknowledged";
+          if (!event.timeline.departments[module]) {
+            event.timeline.departments[module] = {};
+          }
+
+          event.timeline.departments[module].acknowledgedAt = new Date();
           event[path].status.remarks = remarks || "";
         }
 
@@ -933,6 +983,13 @@ exports.updateEventStatus = async (req, res) => {
         if (!event[path]) {
           event[path] = {};
         }
+        if (!event.timeline) {
+          event.timeline = {};
+        }
+
+        if (!event.timeline.departments) {
+          event.timeline.departments = {};
+        }
 
         if (module === "media") {
           if (!mediaType || !["poster", "video"].includes(mediaType)) {
@@ -944,6 +1001,11 @@ exports.updateEventStatus = async (req, res) => {
           event[path].mediaRequirements.forEach((media) => {
             media[mediaType].status = "Completed";
             media[mediaType].remarks = remarks || "";
+            if (!event.timeline.departments[mediaType]) {
+              event.timeline.departments[mediaType] = {};
+            }
+
+            event.timeline.departments[mediaType].completedAt = new Date();
           });
         } else {
           if (!event[path].status) {
@@ -951,6 +1013,11 @@ exports.updateEventStatus = async (req, res) => {
           }
 
           event[path].status.status = "Completed";
+          if (!event.timeline.departments[module]) {
+            event.timeline.departments[module] = {};
+          }
+
+          event.timeline.departments[module].completedAt = new Date();
           event[path].status.remarks = remarks || "";
         }
 

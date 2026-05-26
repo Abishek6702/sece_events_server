@@ -663,6 +663,67 @@ const eventSchema = new mongoose.Schema(
       ],
       default: "Draft",
     },
+
+    timeline: {
+      submittedAt: Date,
+    
+      hodApprovedAt: Date,
+    
+      adminApprovedAt: Date,
+    
+      rejectedAt: Date,
+    
+      closedAt: Date,
+    
+      updatedAt: Date,
+    
+      departments: {
+        venue: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        icts: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        audio: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        transport: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        refreshment: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        accommodation: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        purchase: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        poster: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        video: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+      },
+    },
     feedbacks: [
       {
         type: mongoose.Schema.Types.ObjectId,
