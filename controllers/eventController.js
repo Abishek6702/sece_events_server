@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Event = require("../models/Event.js");
 const {
   notifyEventCreation,
@@ -7,11 +8,12 @@ const {
   notifyEventRejection,
   notifyEventClosure,
 } = require("../utils/eventNotifications.js");
+const { restoreTransportInventory } = require("../utils/transport.js");
 require("dotenv").config();
-const mongoose = require("mongoose");
+const { allocateDefaultMediaStaff } = require("../utils/mediaStaffAllocation");
 const {
-  allocateDefaultMediaStaff,
-} = require("../utils/mediaStaffAllocation");
+  handleTransportSubmission,
+} = require("../utils/transportSubmissionHandler.js");
 
 const deepParse = (data) => {
   if (typeof data === "string") {
@@ -305,16 +307,41 @@ exports.createEvent = async (req, res) => {
 
     eventData.mediaRequirementDetails.mediaRequirements[0] = mediaDetails;
 
-    const event = await Event.create(eventData);
+    const session = await mongoose.startSession();
 
-    // 📧 Send notification for event creation
-    if (normalizedStatus === "Submitted") {
-      await notifyEventCreation(event);
+    try {
+      session.startTransaction();
+
+      // =====================================
+      // TRANSPORT INVENTORY DEDUCTION
+      // =====================================
+
+      if (eventData.status === "Submitted") {
+        await handleTransportSubmission(eventData, session);
+      }
+
+      const createdEvents = await Event.create([eventData], { session });
+
+      const event = createdEvents[0];
+
+      await session.commitTransaction();
+
+      // 📧 Send notification
+      if (normalizedStatus === "Submitted") {
+        await notifyEventCreation(event);
+      }
+
+      return res.status(201).json({
+        message: "Event created successfully",
+        data: event,
+      });
+    } catch (error) {
+      await session.abortTransaction();
+
+      throw error;
+    } finally {
+      await session.endSession();
     }
-
-    res
-      .status(201)
-      .json({ message: "Event created successfully", data: event });
   } catch (error) {
     console.error("Error creating event:", error);
     if (error.name === "ValidationError") {
@@ -334,9 +361,17 @@ exports.updateEvent = async (req, res) => {
     });
 
     const event = await Event.findById(req.params.id);
+
+   
+
     if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+      return res.status(404).json({
+        message: "Event not found",
+      });
     }
+    const oldTransports = structuredClone(
+      event.transportDetails?.transports || [],
+    );
 
     if (payload.organizerId) {
       event.organizerId = payload.organizerId;
@@ -369,7 +404,8 @@ exports.updateEvent = async (req, res) => {
         ensureObject(payload.audioDetails),
       );
     }
-
+    const transportChanged =
+    !!payload.transportDetails;
     if (payload.transportDetails) {
       event.transportDetails = mergeObjects(
         event.transportDetails || {},
@@ -405,7 +441,10 @@ exports.updateEvent = async (req, res) => {
       );
     }
 
+    const wasSubmitted = event.isSubmitted;
+
     const normalizedStatus = normalizeStatus(payload);
+
     if (normalizedStatus) {
       event.status = normalizedStatus;
       event.isSubmitted = normalizedStatus === "Submitted";
@@ -414,6 +453,53 @@ exports.updateEvent = async (req, res) => {
     }
 
     applyUploadedFiles(event, req.files || {});
+
+    // =====================================
+    // TRANSPORT INVENTORY DEDUCTION
+    // =====================================
+
+    const becomingSubmitted =
+    !wasSubmitted &&
+    (
+      normalizedStatus === "Submitted" ||
+      payload.isSubmitted === true
+    );
+  
+  
+  // =====================================
+  // FIRST TIME SUBMISSION
+  // =====================================
+  
+  if (becomingSubmitted) {
+  
+    await handleTransportSubmission(event);
+  }
+  
+  
+  // =====================================
+  // TRANSPORT UPDATED AFTER SUBMISSION
+  // =====================================
+  
+  else if (
+    wasSubmitted &&
+    event.isSubmitted &&
+    transportChanged &&
+    !event.transportInventoryRestored
+  ){
+  
+    // RESTORE OLD VEHICLES
+  
+    for (const transport of oldTransports) {
+  
+      await restoreTransportInventory(
+        transport.vehicles
+      );
+    }
+  
+    // DEDUCT NEW VEHICLES
+  
+    await handleTransportSubmission(event);
+  }
 
     const updatedEvent = await event.save();
     res
@@ -456,11 +542,25 @@ exports.submitEvent = async (req, res) => {
       );
     }
 
-    const normalizedStatus = normalizeStatus({ ...payload, isSubmitted: true });
+    const wasSubmitted = event.isSubmitted;
+
+    const normalizedStatus = normalizeStatus({
+      ...payload,
+      isSubmitted: true,
+    });
+
     event.status = normalizedStatus || "Submitted";
     event.isSubmitted = true;
 
     applyUploadedFiles(event, req.files || {});
+
+    // =====================================
+    // TRANSPORT INVENTORY DEDUCTION
+    // =====================================
+
+    if (!wasSubmitted) {
+      await handleTransportSubmission(event);
+    }
 
     const updatedEvent = await event.save();
     res
@@ -709,12 +809,34 @@ exports.updateEventStatus = async (req, res) => {
 
       case "reject":
         event.status = "Rejected";
+        if (
+          event.isSubmitted &&
+          !event.transportInventoryRestored &&
+          event.transportDetails?.transports?.length
+        ) {
+          for (const transport of event.transportDetails.transports) {
+            await restoreTransportInventory(transport.vehicles);
+          }
+
+          event.transportInventoryRestored = true;
+        }
         // 📧 Send notification for rejection
         await notifyEventRejection(event, reason || "");
         break;
 
       case "close":
         event.status = "Closed";
+        if (
+          event.isSubmitted &&
+          !event.transportInventoryRestored &&
+          event.transportDetails?.transports?.length
+        ) {
+          for (const transport of event.transportDetails.transports) {
+            await restoreTransportInventory(transport.vehicles);
+          }
+
+          event.transportInventoryRestored = true;
+        }
         // 📧 Send notification for event closure
         await notifyEventClosure(event, reason || "");
         break;
@@ -742,7 +864,7 @@ exports.updateEventStatus = async (req, res) => {
               message: "Valid mediaType is required for media module",
             });
           }
-        
+
           event[path].mediaRequirements.forEach((media) => {
             media[mediaType].status = "Acknowledged";
             media[mediaType].remarks = remarks || "";
@@ -751,7 +873,7 @@ exports.updateEventStatus = async (req, res) => {
           if (!event[path].status) {
             event[path].status = {};
           }
-        
+
           event[path].status.status = "Acknowledged";
           event[path].status.remarks = remarks || "";
         }
@@ -781,7 +903,7 @@ exports.updateEventStatus = async (req, res) => {
               message: "Valid mediaType is required for media module",
             });
           }
-        
+
           event[path].mediaRequirements.forEach((media) => {
             media[mediaType].status = "Admin Cancelled";
           });
@@ -789,7 +911,7 @@ exports.updateEventStatus = async (req, res) => {
           if (!event[path].status) {
             event[path].status = {};
           }
-        
+
           event[path].status.status = "Admin Cancelled";
         }
 
@@ -818,7 +940,7 @@ exports.updateEventStatus = async (req, res) => {
               message: "Valid mediaType is required for media module",
             });
           }
-        
+
           event[path].mediaRequirements.forEach((media) => {
             media[mediaType].status = "Completed";
             media[mediaType].remarks = remarks || "";
@@ -827,7 +949,7 @@ exports.updateEventStatus = async (req, res) => {
           if (!event[path].status) {
             event[path].status = {};
           }
-        
+
           event[path].status.status = "Completed";
           event[path].status.remarks = remarks || "";
         }
@@ -921,16 +1043,11 @@ exports.getUserDraftEvents = async (req, res) => {
   }
 };
 
-
 exports.requestMediaStaffChange = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const {
-      mediaType,
-      requestedStaff,
-      reason,
-    } = req.body;
+    const { mediaType, requestedStaff, reason } = req.body;
 
     const event = await Event.findById(id);
 
@@ -940,33 +1057,27 @@ exports.requestMediaStaffChange = async (req, res) => {
       });
     }
 
-    if (
-      !mediaType ||
-      !["poster", "video"].includes(mediaType)
-    ) {
+    if (!mediaType || !["poster", "video"].includes(mediaType)) {
       return res.status(400).json({
         message: "Valid mediaType is required",
       });
     }
 
-    event.mediaRequirementDetails.mediaRequirements.forEach(
-      (media) => {
+    event.mediaRequirementDetails.mediaRequirements.forEach((media) => {
+      media[mediaType].staffChangeRequest = {
+        requested: true,
 
-        media[mediaType].staffChangeRequest = {
-          requested: true,
+        requestedStaff,
 
-          requestedStaff,
+        staffChangeStatus: "Pending",
 
-          staffChangeStatus: "Pending",
+        staffChangeReason: reason,
 
-          staffChangeReason: reason,
+        rejectReason: "",
 
-          rejectReason: "",
-
-          approvedAt: null,
-        };
-      }
-    );
+        approvedAt: null,
+      };
+    });
 
     await event.save();
 

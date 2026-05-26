@@ -869,15 +869,13 @@
                   "key": "isSubmitted",
                   "value": "true",
                   "type": "text",
-                  "uuid": "d4f85764-51ff-4144-977c-be0912e572e3",
-                  "disabled": true
+                  "uuid": "d4f85764-51ff-4144-977c-be0912e572e3"
                 },
                 {
                   "key": "status",
                   "value": "Submitted",
                   "type": "text",
-                  "uuid": "f315675d-b130-48c7-81ea-46e6707e20d9",
-                  "disabled": true
+                  "uuid": "f315675d-b130-48c7-81ea-46e6707e20d9"
                 }
               ]
             },
@@ -1065,7 +1063,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n{\r\n  \"action\": \"adminApprove\"\r\n}\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n// {\r\n//   \"action\": \"close\"\r\n// }\r\n// {\r\n//   \"action\": \"acknowledge\",\r\n//   \"module\": \"media\",\r\n// \"mediaType\": \"poster\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"complete\",\r\n//   \"module\": \"venue\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"adminCancel\",\r\n//   \"module\": \"icts\"\r\n\r\n// }",
+              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"adminApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n{\r\n  \"action\": \"close\"\r\n}\r\n// {\r\n//   \"action\": \"acknowledge\",\r\n//   \"module\": \"media\",\r\n// \"mediaType\": \"poster\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"complete\",\r\n//   \"module\": \"venue\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"adminCancel\",\r\n//   \"module\": \"icts\"\r\n\r\n// }",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1073,14 +1071,14 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/events/6a13fe668b1d51ee41e44d3d/status",
+              "raw": "{{base_url}}/api/events/6a153496b9d065544cfd6625/status",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "events",
-                "6a13fe668b1d51ee41e44d3d",
+                "6a153496b9d065544cfd6625",
                 "status"
               ]
             }
@@ -2122,6 +2120,155 @@
                 "feedback",
                 "event",
                 "6a06bcd99b582499da88448f"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Transport Inventory",
+      "item": [
+        {
+          "name": "post transport",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"vehicleType\": \"Van\",\r\n  \"totalCount\":2,\r\n  \"description\": \"College buses\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transport-inventory",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transport-inventory"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get transport-inventory",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"vehicleType\": \"Van\",\r\n  \"totalCount\":2,\r\n  \"description\": \"College buses\"\r\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transport-inventory",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transport-inventory"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "getb by id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"vehicleType\": \"Van\",\r\n  \"totalCount\":2,\r\n  \"description\": \"College buses\"\r\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transport-inventory/6a1530ed8038f91f954fd10f",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transport-inventory",
+                "6a1530ed8038f91f954fd10f"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "edit inventory",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"vehicleType\": \"Van\",\r\n  \"totalCount\":12,\r\n  \"description\": \"College buses1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transport-inventory/6a1531bd8038f91f954fd112",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transport-inventory",
+                "6a1531bd8038f91f954fd112"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"vehicleType\": \"Van\",\r\n  \"totalCount\":12,\r\n  \"description\": \"College buses1\"\r\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transport-inventory/6a1531bd8038f91f954fd112",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transport-inventory",
+                "6a1531bd8038f91f954fd112"
               ]
             }
           },

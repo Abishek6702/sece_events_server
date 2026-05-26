@@ -644,6 +644,11 @@ const eventSchema = new mongoose.Schema(
     isHodApproved: { type: Boolean, default: false },
     adminApproval: { type: Boolean, default: false },
 
+    transportInventoryRestored: {
+      type: Boolean,
+      default: false,
+    },
+
     // status
     status: {
       type: String,
