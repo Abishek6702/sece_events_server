@@ -2,34 +2,28 @@ const mongoose = require("mongoose");
 const Event = require("../models/Event.js");
 require("dotenv").config();
 
-const getDepartmentStatus = (
-    moduleStatus,
-    overallStatus
-  ) => {
-    // if event closed -> always completed
-    if (overallStatus === "Closed") {
-      return "Completed";
-    }
-  
-    // existing module status
-    if (moduleStatus) {
-      return moduleStatus;
-    }
-  
-    // pending states
-    if (
-      [
-        "Submitted",
-        "HodApproved",
-        "Approved",
-        "DepartmentReview",
-      ].includes(overallStatus)
-    ) {
-      return "Pending for Acknowledge";
-    }
-  
-    return null;
-  };
+const getDepartmentStatus = (moduleStatus, overallStatus) => {
+  // if event closed -> always completed
+  if (overallStatus === "Closed") {
+    return "Completed";
+  }
+
+  // existing module status
+  if (moduleStatus) {
+    return moduleStatus;
+  }
+
+  // pending states
+  if (
+    ["Submitted", "HodApproved", "Approved", "DepartmentReview"].includes(
+      overallStatus,
+    )
+  ) {
+    return "Pending for Acknowledge";
+  }
+
+  return null;
+};
 
 exports.getDashboardTable = async (req, res) => {
   try {
@@ -38,7 +32,7 @@ exports.getDashboardTable = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
 
     const limit = parseInt(req.query.limit) || 10;
-    
+
     const skip = (page - 1) * limit;
 
     const baseQuery = {
@@ -75,6 +69,8 @@ exports.getDashboardTable = async (req, res) => {
         venues: event.venueDetails?.venues?.map((v) => v.venueName) || [],
 
         overallStatus: event.status,
+
+        adminApproval: event.adminApproval,
       };
 
       // ================= ADMIN =================
@@ -104,7 +100,7 @@ exports.getDashboardTable = async (req, res) => {
 
           departmentStatus: getDepartmentStatus(
             event.venueDetails?.status?.status,
-            event.status
+            event.status,
           ),
         });
       }
@@ -121,7 +117,7 @@ exports.getDashboardTable = async (req, res) => {
 
           departmentStatus: getDepartmentStatus(
             event.ictsDetails?.status?.status,
-            event.status
+            event.status,
           ),
         });
       }
@@ -138,7 +134,7 @@ exports.getDashboardTable = async (req, res) => {
 
           departmentStatus: getDepartmentStatus(
             event.audioDetails?.status?.status,
-            event.status
+            event.status,
           ),
         });
       }
@@ -155,7 +151,7 @@ exports.getDashboardTable = async (req, res) => {
 
           departmentStatus: getDepartmentStatus(
             event.transportDetails?.status?.status,
-            event.status
+            event.status,
           ),
         });
       }
@@ -172,7 +168,7 @@ exports.getDashboardTable = async (req, res) => {
 
           departmentStatus: getDepartmentStatus(
             event.refreshmentDetails?.status?.status,
-            event.status
+            event.status,
           ),
         });
       }
@@ -189,7 +185,7 @@ exports.getDashboardTable = async (req, res) => {
 
           departmentStatus: getDepartmentStatus(
             event.accommodationDetails?.status?.status,
-            event.status
+            event.status,
           ),
         });
       }
@@ -206,7 +202,7 @@ exports.getDashboardTable = async (req, res) => {
 
           departmentStatus: getDepartmentStatus(
             event.purchaseDetails?.status?.status,
-            event.status
+            event.status,
           ),
         });
       }
@@ -244,7 +240,7 @@ exports.getDashboardTable = async (req, res) => {
 
               departmentStatus: getDepartmentStatus(
                 p.poster.status,
-                event.status
+                event.status,
               ),
             })),
           });
@@ -273,7 +269,7 @@ exports.getDashboardTable = async (req, res) => {
 
               departmentStatus: getDepartmentStatus(
                 v.video.status,
-                event.status
+                event.status,
               ),
             })),
           });
@@ -283,27 +279,22 @@ exports.getDashboardTable = async (req, res) => {
 
     const totalRecords = data.length;
 
-const paginatedData = data.slice(
-  skip,
-  skip + limit
-);
+    const paginatedData = data.slice(skip, skip + limit);
 
-return res.status(200).json({
-  module,
+    return res.status(200).json({
+      module,
 
-  count: totalRecords,
+      count: totalRecords,
 
-  pagination: {
-    totalRecords,
-    currentPage: page,
-    totalPages: Math.ceil(
-      totalRecords / limit
-    ),
-    limit,
-  },
+      pagination: {
+        totalRecords,
+        currentPage: page,
+        totalPages: Math.ceil(totalRecords / limit),
+        limit,
+      },
 
-  data: paginatedData,
-});
+      data: paginatedData,
+    });
   } catch (error) {
     console.error("Dashboard table error:", error);
 
