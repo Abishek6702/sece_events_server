@@ -1218,7 +1218,7 @@
               "query": [
                 {
                   "key": "module",
-                  "value": "icts",
+                  "value": "audio",
                   "type": "text",
                   "disabled": true
                 }
@@ -2269,6 +2269,39 @@
                 "api",
                 "transport-inventory",
                 "6a1531bd8038f91f954fd112"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "table",
+      "item": [
+        {
+          "name": "dashboard table",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/table/dashboard-table?module=video",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "table",
+                "dashboard-table"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "video"
+                }
               ]
             }
           },
