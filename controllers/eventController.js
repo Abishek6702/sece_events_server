@@ -371,9 +371,10 @@ exports.updateEvent = async (req, res) => {
         message: "Event not found",
       });
     }
-    const oldTransports = structuredClone(
-      event.transportDetails?.transports || [],
-    );
+    const oldTransports =
+      event.transportDetails?.transports?.map((transport) =>
+        transport.toObject ? transport.toObject() : transport,
+      ) || [];
 
     if (payload.organizerId) {
       event.organizerId = payload.organizerId;
@@ -509,7 +510,10 @@ exports.updateEvent = async (req, res) => {
         .status(400)
         .json({ message: "Validation error", errors: error.errors });
     }
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
