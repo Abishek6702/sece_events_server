@@ -363,7 +363,7 @@ exports.updateEvent = async (req, res) => {
     Object.keys(req.body).forEach((key) => {
       payload[key] = deepParse(req.body[key]);
     });
-
+console.log("Update Payload:", payload);
     const event = await Event.findById(req.params.id);
 
     if (!event) {
