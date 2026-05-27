@@ -303,7 +303,7 @@ const refreshmentSchema = new mongoose.Schema(
         accompanyingStaff: [
           {
             name: { type: String, trim: true },
-            mobile: { type: Number },
+            mobile: { type: String, trim: true },
           },
         ],
 

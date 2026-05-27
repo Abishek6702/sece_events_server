@@ -415,10 +415,8 @@ exports.updateEvent = async (req, res) => {
     }
 
     if (payload.refreshmentDetails) {
-      event.refreshmentDetails = mergeObjects(
-        event.refreshmentDetails || {},
-        ensureObject(payload.refreshmentDetails),
-      );
+      event.refreshmentDetails = payload.refreshmentDetails;
+      
     }
 
     if (payload.accommodationDetails) {
