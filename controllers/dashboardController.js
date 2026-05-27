@@ -7,7 +7,9 @@ exports.getDashboardStats = async (req, res) => {
     // const filter = { organizerId: req.user.id };
 
     // for admin:
-    const filter = {};
+    const filter = {
+      status: { $ne: "Draft" },
+    };
 
     // =========================
     // EVENT LEVEL COUNTS
@@ -28,11 +30,7 @@ exports.getDashboardStats = async (req, res) => {
     const pendingEvents = await Event.countDocuments({
       ...filter,
       status: {
-        $in: [
-          "Submitted",
-          "HodApproved",
-          "DepartmentReview",
-        ],
+        $in: ["Submitted", "HodApproved", "DepartmentReview"],
       },
     });
 
@@ -79,8 +77,7 @@ exports.getDashboardStats = async (req, res) => {
         ...filter,
         $or: [
           {
-            [`${path}.status.status`]:
-              "Pending for Acknowledge",
+            [`${path}.status.status`]: "Pending for Acknowledge",
           },
           {
             [`${path}.status`]: { $exists: false },
@@ -139,19 +136,21 @@ exports.getDepartmentWiseStats = async (req, res) => {
     // if no module -> admin overall
     const path = module ? modules[module] : null;
 
-    // condition
     const matchCondition = path
-      ? { [path]: { $exists: true } }
-      : {};
+      ? {
+          status: { $ne: "Draft" },
+          [path]: { $exists: true },
+        }
+      : {
+          status: { $ne: "Draft" },
+        };
 
     // TOTAL COUNT
-    const totalCount = await Event.countDocuments(
-      matchCondition
-    );
+    const totalCount = await Event.countDocuments(matchCondition);
 
     // all departments
     const departments = await Event.distinct(
-      "requestDetails.organizerDetails.organizingDepartment"
+      "requestDetails.organizerDetails.organizingDepartment",
     );
 
     // department wise counts
