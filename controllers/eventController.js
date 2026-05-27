@@ -363,7 +363,7 @@ exports.updateEvent = async (req, res) => {
     Object.keys(req.body).forEach((key) => {
       payload[key] = deepParse(req.body[key]);
     });
-console.log("Update Payload:", payload);
+    console.log("Update Payload:", payload);
     const event = await Event.findById(req.params.id);
 
     if (!event) {
@@ -413,12 +413,18 @@ console.log("Update Payload:", payload);
         ensureObject(payload.transportDetails),
       );
     }
-
+    
     if (payload.refreshmentDetails) {
-      event.refreshmentDetails = payload.refreshmentDetails;
-      
+      event.refreshmentDetails = {
+        ...event.refreshmentDetails,
+        ...payload.refreshmentDetails,
+        refreshments: payload.refreshmentDetails.refreshments || event.refreshmentDetails?.refreshments,
+      };
     }
-
+    console.log(
+      "REFRESHMENT TYPE CHECK:",
+      Array.isArray(event.refreshmentDetails?.refreshments),
+    );
     if (payload.accommodationDetails) {
       event.accommodationDetails = mergeObjects(
         event.accommodationDetails || {},
