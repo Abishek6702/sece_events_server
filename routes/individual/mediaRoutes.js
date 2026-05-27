@@ -33,6 +33,13 @@ router.post(
 // GET ALL
 router.get("/", getAllIndividualMedia);
 
+//dashboard
+// POSTER
+router.get("/poster", getPosterDashboard);
+
+// VIDEO
+router.get("/video", getVideoDashboard);
+
 // GET SINGLE
 router.get("/:id", getSingleIndividualMedia);
 
@@ -44,18 +51,5 @@ router.delete("/:id", deleteIndividualMedia);
 
 // PATCH
 router.patch("/:id", patchIndividualMedia);
-
-//dashboard
-// POSTER
-router.get(
-  "/poster",
-  getPosterDashboard
-);
-
-// VIDEO
-router.get(
-  "/video",
-  getVideoDashboard
-);
 
 module.exports = router;
