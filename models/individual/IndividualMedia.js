@@ -80,6 +80,7 @@ const individualMediaSchema = new mongoose.Schema(
             "TV Display",
             "Social Media",
             "Website Slider",
+            "Flex"," A type Standee","Id card", "Plug card", "Momento card", "Glass Sticker"
           ],
         },
       ],
