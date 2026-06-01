@@ -96,7 +96,7 @@ const individualMediaSchema = new mongoose.Schema(
             "Printing Banner",
             "TV Display",
             "Social Media",
-            "Website Slider",
+            "Website Banner",
             "Flex",
             "A type Standee",
             "Id card",
