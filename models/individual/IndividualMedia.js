@@ -31,7 +31,7 @@ const sizeSchema = new mongoose.Schema(
         "Printing Banner",
         "TV Display",
         "Social Media",
-        "Website Slider",
+        "Website Banner",
         "A type Standee",
         "Id card",
         "Plug card",
