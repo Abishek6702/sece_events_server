@@ -30,7 +30,13 @@ exports.login = async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id, user.name, user.email),
+      department: user.department,
+      role: user.role,
+      isadmin: user.isadmin,
+      isFirstTimeLogin: user.isFirstTimeLogin,
+      facultyId: user.facultyId,
+      hasAccess: user.hasAccess,
+      token: generateToken(user),
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -114,7 +120,7 @@ exports.changePassword = async (req, res) => {
 
 exports.createAdmin = async (req, res) => {
   try {
-    const { name, email, department, role,phone } = req.body;
+    const { name, email, department, role, phone } = req.body;
 
     if (!name || !email || !phone) {
       return res.status(400).json({ message: "All fields required" });
@@ -149,7 +155,6 @@ exports.createAdmin = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 exports.getProfile = async (req, res) => {
   try {

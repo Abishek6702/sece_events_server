@@ -20,7 +20,24 @@ const sizeSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ["Width", "Height", "Sticker", "Banner"],
+      enum: [
+        "Width",
+        "Height",
+        "Sticker",
+        "Banner",
+        "Flex",
+        "Digital Signage",
+        "Standee",
+        "Printing Banner",
+        "TV Display",
+        "Social Media",
+        "Website Banner",
+        "A type Standee",
+        "Id card",
+        "Plug card",
+        "Momento card",
+        "Glass Sticker",
+      ],
     },
 
     value: {
@@ -79,7 +96,13 @@ const individualMediaSchema = new mongoose.Schema(
             "Printing Banner",
             "TV Display",
             "Social Media",
-            "Website Slider",
+            "Website Banner",
+            "Flex",
+            "A type Standee",
+            "Id card",
+            "Plug card",
+            "Momento card",
+            "Glass Sticker"
           ],
         },
       ],

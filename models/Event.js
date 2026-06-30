@@ -3,7 +3,12 @@ const mongoose = require("mongoose");
 const departmentStatusSchema = new mongoose.Schema({
   status: {
     type: String,
-    enum: ["Acknowledged", "Pending for Acknowledge","Completed"],
+    enum: [
+      "Acknowledged",
+      "Pending for Acknowledge",
+      "Completed",
+      "Admin Cancelled",
+    ],
     default: "Pending for Acknowledge",
   },
   remarks: { type: String },
@@ -298,7 +303,7 @@ const refreshmentSchema = new mongoose.Schema(
         accompanyingStaff: [
           {
             name: { type: String, trim: true },
-            mobile: { type: Number },
+            mobile: { type: String, trim: true },
           },
         ],
 
@@ -409,7 +414,7 @@ const purchaseSchema = new mongoose.Schema(
 
               voucher: [
                 {
-                  voucherWorth  : String,
+                  voucherWorth: String,
                   quantity: Number,
                 },
               ],
@@ -487,6 +492,58 @@ const mediaRequirementSchema = new mongoose.Schema(
           priority: String,
 
           specialRequirements: String,
+          //default staff if wnat changed and updated
+          staff: [
+            {
+              facultyId: {
+                type: mongoose.Types.ObjectId,
+                ref: "Faculty",
+              },
+              name: String,
+              email: String,
+            },
+          ],
+          staffChangeRequest: {
+            requested: {
+              type: Boolean,
+              default: false,
+            },
+          
+            requestedStaff: [
+              {
+                facultyId: {
+                  type: mongoose.Types.ObjectId,
+                  ref: "Faculty",
+                },
+                name: String,
+                email: String,
+              },
+            ],
+          
+            staffChangeStatus: {
+              type: String,
+              enum: [
+                "Pending",
+                "Approved",
+                "Rejected",
+                "Not Requested",
+              ],
+              default: "Not Requested",
+            },
+          
+            staffChangeReason: String,
+          
+            rejectReason: String,
+          
+            approvedAt: Date,
+          },
+          status: {
+            type: String,
+            enum: ["Pending for Acknowledge", "Acknowledged", "Completed"],
+            default: "Pending for Acknowledge",
+          },
+
+       
         },
 
         video: {
@@ -503,10 +560,61 @@ const mediaRequirementSchema = new mongoose.Schema(
           priority: String,
 
           specialRequirements: String,
+          //default staff if wnat changed and updated
+          staff: [
+            {
+              facultyId: {
+                type: mongoose.Types.ObjectId,
+                ref: "Faculty",
+              },
+              name: String,
+              email: String,
+            },
+          ],
+          staffChangeRequest: {
+            requested: {
+              type: Boolean,
+              default: false,
+            },
+          
+            requestedStaff: [
+              {
+                facultyId: {
+                  type: mongoose.Types.ObjectId,
+                  ref: "Faculty",
+                },
+                name: String,
+                email: String,
+              },
+            ],
+          
+            staffChangeStatus: {
+              type: String,
+              enum: [
+                "Pending",
+                "Approved",
+                "Rejected",
+                "Not Requested",
+              ],
+              default: "Not Requested",
+            },
+          
+            staffChangeReason: String,
+          
+            rejectReason: String,
+          
+            approvedAt: Date,
+          },
+          status: {
+            type: String,
+            enum: ["Pending for Acknowledge", "Acknowledged", "Completed"],
+            default: "Pending for Acknowledge",
+          },
+          remarks: String,
         },
       },
     ],
-    status: departmentStatusSchema,
+    
   },
   { _id: false },
 );
@@ -536,6 +644,11 @@ const eventSchema = new mongoose.Schema(
     isHodApproved: { type: Boolean, default: false },
     adminApproval: { type: Boolean, default: false },
 
+    transportInventoryRestored: {
+      type: Boolean,
+      default: false,
+    },
+
     // status
     status: {
       type: String,
@@ -550,6 +663,73 @@ const eventSchema = new mongoose.Schema(
       ],
       default: "Draft",
     },
+
+    timeline: {
+      submittedAt: Date,
+    
+      hodApprovedAt: Date,
+    
+      adminApprovedAt: Date,
+    
+      rejectedAt: Date,
+    
+      closedAt: Date,
+    
+      updatedAt: Date,
+    
+      departments: {
+        venue: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        icts: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        audio: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        transport: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        refreshment: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        accommodation: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        purchase: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        poster: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+    
+        video: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+      },
+    },
+    feedbacks: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Feedback",
+      },
+    ],
   },
   { timestamps: true },
 );

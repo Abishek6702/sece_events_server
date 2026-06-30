@@ -12,6 +12,7 @@ const {
   getFilteredEvents,
   updateEventStatus,
   getRequirementDetails,
+  getUserDraftEvents,
 } = require("../controllers/eventController.js");
 
 const uploadFields = upload.fields([
@@ -26,7 +27,7 @@ router.get("/", getAllEvents);
 router.get("/filter", getFilteredEvents);
 
 router.get("/requirements/:id", getRequirementDetails);
-
+router.get("/draft/:organizerId", getUserDraftEvents);
 router.patch("/:id/status", updateEventStatus);
 router.put("/:id", uploadFields, updateEvent);
 router.patch("/:id/submit", uploadFields, submitEvent);

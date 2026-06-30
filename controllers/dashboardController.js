@@ -3,11 +3,40 @@ const Faculty = require("../models/Faculty");
 
 exports.getDashboardStats = async (req, res) => {
   try {
-    const totalEvents = await Event.countDocuments();
+    // for faculty login use:
+    // const filter = { organizerId: req.user.id };
+
+    // for admin:
+    const filter = {
+      status: { $ne: "Draft" },
+    };
+
+    // =========================
+    // EVENT LEVEL COUNTS
+    // =========================
+
+    const totalEvents = await Event.countDocuments(filter);
 
     const completedEvents = await Event.countDocuments({
+      ...filter,
       status: "Closed",
     });
+
+    const approvedEvents = await Event.countDocuments({
+      ...filter,
+      status: "Approved",
+    });
+
+    const pendingEvents = await Event.countDocuments({
+      ...filter,
+      status: {
+        $in: ["Submitted", "HodApproved", "DepartmentReview"],
+      },
+    });
+
+    // =========================
+    // MODULES
+    // =========================
 
     const modules = {
       venue: "venueDetails",
@@ -25,34 +54,62 @@ exports.getDashboardStats = async (req, res) => {
     for (const key in modules) {
       const path = modules[key];
 
-      const acknowledged = await Event.countDocuments({
+      // total module requests
+      const total = await Event.countDocuments({
+        ...filter,
+        [path]: { $exists: true },
+      });
+
+      // approved / acknowledged
+      const approved = await Event.countDocuments({
+        ...filter,
         [`${path}.status.status`]: "Acknowledged",
       });
 
+      // completed
+      const completed = await Event.countDocuments({
+        ...filter,
+        [`${path}.status.status`]: "Completed",
+      });
+
+      // pending
       const pending = await Event.countDocuments({
+        ...filter,
         $or: [
-          { [`${path}.status.status`]: "Pending for Acknowledge" },
-          { [`${path}.status`]: { $exists: false } },
+          {
+            [`${path}.status.status`]: "Pending for Acknowledge",
+          },
+          {
+            [`${path}.status`]: { $exists: false },
+          },
         ],
       });
 
       moduleStats[key] = {
-        acknowledged,
+        total,
+        approved,
+        completed,
         pending,
       };
     }
 
-    res.status(200).json({
-      totalEvents,
-      completedEvents,
+    return res.status(200).json({
+      events: {
+        total: totalEvents,
+        completed: completedEvents,
+        approved: approvedEvents,
+        pending: pendingEvents,
+      },
       modules: moduleStats,
     });
   } catch (error) {
     console.error("Dashboard error:", error);
-    res.status(500).json({ message: "Server error" });
+
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
 };
-
 
 exports.getDepartmentWiseStats = async (req, res) => {
   try {
@@ -69,57 +126,71 @@ exports.getDepartmentWiseStats = async (req, res) => {
       media: "mediaRequirementDetails",
     };
 
-    const getStats = async (path) => {
-      return await Event.aggregate([
-        {
-          $match: {
-            [`${path}`]: { $exists: true },
-          },
-        },
-        {
-          $group: {
-            _id: "$requestDetails.organizerDetails.organizingDepartment",
-            count: { $sum: 1 },
-          },
-        },
-        {
-          $project: {
-            department: "$_id",
-            count: 1,
-            _id: 0,
-          },
-        },
-      ]);
-    };
-
-    if (module) {
-      const path = modules[module];
-
-      if (!path) {
-        return res.status(400).json({ message: "Invalid module" });
-      }
-
-      const data = await getStats(path);
-
-      return res.status(200).json({
-        module,
-        data,
+    // validate module only if provided
+    if (module && !modules[module]) {
+      return res.status(400).json({
+        message: "Invalid module",
       });
     }
 
-    const result = {};
+    // if no module -> admin overall
+    const path = module ? modules[module] : null;
 
-    for (const key in modules) {
-      result[key] = await getStats(modules[key]);
-    }
+    const matchCondition = path
+      ? {
+          status: { $ne: "Draft" },
+          [path]: { $exists: true },
+        }
+      : {
+          status: { $ne: "Draft" },
+        };
 
-    res.status(200).json({
-      message: "Department-wise stats",
-      data: result,
+    // TOTAL COUNT
+    const totalCount = await Event.countDocuments(matchCondition);
+
+    // all departments
+    const departments = await Event.distinct(
+      "requestDetails.organizerDetails.organizingDepartment",
+    );
+
+    // department wise counts
+    const stats = await Event.aggregate([
+      {
+        $match: matchCondition,
+      },
+
+      {
+        $group: {
+          _id: "$requestDetails.organizerDetails.organizingDepartment",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // convert array -> object
+    const statsMap = {};
+
+    stats.forEach((item) => {
+      statsMap[item._id] = item.count;
+    });
+
+    // include all departments
+    const departmentWise = departments.map((dept) => ({
+      department: dept,
+      count: statsMap[dept] || 0,
+    }));
+
+    return res.status(200).json({
+      type: module || "admin",
+      totalCount,
+      departmentWise,
     });
   } catch (error) {
-    console.error("Pie chart error:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Department stats error:", error);
+
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
 };
 

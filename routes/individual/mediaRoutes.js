@@ -11,6 +11,8 @@ const {
   updateIndividualMedia,
   deleteIndividualMedia,
   patchIndividualMedia,
+  getPosterDashboard,
+  getVideoDashboard,
 } = require("../../controllers/individual/mediaController");
 
 
@@ -30,6 +32,13 @@ router.post(
 
 // GET ALL
 router.get("/", getAllIndividualMedia);
+
+//dashboard
+// POSTER
+router.get("/poster", getPosterDashboard);
+
+// VIDEO
+router.get("/video", getVideoDashboard);
 
 // GET SINGLE
 router.get("/:id", getSingleIndividualMedia);

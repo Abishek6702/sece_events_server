@@ -7,228 +7,6 @@
   },
   "item": [
     {
-      "name": "Faculty",
-      "item": [
-        {
-          "name": "Excel_Faculty_Import",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "faculties",
-                  "type": "file",
-                  "uuid": "23ff8874-e452-436d-a64d-68d06c1d3a78",
-                  "src": "/E:/Events/server/files/Faculty_Details.xlsx"
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/api/faculty/import-faculty",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "faculty",
-                "import-faculty"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Individaul Faculty add",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n  \"name\": \"Chandru R\",\r\n  \"empId\": \"Sece129\",\r\n  \"email\": \"chandru.r@sece.ac.in\",\r\n  \"phone\": 6382073665,\r\n  \"department\": \"Placement\",\r\n  \"dob\": \"2002-07-06\",\r\n  \"gender\": \"Male\",\r\n  \"doj\": \"2024-12-01\",\r\n  \"designation\": \"Full Stack Developer\",\r\n  \"employeeCategory\": \"Non-Teaching\",\r\n  \"location\": \"Chennai\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/faculty/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "faculty",
-                ""
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get individual faculty",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/faculty/69e71ad143efebd19aadc05d",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "faculty",
-                "69e71ad143efebd19aadc05d"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get all facilty",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/faculty",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "faculty"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Edit faculty",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"name\":\"Abishekkrishna\",\r\n    \"department\":\"ECE\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/faculty/69e71ad143efebd19aadc05d",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "faculty",
-                "69e71ad143efebd19aadc05d"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "faculty and asscoiated login delete",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/faculty/69e71ad143efebd19aadc05d",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "faculty",
-                "69e71ad143efebd19aadc05d"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Profile image",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/faculty/69eb77eb24e52ee13e40f077/profile-image",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "faculty",
-                "69eb77eb24e52ee13e40f077",
-                "profile-image"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Add profile image",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "PATCH",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "profileImage",
-                  "type": "file",
-                  "uuid": "08a456db-0dac-42f9-b829-1473784a1b01",
-                  "src": "/C:/Users/USER/Downloads/pms/jpg1.jpg"
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/api/faculty/69eb77eb24e52ee13e40f077/profile-image",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "faculty",
-                "69eb77eb24e52ee13e40f077",
-                "profile-image"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
       "name": "Auth",
       "item": [
         {
@@ -869,15 +647,13 @@
                   "key": "isSubmitted",
                   "value": "true",
                   "type": "text",
-                  "uuid": "d4f85764-51ff-4144-977c-be0912e572e3",
-                  "disabled": true
+                  "uuid": "d4f85764-51ff-4144-977c-be0912e572e3"
                 },
                 {
                   "key": "status",
                   "value": "Submitted",
                   "type": "text",
-                  "uuid": "f315675d-b130-48c7-81ea-46e6707e20d9",
-                  "disabled": true
+                  "uuid": "f315675d-b130-48c7-81ea-46e6707e20d9"
                 }
               ]
             },
@@ -1065,7 +841,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"adminApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n// {\r\n//   \"action\": \"close\"\r\n// }\r\n// {\r\n//   \"action\": \"acknowledge\",\r\n//   \"module\": \"media\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n{\r\n  \"action\": \"complete\",\r\n  \"module\": \"venue\",\r\n  \"remarks\": \"Poster allocated\"\r\n}",
+              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"adminApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n{\r\n  \"action\": \"close\"\r\n}\r\n// {\r\n//   \"action\": \"acknowledge\",\r\n//   \"module\": \"media\",\r\n// \"mediaType\": \"poster\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"complete\",\r\n//   \"module\": \"venue\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"adminCancel\",\r\n//   \"module\": \"icts\"\r\n\r\n// }",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1073,14 +849,14 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/events/69f2ddff5a25d78e78399737/status",
+              "raw": "{{base_url}}/api/events/6a153496b9d065544cfd6625/status",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "events",
-                "69f2ddff5a25d78e78399737",
+                "6a153496b9d065544cfd6625",
                 "status"
               ]
             }
@@ -1105,6 +881,90 @@
                 "events",
                 "requirements",
                 "6a05532560b052b1fe18c0b4"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get draft per user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/events/draft/6a0411af4579d3137b255e73",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "draft",
+                "6a0411af4579d3137b255e73"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "staff-change-request",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "// {\r\n//   \"mediaType\": \"poster\",\r\n//   \"reason\": \"Assigned staff unavailable\",\r\n//   \"requestedStaff\": [\r\n//     {\r\n//       \"facultyId\": \"6a0416084579d3137b255e8f\",\r\n//       \"name\": \"Poster Admin1\",\r\n//       \"email\": \"code.with.nishanth031@gmail.com\"\r\n//     }\r\n//   ]\r\n// }\r\n\r\n{\r\n  \"mediaType\": \"video\",\r\n  \"reason\": \"Assigned staff unavailable\",\r\n  \"requestedStaff\": [\r\n    {\r\n      \"facultyId\": \"6a0416c14579d3137b255e91\",\r\n      \"name\": \"Video Admin1\",\r\n      \"email\": \"video1@gmail.com\"\r\n    }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/media-staff-change/6a13fe668b1d51ee41e44d3d/staff-change-request",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "media-staff-change",
+                "6a13fe668b1d51ee41e44d3d",
+                "staff-change-request"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "staff-change-action",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "// {\r\n//   \"mediaType\": \"poster\",\r\n//   \"action\": \"approve\"\r\n// }\r\n\r\n{\r\n  \"mediaType\": \"video\",\r\n  \"action\": \"reject\",\r\n  \"rejectReason\": \"Video staff unavailablehjhgtgjhyj\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/media-staff-change/6a13fe668b1d51ee41e44d3d/staff-change-action",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "media-staff-change",
+                "6a13fe668b1d51ee41e44d3d",
+                "staff-change-action"
               ]
             }
           },
@@ -1136,7 +996,7 @@
               "query": [
                 {
                   "key": "module",
-                  "value": "icts",
+                  "value": "audio",
                   "type": "text",
                   "disabled": true
                 }
@@ -1192,6 +1052,1192 @@
                   "type": "text",
                   "disabled": true
                 }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Feedback",
+      "item": [
+        {
+          "name": "Create Feedback",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"eventId\": \"6a06bcd99b582499da88448f\",\r\n  \"organizerId\": \"6a0411af4579d3137b255e73\",\r\n  \"sections\": [\r\n    {\r\n      \"sectionKey\": \"venue\",\r\n      \"sectionTitle\": \"Venue Management\",\r\n      \"rating\": 5,\r\n      \"ratingLabel\": \"Excellent\",\r\n      \"comment\": \"Hall arrangement was very good\"\r\n    },\r\n    {\r\n      \"sectionKey\": \"audio\",\r\n      \"sectionTitle\": \"Audio System\",\r\n      \"rating\": 3,\r\n      \"ratingLabel\": \"Neutral\",\r\n      \"comment\": \"Mic issue happened once\"\r\n    },\r\n    {\r\n      \"sectionKey\": \"food\",\r\n      \"sectionTitle\": \"Food & Refreshment\",\r\n      \"rating\": 4,\r\n      \"ratingLabel\": \"Positive\",\r\n      \"comment\": \"Food quality was nice\"\r\n    }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/feedback",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "feedback"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete feedback",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/feedback/6a0a9b123a3fc2e4c9af917d",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "feedback",
+                "6a0a9b123a3fc2e4c9af917d"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get feedback by id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/feedback/6a0a9b6f3a3fc2e4c9af917f",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "feedback",
+                "6a0a9b6f3a3fc2e4c9af917f"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get feedback by event id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/feedback/event/6a06bcd99b582499da88448f",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "feedback",
+                "event",
+                "6a06bcd99b582499da88448f"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Transport Inventory",
+      "item": [
+        {
+          "name": "post transport",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"vehicleType\": \"Van\",\r\n  \"totalCount\":2,\r\n  \"description\": \"College buses\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transport-inventory",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transport-inventory"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get transport-inventory",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"vehicleType\": \"Van\",\r\n  \"totalCount\":2,\r\n  \"description\": \"College buses\"\r\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transport-inventory",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transport-inventory"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "getb by id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"vehicleType\": \"Van\",\r\n  \"totalCount\":2,\r\n  \"description\": \"College buses\"\r\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transport-inventory/6a1530ed8038f91f954fd10f",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transport-inventory",
+                "6a1530ed8038f91f954fd10f"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "edit inventory",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"vehicleType\": \"Van\",\r\n  \"totalCount\":12,\r\n  \"description\": \"College buses1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transport-inventory/6a1531bd8038f91f954fd112",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transport-inventory",
+                "6a1531bd8038f91f954fd112"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"vehicleType\": \"Van\",\r\n  \"totalCount\":12,\r\n  \"description\": \"College buses1\"\r\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transport-inventory/6a1531bd8038f91f954fd112",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transport-inventory",
+                "6a1531bd8038f91f954fd112"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "avilable",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"vehicleType\": \"Van\",\r\n  \"totalCount\":2,\r\n  \"description\": \"College buses\"\r\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transport-inventory/available?pickupDateTime=2026-05-30T01:30:00.000Z&dropDateTime=2026-05-30T02:00:00.000Z",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transport-inventory",
+                "available"
+              ],
+              "query": [
+                {
+                  "key": "pickupDateTime",
+                  "value": "2026-05-30T01:30:00.000Z"
+                },
+                {
+                  "key": "dropDateTime",
+                  "value": "2026-05-30T02:00:00.000Z",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "table",
+      "item": [
+        {
+          "name": "dashboard table",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/table/dashboard-table?module=video",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "table",
+                "dashboard-table"
+              ],
+              "query": [
+                {
+                  "key": "module",
+                  "value": "video"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "individualdashbord",
+      "item": [
+        {
+          "name": "foodDashboardController",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "employee",
+                  "value": "6a0411af4579d3137b255e70",
+                  "type": "text"
+                },
+                {
+                  "key": "dayIndex",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "Pending",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Poster",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Video",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[posterContent]",
+                  "value": "Need promotional poster",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[certificateContent]",
+                  "value": "Certificate design for winners",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[trophyContent]",
+                  "value": "Golden trophy design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[priority]",
+                  "value": "High",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[specialRequirements]",
+                  "value": "Modern design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Digital Signage",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Standee",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Social Media",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][type]",
+                  "value": "Width",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][value]",
+                  "value": "1920",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][type]",
+                  "value": "Height",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][value]",
+                  "value": "1080",
+                  "type": "text"
+                },
+                {
+                  "key": "video[videoContent]",
+                  "value": "Need teaser video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[priority]",
+                  "value": "Urgent",
+                  "type": "text"
+                },
+                {
+                  "key": "video[specialRequirements]",
+                  "value": "Cinematic editing",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]",
+                  "value": "Invitation Video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]",
+                  "value": "Promo Teaser",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Stage Performance",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Audience Reactions",
+                  "type": "text"
+                },
+                {
+                  "key": "referenceCertificateFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
+                },
+                {
+                  "key": "poster[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "5e54b419-ef30-4f2b-9bcb-34ea3ddca974"
+                },
+                {
+                  "key": "video[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "9de5df86-1731-4ce5-a5c2-c0ef95d543d4"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/foods",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "foods"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Poster Dashboard Endpoint",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "employee",
+                  "value": "6a0411af4579d3137b255e70",
+                  "type": "text"
+                },
+                {
+                  "key": "dayIndex",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "Pending",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Poster",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Video",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[posterContent]",
+                  "value": "Need promotional poster",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[certificateContent]",
+                  "value": "Certificate design for winners",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[trophyContent]",
+                  "value": "Golden trophy design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[priority]",
+                  "value": "High",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[specialRequirements]",
+                  "value": "Modern design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Digital Signage",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Standee",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Social Media",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][type]",
+                  "value": "Width",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][value]",
+                  "value": "1920",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][type]",
+                  "value": "Height",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][value]",
+                  "value": "1080",
+                  "type": "text"
+                },
+                {
+                  "key": "video[videoContent]",
+                  "value": "Need teaser video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[priority]",
+                  "value": "Urgent",
+                  "type": "text"
+                },
+                {
+                  "key": "video[specialRequirements]",
+                  "value": "Cinematic editing",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]",
+                  "value": "Invitation Video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]",
+                  "value": "Promo Teaser",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Stage Performance",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Audience Reactions",
+                  "type": "text"
+                },
+                {
+                  "key": "referenceCertificateFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
+                },
+                {
+                  "key": "poster[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "5e54b419-ef30-4f2b-9bcb-34ea3ddca974"
+                },
+                {
+                  "key": "video[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "9de5df86-1731-4ce5-a5c2-c0ef95d543d4"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/individual-media/poster",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "individual-media",
+                "poster"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Video Dashboard Endpoint",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "employee",
+                  "value": "6a0411af4579d3137b255e70",
+                  "type": "text"
+                },
+                {
+                  "key": "dayIndex",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "Pending",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Poster",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Video",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[posterContent]",
+                  "value": "Need promotional poster",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[certificateContent]",
+                  "value": "Certificate design for winners",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[trophyContent]",
+                  "value": "Golden trophy design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[priority]",
+                  "value": "High",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[specialRequirements]",
+                  "value": "Modern design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Digital Signage",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Standee",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Social Media",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][type]",
+                  "value": "Width",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][value]",
+                  "value": "1920",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][type]",
+                  "value": "Height",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][value]",
+                  "value": "1080",
+                  "type": "text"
+                },
+                {
+                  "key": "video[videoContent]",
+                  "value": "Need teaser video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[priority]",
+                  "value": "Urgent",
+                  "type": "text"
+                },
+                {
+                  "key": "video[specialRequirements]",
+                  "value": "Cinematic editing",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]",
+                  "value": "Invitation Video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]",
+                  "value": "Promo Teaser",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Stage Performance",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Audience Reactions",
+                  "type": "text"
+                },
+                {
+                  "key": "referenceCertificateFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
+                },
+                {
+                  "key": "poster[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "5e54b419-ef30-4f2b-9bcb-34ea3ddca974"
+                },
+                {
+                  "key": "video[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "9de5df86-1731-4ce5-a5c2-c0ef95d543d4"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/individual-media/video",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "individual-media",
+                "video"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "purchase Dashboard Endpoint",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "employee",
+                  "value": "6a0411af4579d3137b255e70",
+                  "type": "text"
+                },
+                {
+                  "key": "dayIndex",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "Pending",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Poster",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Video",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[posterContent]",
+                  "value": "Need promotional poster",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[certificateContent]",
+                  "value": "Certificate design for winners",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[trophyContent]",
+                  "value": "Golden trophy design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[priority]",
+                  "value": "High",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[specialRequirements]",
+                  "value": "Modern design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Digital Signage",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Standee",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Social Media",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][type]",
+                  "value": "Width",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][value]",
+                  "value": "1920",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][type]",
+                  "value": "Height",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][value]",
+                  "value": "1080",
+                  "type": "text"
+                },
+                {
+                  "key": "video[videoContent]",
+                  "value": "Need teaser video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[priority]",
+                  "value": "Urgent",
+                  "type": "text"
+                },
+                {
+                  "key": "video[specialRequirements]",
+                  "value": "Cinematic editing",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]",
+                  "value": "Invitation Video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]",
+                  "value": "Promo Teaser",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Stage Performance",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Audience Reactions",
+                  "type": "text"
+                },
+                {
+                  "key": "referenceCertificateFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
+                },
+                {
+                  "key": "poster[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "5e54b419-ef30-4f2b-9bcb-34ea3ddca974"
+                },
+                {
+                  "key": "video[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "9de5df86-1731-4ce5-a5c2-c0ef95d543d4"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/purchase",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "purchase"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Transports Dashboard Endpoint",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "employee",
+                  "value": "6a0411af4579d3137b255e70",
+                  "type": "text"
+                },
+                {
+                  "key": "dayIndex",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "Pending",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Poster",
+                  "type": "text"
+                },
+                {
+                  "key": "typeOfMedia[]",
+                  "value": "Video",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[posterContent]",
+                  "value": "Need promotional poster",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[certificateContent]",
+                  "value": "Certificate design for winners",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[trophyContent]",
+                  "value": "Golden trophy design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[priority]",
+                  "value": "High",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[specialRequirements]",
+                  "value": "Modern design",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Digital Signage",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Standee",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[displayNeeded][]",
+                  "value": "Social Media",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][type]",
+                  "value": "Width",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][0][value]",
+                  "value": "1920",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][type]",
+                  "value": "Height",
+                  "type": "text"
+                },
+                {
+                  "key": "poster[sizes][1][value]",
+                  "value": "1080",
+                  "type": "text"
+                },
+                {
+                  "key": "video[videoContent]",
+                  "value": "Need teaser video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[priority]",
+                  "value": "Urgent",
+                  "type": "text"
+                },
+                {
+                  "key": "video[specialRequirements]",
+                  "value": "Cinematic editing",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]",
+                  "value": "Invitation Video",
+                  "type": "text"
+                },
+                {
+                  "key": "video[preEventVideos][]",
+                  "value": "Promo Teaser",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Stage Performance",
+                  "type": "text"
+                },
+                {
+                  "key": "video[eventCoverage][]",
+                  "value": "Audience Reactions",
+                  "type": "text"
+                },
+                {
+                  "key": "referenceCertificateFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
+                },
+                {
+                  "key": "referenceFiles",
+                  "type": "file",
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
+                },
+                {
+                  "key": "poster[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "5e54b419-ef30-4f2b-9bcb-34ea3ddca974"
+                },
+                {
+                  "key": "video[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "9de5df86-1731-4ce5-a5c2-c0ef95d543d4"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5005/api/transports",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5005",
+              "path": [
+                "api",
+                "transports"
               ]
             }
           },
@@ -1316,7 +2362,7 @@
                   "type": "text"
                 },
                 {
-                  "key": "video[preEventVideos][]Promo Teaser",
+                  "key": "video[preEventVideos][]",
                   "value": "Promo Teaser",
                   "type": "text"
                 },
@@ -1331,24 +2377,26 @@
                   "type": "text"
                 },
                 {
-                  "key": "referencePosterFiles",
-                  "type": "file",
-                  "src": "/C:/Users/HP/Downloads/consolidated (8).pdf"
-                },
-                {
-                  "key": "referencePosterFiles",
-                  "type": "file",
-                  "src": "/C:/Users/HP/Downloads/consolidated (8).pdf"
-                },
-                {
                   "key": "referenceCertificateFiles",
                   "type": "file",
-                  "src": "/C:/Users/HP/Downloads/service (3).pdf"
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
                 },
                 {
                   "key": "referenceFiles",
                   "type": "file",
-                  "src": "/C:/Users/HP/Downloads/consolidated (8).pdf"
+                  "src": "/C:/Users/HP/Downloads/faculty_appraisal_6a016c7e6ba7d3e58c631297.pdf"
+                },
+                {
+                  "key": "poster[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "5e54b419-ef30-4f2b-9bcb-34ea3ddca974"
+                },
+                {
+                  "key": "video[deliveryDate]",
+                  "value": "2026-05-25",
+                  "type": "text",
+                  "uuid": "9de5df86-1731-4ce5-a5c2-c0ef95d543d4"
                 }
               ]
             },
@@ -1939,6 +2987,228 @@
                 "api",
                 "transports",
                 "6a0599af6b7e172a484f15c4"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Faculty",
+      "item": [
+        {
+          "name": "Excel_Faculty_Import",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "faculties",
+                  "type": "file",
+                  "uuid": "23ff8874-e452-436d-a64d-68d06c1d3a78",
+                  "src": "/E:/Events/server/files/Faculty_Details.xlsx"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/faculty/import-faculty",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "faculty",
+                "import-faculty"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Individaul Faculty add",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Chandru R\",\r\n  \"empId\": \"Sece129\",\r\n  \"email\": \"chandru.r@sece.ac.in\",\r\n  \"phone\": 6382073665,\r\n  \"department\": \"Placement\",\r\n  \"dob\": \"2002-07-06\",\r\n  \"gender\": \"Male\",\r\n  \"doj\": \"2024-12-01\",\r\n  \"designation\": \"Full Stack Developer\",\r\n  \"employeeCategory\": \"Non-Teaching\",\r\n  \"location\": \"Chennai\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/faculty/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "faculty",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get individual faculty",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/faculty/69e71ad143efebd19aadc05d",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "faculty",
+                "69e71ad143efebd19aadc05d"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all facilty",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/faculty",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "faculty"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit faculty",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\":\"Abishekkrishna\",\r\n    \"department\":\"ECE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/faculty/69e71ad143efebd19aadc05d",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "faculty",
+                "69e71ad143efebd19aadc05d"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "faculty and asscoiated login delete",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/faculty/69e71ad143efebd19aadc05d",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "faculty",
+                "69e71ad143efebd19aadc05d"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Profile image",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/faculty/69eb77eb24e52ee13e40f077/profile-image",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "faculty",
+                "69eb77eb24e52ee13e40f077",
+                "profile-image"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add profile image",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "profileImage",
+                  "type": "file",
+                  "uuid": "08a456db-0dac-42f9-b829-1473784a1b01",
+                  "src": "/C:/Users/USER/Downloads/pms/jpg1.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/faculty/69eb77eb24e52ee13e40f077/profile-image",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "faculty",
+                "69eb77eb24e52ee13e40f077",
+                "profile-image"
               ]
             }
           },

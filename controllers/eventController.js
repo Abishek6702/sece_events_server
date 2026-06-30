@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Event = require("../models/Event.js");
 const {
   notifyEventCreation,
@@ -7,8 +8,12 @@ const {
   notifyEventRejection,
   notifyEventClosure,
 } = require("../utils/eventNotifications.js");
+const { restoreTransportInventory } = require("../utils/transport.js");
 require("dotenv").config();
-const mongoose = require("mongoose");
+const { allocateDefaultMediaStaff } = require("../utils/mediaStaffAllocation");
+const {
+  handleTransportSubmission,
+} = require("../utils/transportSubmissionHandler.js");
 
 const deepParse = (data) => {
   if (typeof data === "string") {
@@ -253,7 +258,11 @@ exports.createEvent = async (req, res) => {
         payload.mediaRequirementDetails,
       ),
     });
-
+    if (!eventData.timeline) {
+      eventData.timeline = {
+        departments: {},
+      };
+    }
     const normalizedStatus = normalizeStatus(payload);
     if (normalizedStatus) {
       eventData.status = normalizedStatus;
@@ -302,16 +311,41 @@ exports.createEvent = async (req, res) => {
 
     eventData.mediaRequirementDetails.mediaRequirements[0] = mediaDetails;
 
-    const event = await Event.create(eventData);
+    const session = await mongoose.startSession();
 
-    // 📧 Send notification for event creation
-    if (normalizedStatus === "Submitted") {
-      await notifyEventCreation(event);
+    try {
+      session.startTransaction();
+
+      // =====================================
+      // TRANSPORT INVENTORY DEDUCTION
+      // =====================================
+
+      if (eventData.status === "Submitted") {
+        await handleTransportSubmission(eventData, session);
+      }
+
+      const createdEvents = await Event.create([eventData], { session });
+
+      const event = createdEvents[0];
+
+      await session.commitTransaction();
+
+      // 📧 Send notification
+      if (normalizedStatus === "Submitted") {
+        await notifyEventCreation(event);
+      }
+
+      return res.status(201).json({
+        message: "Event created successfully",
+        data: event,
+      });
+    } catch (error) {
+      await session.abortTransaction();
+
+      throw error;
+    } finally {
+      await session.endSession();
     }
-
-    res
-      .status(201)
-      .json({ message: "Event created successfully", data: event });
   } catch (error) {
     console.error("Error creating event:", error);
     if (error.name === "ValidationError") {
@@ -331,9 +365,16 @@ exports.updateEvent = async (req, res) => {
     });
 
     const event = await Event.findById(req.params.id);
+
     if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+      return res.status(404).json({
+        message: "Event not found",
+      });
     }
+    const oldTransports =
+      event.transportDetails?.transports?.map((transport) =>
+        transport.toObject ? transport.toObject() : transport,
+      ) || [];
 
     if (payload.organizerId) {
       event.organizerId = payload.organizerId;
@@ -366,7 +407,7 @@ exports.updateEvent = async (req, res) => {
         ensureObject(payload.audioDetails),
       );
     }
-
+    const transportChanged = !!payload.transportDetails;
     if (payload.transportDetails) {
       event.transportDetails = mergeObjects(
         event.transportDetails || {},
@@ -402,7 +443,10 @@ exports.updateEvent = async (req, res) => {
       );
     }
 
+    const wasSubmitted = event.isSubmitted;
+
     const normalizedStatus = normalizeStatus(payload);
+
     if (normalizedStatus) {
       event.status = normalizedStatus;
       event.isSubmitted = normalizedStatus === "Submitted";
@@ -412,6 +456,49 @@ exports.updateEvent = async (req, res) => {
 
     applyUploadedFiles(event, req.files || {});
 
+    // =====================================
+    // TRANSPORT INVENTORY DEDUCTION
+    // =====================================
+
+    const becomingSubmitted =
+      !wasSubmitted &&
+      (normalizedStatus === "Submitted" || payload.isSubmitted === true);
+
+    if (!event.timeline) {
+      event.timeline = {
+        departments: {},
+      };
+    }
+    // =====================================
+    // FIRST TIME SUBMISSION
+    // =====================================
+    if (becomingSubmitted) {
+      event.timeline.submittedAt = new Date();
+    }
+    if (becomingSubmitted) {
+      await handleTransportSubmission(event);
+    }
+
+    // =====================================
+    // TRANSPORT UPDATED AFTER SUBMISSION
+    // =====================================
+    else if (
+      wasSubmitted &&
+      event.isSubmitted &&
+      transportChanged &&
+      !event.transportInventoryRestored
+    ) {
+      // RESTORE OLD VEHICLES
+
+      for (const transport of oldTransports) {
+        await restoreTransportInventory(transport.vehicles);
+      }
+
+      // DEDUCT NEW VEHICLES
+
+      await handleTransportSubmission(event);
+    }
+    event.timeline.updatedAt = new Date();
     const updatedEvent = await event.save();
     res
       .status(200)
@@ -423,7 +510,10 @@ exports.updateEvent = async (req, res) => {
         .status(400)
         .json({ message: "Validation error", errors: error.errors });
     }
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
@@ -453,11 +543,31 @@ exports.submitEvent = async (req, res) => {
       );
     }
 
-    const normalizedStatus = normalizeStatus({ ...payload, isSubmitted: true });
+    const wasSubmitted = event.isSubmitted;
+
+    const normalizedStatus = normalizeStatus({
+      ...payload,
+      isSubmitted: true,
+    });
+
     event.status = normalizedStatus || "Submitted";
     event.isSubmitted = true;
+    if (!event.timeline) {
+      event.timeline = {
+        departments: {},
+      };
+    }
+    event.timeline.submittedAt = new Date();
 
     applyUploadedFiles(event, req.files || {});
+
+    // =====================================
+    // TRANSPORT INVENTORY DEDUCTION
+    // =====================================
+
+    if (!wasSubmitted) {
+      await handleTransportSubmission(event);
+    }
 
     const updatedEvent = await event.save();
     res
@@ -661,7 +771,7 @@ exports.getFilteredEvents = async (req, res) => {
 exports.updateEventStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { action, module, remarks, reason } = req.body;
+    const { action, module, mediaType, remarks, reason } = req.body;
 
     const event = await Event.findById(id);
 
@@ -684,6 +794,12 @@ exports.updateEventStatus = async (req, res) => {
       case "submit":
         event.isSubmitted = true;
         event.status = "Submitted";
+        if (!event.timeline) {
+          event.timeline = {
+            departments: {},
+          };
+        }
+        event.timeline.submittedAt = new Date();
         // 📧 Send notification for event creation/submission
         await notifyEventCreation(event);
         break;
@@ -691,6 +807,12 @@ exports.updateEventStatus = async (req, res) => {
       case "hodApprove":
         event.isHodApproved = true;
         event.status = "HodApproved";
+        if (!event.timeline) {
+          event.timeline = {
+            departments: {},
+          };
+        }
+        event.timeline.hodApprovedAt = new Date();
         // 📧 Send notification for HOD approval
         await notifyHODApproval(event);
         break;
@@ -698,6 +820,13 @@ exports.updateEventStatus = async (req, res) => {
       case "adminApprove":
         event.adminApproval = true;
         event.status = "Approved";
+        if (!event.timeline) {
+          event.timeline = {
+            departments: {},
+          };
+        }
+        event.timeline.adminApprovedAt = new Date();
+        await allocateDefaultMediaStaff(event);
         // 📧 Send notification for admin approval and to department heads
         await notifyAdminApproval(event);
         await notifyDepartmentHeads(event);
@@ -705,12 +834,46 @@ exports.updateEventStatus = async (req, res) => {
 
       case "reject":
         event.status = "Rejected";
+        if (
+          event.isSubmitted &&
+          !event.transportInventoryRestored &&
+          event.transportDetails?.transports?.length
+        ) {
+          for (const transport of event.transportDetails.transports) {
+            await restoreTransportInventory(transport.vehicles);
+          }
+
+          event.transportInventoryRestored = true;
+        }
+        if (!event.timeline) {
+          event.timeline = {
+            departments: {},
+          };
+        }
+        event.timeline.rejectedAt = new Date();
         // 📧 Send notification for rejection
         await notifyEventRejection(event, reason || "");
         break;
 
       case "close":
         event.status = "Closed";
+        if (!event.timeline) {
+          event.timeline = {
+            departments: {},
+          };
+        }
+        event.timeline.closedAt = new Date();
+        if (
+          event.isSubmitted &&
+          !event.transportInventoryRestored &&
+          event.transportDetails?.transports?.length
+        ) {
+          for (const transport of event.transportDetails.transports) {
+            await restoreTransportInventory(transport.vehicles);
+          }
+
+          event.transportInventoryRestored = true;
+        }
         // 📧 Send notification for event closure
         await notifyEventClosure(event, reason || "");
         break;
@@ -731,13 +894,80 @@ exports.updateEventStatus = async (req, res) => {
         if (!event[path]) {
           event[path] = {};
         }
-
-        if (!event[path].status) {
-          event[path].status = {};
+        if (!event.timeline) {
+          event.timeline = {};
         }
 
-        event[path].status.status = "Acknowledged";
-        event[path].status.remarks = remarks || "";
+        if (!event.timeline.departments) {
+          event.timeline.departments = {};
+        }
+
+        if (module === "media") {
+          if (!mediaType || !["poster", "video"].includes(mediaType)) {
+            return res.status(400).json({
+              message: "Valid mediaType is required for media module",
+            });
+          }
+
+          event[path].mediaRequirements.forEach((media) => {
+            if (!event.timeline.departments[mediaType]) {
+              event.timeline.departments[mediaType] = {};
+            }
+
+            event.timeline.departments[mediaType].acknowledgedAt = new Date();
+            media[mediaType].status = "Acknowledged";
+            media[mediaType].remarks = remarks || "";
+          });
+        } else {
+          if (!event[path].status) {
+            event[path].status = {};
+          }
+
+          event[path].status.status = "Acknowledged";
+          if (!event.timeline.departments[module]) {
+            event.timeline.departments[module] = {};
+          }
+
+          event.timeline.departments[module].acknowledgedAt = new Date();
+          event[path].status.remarks = remarks || "";
+        }
+
+        break;
+      }
+      case "adminCancel": {
+        if (!module) {
+          return res.status(400).json({
+            message: "Module is required for admin cancellation",
+          });
+        }
+
+        const path = moduleMap[module];
+
+        if (!path) {
+          return res.status(400).json({ message: "Invalid module" });
+        }
+
+        if (!event[path]) {
+          event[path] = {};
+        }
+
+        if (module === "media") {
+          if (!mediaType || !["poster", "video"].includes(mediaType)) {
+            return res.status(400).json({
+              message: "Valid mediaType is required for media module",
+            });
+          }
+
+          event[path].mediaRequirements.forEach((media) => {
+            media[mediaType].status = "Admin Cancelled";
+          });
+        } else {
+          if (!event[path].status) {
+            event[path].status = {};
+          }
+
+          event[path].status.status = "Admin Cancelled";
+        }
 
         break;
       }
@@ -757,16 +987,47 @@ exports.updateEventStatus = async (req, res) => {
         if (!event[path]) {
           event[path] = {};
         }
-
-        if (!event[path].status) {
-          event[path].status = {};
+        if (!event.timeline) {
+          event.timeline = {};
         }
 
-        event[path].status.status = "Completed";
-        event[path].status.remarks = remarks || "";
+        if (!event.timeline.departments) {
+          event.timeline.departments = {};
+        }
+
+        if (module === "media") {
+          if (!mediaType || !["poster", "video"].includes(mediaType)) {
+            return res.status(400).json({
+              message: "Valid mediaType is required for media module",
+            });
+          }
+
+          event[path].mediaRequirements.forEach((media) => {
+            media[mediaType].status = "Completed";
+            media[mediaType].remarks = remarks || "";
+            if (!event.timeline.departments[mediaType]) {
+              event.timeline.departments[mediaType] = {};
+            }
+
+            event.timeline.departments[mediaType].completedAt = new Date();
+          });
+        } else {
+          if (!event[path].status) {
+            event[path].status = {};
+          }
+
+          event[path].status.status = "Completed";
+          if (!event.timeline.departments[module]) {
+            event.timeline.departments[module] = {};
+          }
+
+          event.timeline.departments[module].completedAt = new Date();
+          event[path].status.remarks = remarks || "";
+        }
 
         break;
       }
+
       default:
         return res.status(400).json({ message: "Invalid action" });
     }
@@ -783,14 +1044,12 @@ exports.updateEventStatus = async (req, res) => {
   }
 };
 
-
-
 exports.getRequirementDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
     const event = await Event.findById(id).select(
-      "requestDetails.requirementDetails"
+      "requestDetails.requirementDetails",
     );
 
     if (!event) {
@@ -802,8 +1061,7 @@ exports.getRequirementDetails = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      requirementDetails:
-        event.requestDetails?.requirementDetails || {},
+      requirementDetails: event.requestDetails?.requirementDetails || {},
     });
   } catch (error) {
     console.error("Error fetching requirement details:", error);
@@ -815,4 +1073,94 @@ exports.getRequirementDetails = async (req, res) => {
   }
 };
 
-;
+// Get draft event for a particular user
+exports.getUserDraftEvents = async (req, res) => {
+  try {
+    const { organizerId } = req.params;
+
+    const draftEvents = await Event.find({
+      organizerId,
+      status: "Draft",
+      isSubmitted: false,
+    }).sort({ updatedAt: -1 });
+
+    // no drafts found
+    if (!draftEvents || draftEvents.length === 0) {
+      return res.status(200).json({
+        success: true,
+        hasDrafts: false,
+        totalDrafts: 0,
+        message: "No draft events found",
+        data: [],
+      });
+    }
+
+    // drafts found
+    return res.status(200).json({
+      success: true,
+      hasDrafts: true,
+      totalDrafts: draftEvents.length,
+      message: "Draft events fetched successfully",
+      data: draftEvents,
+    });
+  } catch (error) {
+    console.error("Get Draft Events Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+exports.requestMediaStaffChange = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { mediaType, requestedStaff, reason } = req.body;
+
+    const event = await Event.findById(id);
+
+    if (!event) {
+      return res.status(404).json({
+        message: "Event not found",
+      });
+    }
+
+    if (!mediaType || !["poster", "video"].includes(mediaType)) {
+      return res.status(400).json({
+        message: "Valid mediaType is required",
+      });
+    }
+
+    event.mediaRequirementDetails.mediaRequirements.forEach((media) => {
+      media[mediaType].staffChangeRequest = {
+        requested: true,
+
+        requestedStaff,
+
+        staffChangeStatus: "Pending",
+
+        staffChangeReason: reason,
+
+        rejectReason: "",
+
+        approvedAt: null,
+      };
+    });
+
+    await event.save();
+
+    res.status(200).json({
+      message: `${mediaType} staff change requested successfully`,
+      data: event,
+    });
+  } catch (error) {
+    console.error("Staff change request error:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
