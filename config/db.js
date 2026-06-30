@@ -1,7 +1,10 @@
 const mongoose = require('mongoose');
 const dontenv = require('dotenv');
+const dns = require('dns')
 
 dontenv.config();
+
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 // MongoDB connecton establishment
 const connectDB = async()=>{
