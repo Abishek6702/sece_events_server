@@ -3215,6 +3215,198 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "EventType",
+      "item": [
+        {
+          "name": "create new event type with documents list",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"eventType\": \"Webinar\",\r\n  \"documents\": [\r\n    {\r\n      \"name\": \"Banner Image\",\r\n      \"isActive\": true,\r\n      \"order\": 1\r\n    },\r\n    {\r\n      \"name\": \"Attendance Sheet\",\r\n      \"isActive\": true,\r\n      \"order\": 2\r\n    },\r\n    {\r\n      \"name\": \"Event Photos\",\r\n      \"isActive\": true,\r\n      \"order\": 3\r\n    },\r\n    {\r\n      \"name\": \"Feedback Report\",\r\n      \"isActive\": false,\r\n      \"order\": 4\r\n    }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/eventTypes/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "eventTypes",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get event types",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/eventTypes/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "eventTypes",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get event type by id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/eventTypes/6a4f3f573e1148d3c70ded78",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "eventTypes",
+                "6a4f3f573e1148d3c70ded78"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "edit event type",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"eventType\": \"Webinar\",\r\n  \"documents\": [\r\n    {\r\n      \"name\": \"Attendance Sheet\",\r\n      \"isActive\": true,\r\n      \"order\": 1\r\n    },\r\n    {\r\n      \"name\": \"Banner Image\",\r\n      \"isActive\": true,\r\n      \"order\": 2\r\n    },\r\n    {\r\n      \"name\": \"Feedback Report\",\r\n      \"isActive\": true,\r\n      \"order\": 3\r\n    },\r\n    {\r\n      \"name\": \"Event Photos\",\r\n      \"isActive\": false,\r\n      \"order\": 4\r\n    },\r\n    {\r\n      \"name\": \"Certificate\",\r\n      \"isActive\": true,\r\n      \"order\": 5\r\n    }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/eventTypes/6a4f3f573e1148d3c70ded78",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "eventTypes",
+                "6a4f3f573e1148d3c70ded78"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete particular document in event type",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"eventType\": \"Webinar\",\r\n  \"documents\": [\r\n    {\r\n      \"name\": \"Attendance Sheet\",\r\n      \"isActive\": true,\r\n      \"order\": 1\r\n    },\r\n    {\r\n      \"name\": \"Banner Image\",\r\n      \"isActive\": true,\r\n      \"order\": 2\r\n    },\r\n    {\r\n      \"name\": \"Feedback Report\",\r\n      \"isActive\": true,\r\n      \"order\": 3\r\n    },\r\n    {\r\n      \"name\": \"Event Photos\",\r\n      \"isActive\": false,\r\n      \"order\": 4\r\n    },\r\n    {\r\n      \"name\": \"Certificate\",\r\n      \"isActive\": true,\r\n      \"order\": 5\r\n    }\r\n  ]\r\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/eventTypes/6a4f3f573e1148d3c70ded78/document/6a4f421c3e1148d3c70ded89",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "eventTypes",
+                "6a4f3f573e1148d3c70ded78",
+                "document",
+                "6a4f421c3e1148d3c70ded89"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "make active to inactive toggle",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/eventTypes/6a4f3f573e1148d3c70ded78/document/6a4f421c3e1148d3c70ded8b/toggle",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "eventTypes",
+                "6a4f3f573e1148d3c70ded78",
+                "document",
+                "6a4f421c3e1148d3c70ded8b",
+                "toggle"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete event type completely",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/eventTypes/6a4f3f573e1148d3c70ded78",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "eventTypes",
+                "6a4f3f573e1148d3c70ded78"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }
