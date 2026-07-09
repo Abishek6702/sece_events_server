@@ -1,4 +1,5 @@
 const Venue = require('../models/Venue');
+const Event = require('../models/Event');
 
 const xlsx = require('xlsx');
 
@@ -202,6 +203,125 @@ const getVenueOptions = async (req, res) => {
   }
 };
 
+const getVenueBookingCounts = async (req, res) => {
+  try {
+    const year = Number(req.query.year || new Date().getFullYear());
+
+    if (!Number.isInteger(year) || year < 1900 || year > 3000) {
+      return res.status(400).json({
+        message: "Invalid year. Use a valid year like 2026"
+      });
+    }
+
+    const statuses = (req.query.statuses || "Approved,Closed")
+      .split(",")
+      .map(status => status.trim())
+      .filter(Boolean);
+
+    const startDate = new Date(Date.UTC(year, 0, 1));
+    const endDate = new Date(Date.UTC(year + 1, 0, 1));
+
+    const bookingCounts = await Event.aggregate([
+      {
+        $match: {
+          status: { $in: statuses },
+          "venueDetails.venues.0": { $exists: true }
+        }
+      },
+      { $unwind: "$venueDetails.venues" },
+      {
+        $match: {
+          "venueDetails.venues.venueName": { $type: "string", $ne: "" }
+        }
+      },
+      {
+        $addFields: {
+          bookingDate: {
+            $arrayElemAt: [
+              "$requestDetails.eventDetails.eventSchedule.eventDate",
+              "$venueDetails.venues.dayIndex"
+            ]
+          },
+          normalizedVenueName: {
+            $trim: { input: "$venueDetails.venues.venueName" }
+          }
+        }
+      },
+      {
+        $match: {
+          bookingDate: { $gte: startDate, $lt: endDate },
+          normalizedVenueName: { $ne: "" }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            eventId: "$_id",
+            dayIndex: "$venueDetails.venues.dayIndex",
+            venueName: "$normalizedVenueName"
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.venueName",
+          bookingCount: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          venueName: "$_id",
+          bookingCount: 1
+        }
+      },
+      { $sort: { bookingCount: -1, venueName: 1 } }
+    ]);
+
+    const venues = await Venue.find({}, { venue: 1 }).sort({ venue: 1 });
+    const countByVenueName = new Map(
+      bookingCounts.map(item => [
+        item.venueName.trim().toLowerCase(),
+        item.bookingCount
+      ])
+    );
+
+    const data = venues
+      .map(venue => ({
+        venueId: venue._id,
+        venueName: venue.venue,
+        bookingCount: countByVenueName.get(venue.venue.trim().toLowerCase()) || 0
+      }))
+      .filter(venue => venue.bookingCount > 0);
+
+    const knownVenueNames = new Set(
+      venues.map(venue => venue.venue.trim().toLowerCase())
+    );
+
+    bookingCounts.forEach(item => {
+      const key = item.venueName.trim().toLowerCase();
+
+      if (!knownVenueNames.has(key)) {
+        data.push({
+          venueId: null,
+          venueName: item.venueName,
+          bookingCount: item.bookingCount
+        });
+      }
+    });
+
+    res.json({
+      year,
+      statuses,
+      count: data.length,
+      data
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   importVenuesFromExcel,
   createVenue,
@@ -209,5 +329,6 @@ module.exports = {
   getVenueById,
   updateVenue,
   deleteVenue,
-  getVenueOptions
+  getVenueOptions,
+  getVenueBookingCounts
 };

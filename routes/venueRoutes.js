@@ -8,7 +8,8 @@ const {
   updateVenue,
   deleteVenue,
   importVenuesFromExcel,
-  getVenueOptions
+  getVenueOptions,
+  getVenueBookingCounts
 } = require('../controllers/venueController');
 
 const upload = require('../middleware/upload'); 
@@ -26,6 +27,7 @@ router.get('/', getAllVenues);
 
 // ➤ Get venue options
 router.get('/options', getVenueOptions);
+router.get('/booking-counts', getVenueBookingCounts);
 
 // ➤ Get by ID (IMPORTANT: keep AFTER other GET routes)
 router.get('/:id', getVenueById);
