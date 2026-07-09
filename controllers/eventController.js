@@ -15,6 +15,8 @@ const {
   handleTransportSubmission,
 } = require("../utils/transportSubmissionHandler.js");
 
+const assignIQACNumber = require("../utils/assignIQACNumber");
+
 const deepParse = (data) => {
   if (typeof data === "string") {
     try {
@@ -321,6 +323,12 @@ exports.createEvent = async (req, res) => {
       // =====================================
 
       if (eventData.status === "Submitted") {
+        eventData.timeline.submittedAt = new Date();
+
+        // Generate IQAC Number
+        await assignIQACNumber(eventData, session);
+
+        // Deduct Transport Inventory
         await handleTransportSubmission(eventData, session);
       }
 
@@ -474,8 +482,10 @@ exports.updateEvent = async (req, res) => {
     // =====================================
     if (becomingSubmitted) {
       event.timeline.submittedAt = new Date();
-    }
-    if (becomingSubmitted) {
+
+      // Generate IQAC Number
+      await assignIQACNumber(event);
+
       await handleTransportSubmission(event);
     }
 
@@ -552,6 +562,11 @@ exports.submitEvent = async (req, res) => {
 
     event.status = normalizedStatus || "Submitted";
     event.isSubmitted = true;
+
+    if (!wasSubmitted) {
+      await assignIQACNumber(event);
+    }
+
     if (!event.timeline) {
       event.timeline = {
         departments: {},

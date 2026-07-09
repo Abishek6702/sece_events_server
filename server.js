@@ -19,6 +19,7 @@ const mediaStaffChangeRoutes = require("./routes/mediaStaffChangeRoutes");
 const transportInventoryRoutes = require("./routes/transportInventoryRoutes");
 const tableRoutes = require("./routes/tableRoutes");
 const eventTypeRoutes = require("./routes/eventTypeRoutes");
+const testRoutes = require("./routes/testRoutes");
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ connectDB();
 
 app.use(express.json());
 
+app.use("/api/test",testRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/faculty", facultyRoutes);
 app.use("/api/venues", venueRoutes);

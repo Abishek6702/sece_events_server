@@ -627,7 +627,10 @@ const eventSchema = new mongoose.Schema(
       ref: "Faculty",
       required: true,
     },
-
+    iqacNumber:{
+      type:String,
+      unique:true
+  },
     requestDetails: requestSchema,
     venueDetails: venueSchema,
     ictsDetails: ictsSchema,
