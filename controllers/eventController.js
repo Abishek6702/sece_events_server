@@ -247,6 +247,68 @@ const applyUploadedFiles = (event, files) => {
   event.mediaRequirementDetails.mediaRequirements[0] = mediaDetails;
 };
 
+function resetDepartment(event, module, adminRemark) {
+  const now = new Date();
+
+  const moduleMap = {
+    venue: "venueDetails",
+    icts: "ictsDetails",
+    audio: "audioDetails",
+    transport: "transportDetails",
+    refreshment: "refreshmentDetails",
+    accommodation: "accommodationDetails",
+    purchase: "purchaseDetails",
+  };
+
+  if (module === "media") {
+    event.mediaRequirementDetails.mediaRequirements.forEach((media) => {
+      if (media.poster) {
+        media.poster.status = "Pending for Acknowledge";
+        media.poster.remarks = "";              // NEW
+        media.poster.adminEditRemark = adminRemark;
+        media.poster.adminEditedAt = now;
+      }
+      
+      if (media.video) {
+        media.video.status = "Pending for Acknowledge";
+        media.video.remarks = "";               // NEW
+        media.video.adminEditRemark = adminRemark;
+        media.video.adminEditedAt = now;
+      }
+    });
+
+    event.timeline.departments.poster = {
+      acknowledgedAt: null,
+      completedAt: null,
+    };
+    
+    event.timeline.departments.video = {
+      acknowledgedAt: null,
+      completedAt: null,
+    };
+
+    return;
+  }
+
+  const path = moduleMap[module];
+
+if (!event[path]) return;
+
+if (!event[path].status) {
+  event[path].status = {};
+}
+
+event[path].status.status = "Pending for Acknowledge";
+event[path].status.remarks = "";
+event[path].status.adminEditRemark = adminRemark;
+event[path].status.adminEditedAt = now;
+
+event.timeline.departments[module] = {
+  acknowledgedAt: null,
+  completedAt: null,
+};
+}
+
 exports.createEvent = async (req, res) => {
   // console.log("BODY:", req.body);
   try {
@@ -375,10 +437,20 @@ exports.createEvent = async (req, res) => {
 exports.updateEvent = async (req, res) => {
   try {
     const payload = {};
+    
     Object.keys(req.body).forEach((key) => {
       payload[key] = deepParse(req.body[key]);
     });
-
+    const changedModules = {
+      venue: !!payload.venueDetails,
+      icts: !!payload.ictsDetails,
+      audio: !!payload.audioDetails,
+      transport: !!payload.transportDetails,
+      refreshment: !!payload.refreshmentDetails,
+      accommodation: !!payload.accommodationDetails,
+      purchase: !!payload.purchaseDetails,
+      media: !!payload.mediaRequirementDetails,
+    };
     const event = await Event.findById(req.params.id);
 
     if (!event) {
@@ -515,7 +587,19 @@ exports.updateEvent = async (req, res) => {
 
       await handleTransportSubmission(event);
     }
+    if (event.adminApproval) {
+      Object.entries(changedModules).forEach(([module, changed]) => {
+        if (changed) {
+          resetDepartment(
+            event,
+            module,
+            payload.adminEditRemark || ""
+          );
+        }
+      });
+    }
     event.timeline.updatedAt = new Date();
+    
     const updatedEvent = await event.save();
     res
       .status(200)

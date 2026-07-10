@@ -12,6 +12,10 @@ const departmentStatusSchema = new mongoose.Schema({
     default: "Pending for Acknowledge",
   },
   remarks: { type: String },
+
+  adminEditRemark: String,
+
+  adminEditedAt: Date,
 });
 
 const fileReferenceSchema = new mongoose.Schema(
@@ -541,6 +545,9 @@ const mediaRequirementSchema = new mongoose.Schema(
             enum: ["Pending for Acknowledge", "Acknowledged", "Completed"],
             default: "Pending for Acknowledge",
           },
+          remarks: String,
+          adminEditRemark: String,
+          adminEditedAt: Date,
         },
 
         video: {
@@ -602,6 +609,8 @@ const mediaRequirementSchema = new mongoose.Schema(
             enum: ["Pending for Acknowledge", "Acknowledged", "Completed"],
             default: "Pending for Acknowledge",
           },
+          adminEditRemark: String,
+          adminEditedAt: Date,
           remarks: String,
         },
       },
