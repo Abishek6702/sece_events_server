@@ -199,7 +199,10 @@ const applyUploadedFiles = (event, files) => {
   event.requestDetails.organizerDetails = ensureObject(
     event.requestDetails.organizerDetails,
   );
-
+  if (files.principalApprovalDocument && files.principalApprovalDocument[0]) {
+    event.requestDetails.organizerDetails.principalApprovalDocument =
+      normalizeFileReference(files.principalApprovalDocument[0]);
+  }
   if (files.previousEventDocumentation && files.previousEventDocumentation[0]) {
     event.requestDetails.organizerDetails.previousEventDocumentationDetails =
       normalizeFileReference(files.previousEventDocumentation[0]);
@@ -278,7 +281,11 @@ exports.createEvent = async (req, res) => {
     );
 
     const files = req.files || {};
-
+    if (files.principalApprovalDocument && files.principalApprovalDocument[0]) {
+      eventData.requestDetails.organizerDetails.principalApprovalDocument =
+        normalizeFileReference(files.principalApprovalDocument[0]);
+    }
+    
     if (
       files.previousEventDocumentation &&
       files.previousEventDocumentation[0]

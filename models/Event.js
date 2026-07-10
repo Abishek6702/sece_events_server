@@ -25,12 +25,16 @@ const fileReferenceSchema = new mongoose.Schema(
 // organizerDetails (finalized)
 const organizerSchema = new mongoose.Schema(
   {
+    principalApprovalDocument: fileReferenceSchema,
     previousEventDocumentation: { type: Boolean, default: false },
     previousEventDocumentationDetails: fileReferenceSchema,
     previousEventReason: { type: String },
 
     isBudgetApproved: { type: Boolean, default: false },
     financeRequired: { type: Boolean, default: false },
+
+    advanceAmount: { type: Number },
+    purposeOfAdvance: { type: String },
 
     organizingDepartment: { type: String },
     organizerCount: { type: Number },
@@ -508,7 +512,7 @@ const mediaRequirementSchema = new mongoose.Schema(
               type: Boolean,
               default: false,
             },
-          
+
             requestedStaff: [
               {
                 facultyId: {
@@ -519,22 +523,17 @@ const mediaRequirementSchema = new mongoose.Schema(
                 email: String,
               },
             ],
-          
+
             staffChangeStatus: {
               type: String,
-              enum: [
-                "Pending",
-                "Approved",
-                "Rejected",
-                "Not Requested",
-              ],
+              enum: ["Pending", "Approved", "Rejected", "Not Requested"],
               default: "Not Requested",
             },
-          
+
             staffChangeReason: String,
-          
+
             rejectReason: String,
-          
+
             approvedAt: Date,
           },
           status: {
@@ -542,8 +541,6 @@ const mediaRequirementSchema = new mongoose.Schema(
             enum: ["Pending for Acknowledge", "Acknowledged", "Completed"],
             default: "Pending for Acknowledge",
           },
-
-       
         },
 
         video: {
@@ -576,7 +573,7 @@ const mediaRequirementSchema = new mongoose.Schema(
               type: Boolean,
               default: false,
             },
-          
+
             requestedStaff: [
               {
                 facultyId: {
@@ -587,22 +584,17 @@ const mediaRequirementSchema = new mongoose.Schema(
                 email: String,
               },
             ],
-          
+
             staffChangeStatus: {
               type: String,
-              enum: [
-                "Pending",
-                "Approved",
-                "Rejected",
-                "Not Requested",
-              ],
+              enum: ["Pending", "Approved", "Rejected", "Not Requested"],
               default: "Not Requested",
             },
-          
+
             staffChangeReason: String,
-          
+
             rejectReason: String,
-          
+
             approvedAt: Date,
           },
           status: {
@@ -614,7 +606,6 @@ const mediaRequirementSchema = new mongoose.Schema(
         },
       },
     ],
-    
   },
   { _id: false },
 );
@@ -627,10 +618,10 @@ const eventSchema = new mongoose.Schema(
       ref: "Faculty",
       required: true,
     },
-    iqacNumber:{
-      type:String,
-      unique:true
-  },
+    iqacNumber: {
+      type: String,
+      unique: true,
+    },
     requestDetails: requestSchema,
     venueDetails: venueSchema,
     ictsDetails: ictsSchema,
@@ -669,58 +660,58 @@ const eventSchema = new mongoose.Schema(
 
     timeline: {
       submittedAt: Date,
-    
+
       hodApprovedAt: Date,
-    
+
       adminApprovedAt: Date,
-    
+
       rejectedAt: Date,
-    
+
       closedAt: Date,
-    
+
       updatedAt: Date,
-    
+
       departments: {
         venue: {
           acknowledgedAt: Date,
           completedAt: Date,
         },
-    
+
         icts: {
           acknowledgedAt: Date,
           completedAt: Date,
         },
-    
+
         audio: {
           acknowledgedAt: Date,
           completedAt: Date,
         },
-    
+
         transport: {
           acknowledgedAt: Date,
           completedAt: Date,
         },
-    
+
         refreshment: {
           acknowledgedAt: Date,
           completedAt: Date,
         },
-    
+
         accommodation: {
           acknowledgedAt: Date,
           completedAt: Date,
         },
-    
+
         purchase: {
           acknowledgedAt: Date,
           completedAt: Date,
         },
-    
+
         poster: {
           acknowledgedAt: Date,
           completedAt: Date,
         },
-    
+
         video: {
           acknowledgedAt: Date,
           completedAt: Date,

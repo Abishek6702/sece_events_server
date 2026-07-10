@@ -16,6 +16,7 @@ const {
 } = require("../controllers/eventController.js");
 
 const uploadFields = upload.fields([
+  { name: "principalApprovalDocument", maxCount: 1 },
   { name: "previousEventDocumentation", maxCount: 1 },
   { name: "referencePosterFiles", maxCount: 5 },
   { name: "referenceCertificateFiles", maxCount: 5 },
