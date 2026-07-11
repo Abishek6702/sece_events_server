@@ -9,6 +9,7 @@ const {
   editFaculty,
   uploadProfileImage,
   deleteProfileImage,
+  searchFaculty,
 } = require("../controllers/facultyController");
 const { protect } = require("../middleware/protect");
 const upload = require("../middleware/upload");
@@ -21,6 +22,9 @@ router.post("/import-faculty", upload.single("faculties"), importExcelFaculty);
 router.post("/", addIndividualFaculty);
 
 router.get("/", getFaculties);
+
+router.get("/search", searchFaculty);
+
 
 router.get("/:id", getFacultyId);
 

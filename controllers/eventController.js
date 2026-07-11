@@ -247,6 +247,19 @@ const applyUploadedFiles = (event, files) => {
   event.mediaRequirementDetails.mediaRequirements[0] = mediaDetails;
 };
 
+const initializeDepartmentStatus = (details) => {
+  if (!details.status) {
+    details.status = {
+      status: "Pending for Acknowledge",
+      remarks: "",
+      adminEditRemark: "",
+      adminEditedAt: null,
+    };
+  }
+
+  return details;
+};
+
 function resetDepartment(event, module, adminRemark) {
   const now = new Date();
 
@@ -479,6 +492,7 @@ exports.updateEvent = async (req, res) => {
         event.venueDetails || {},
         ensureObject(payload.venueDetails),
       );
+      initializeDepartmentStatus(event.venueDetails);
     }
 
     if (payload.ictsDetails) {
@@ -486,6 +500,7 @@ exports.updateEvent = async (req, res) => {
         event.ictsDetails || {},
         ensureObject(payload.ictsDetails),
       );
+      initializeDepartmentStatus(event.ictsDetails);
     }
 
     if (payload.audioDetails) {
@@ -493,6 +508,7 @@ exports.updateEvent = async (req, res) => {
         event.audioDetails || {},
         ensureObject(payload.audioDetails),
       );
+      initializeDepartmentStatus(event.audioDetails);
     }
     const transportChanged = !!payload.transportDetails;
     if (payload.transportDetails) {
@@ -500,6 +516,7 @@ exports.updateEvent = async (req, res) => {
         event.transportDetails || {},
         ensureObject(payload.transportDetails),
       );
+      initializeDepartmentStatus(event.transportDetails);
     }
 
     if (payload.refreshmentDetails) {
@@ -507,6 +524,8 @@ exports.updateEvent = async (req, res) => {
         event.refreshmentDetails || {},
         ensureObject(payload.refreshmentDetails),
       );
+      
+      initializeDepartmentStatus(event.refreshmentDetails);
     }
 
     if (payload.accommodationDetails) {
@@ -514,6 +533,8 @@ exports.updateEvent = async (req, res) => {
         event.accommodationDetails || {},
         ensureObject(payload.accommodationDetails),
       );
+      
+      initializeDepartmentStatus(event.accommodationDetails);
     }
 
     if (payload.purchaseDetails) {
@@ -521,6 +542,7 @@ exports.updateEvent = async (req, res) => {
         event.purchaseDetails || {},
         ensureObject(payload.purchaseDetails),
       );
+      initializeDepartmentStatus(event.purchaseDetails);
     }
 
     if (payload.mediaRequirementDetails) {
@@ -1154,9 +1176,19 @@ exports.getRequirementDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const event = await Event.findById(id).select(
-      "requestDetails.requirementDetails",
-    );
+    const event = await Event.findById(id).select(`
+      requestDetails.requirementDetails
+      requestDetails.organizerDetails.financeRequired
+      venueDetails.status
+      ictsDetails.status
+      audioDetails.status
+      transportDetails.status
+      refreshmentDetails.status
+      accommodationDetails.status
+      purchaseDetails.status
+      mediaRequirementDetails.mediaRequirements.poster
+      mediaRequirementDetails.mediaRequirements.video
+    `);
 
     if (!event) {
       return res.status(404).json({
@@ -1165,9 +1197,79 @@ exports.getRequirementDetails = async (req, res) => {
       });
     }
 
+    const requirementDetails =
+      event.requestDetails?.requirementDetails || {};
+
+    const financeRequired =
+      event.requestDetails?.organizerDetails?.financeRequired || false;
+
+    const media =
+      event.mediaRequirementDetails?.mediaRequirements?.[0];
+
+    const departments = {
+      venue: {
+        required: requirementDetails.venueRequired,
+        status: event.venueDetails?.status || null,
+      },
+
+      icts: {
+        required: requirementDetails.ictsRequired,
+        status: event.ictsDetails?.status || null,
+      },
+
+      audio: {
+        required: requirementDetails.audioRequired,
+        status: event.audioDetails?.status || null,
+      },
+
+      transport: {
+        required: requirementDetails.transportRequired,
+        status: event.transportDetails?.status || null,
+      },
+
+      refreshment: {
+        required: requirementDetails.transportRequired,
+        status: event.refreshmentDetails?.status || null,
+      },
+
+      accommodation: {
+        required: requirementDetails.accommodationRequired,
+        status: event.accommodationDetails?.status || null,
+      },
+
+      purchase: {
+        required: financeRequired,
+        status: event.purchaseDetails?.status || null,
+      },
+
+      poster: {
+        required: requirementDetails.mediaRequired,
+        status: media?.poster
+          ? {
+              status: media.poster.status,
+              remarks: media.poster.remarks,
+              adminEditRemark: media.poster.adminEditRemark,
+              adminEditedAt: media.poster.adminEditedAt,
+            }
+          : null,
+      },
+
+      video: {
+        required: requirementDetails.mediaRequired,
+        status: media?.video
+          ? {
+              status: media.video.status,
+              remarks: media.video.remarks,
+              adminEditRemark: media.video.adminEditRemark,
+              adminEditedAt: media.video.adminEditedAt,
+            }
+          : null,
+      },
+    };
+
     return res.status(200).json({
       success: true,
-      requirementDetails: event.requestDetails?.requirementDetails || {},
+      departments,
     });
   } catch (error) {
     console.error("Error fetching requirement details:", error);

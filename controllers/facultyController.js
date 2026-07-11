@@ -5,7 +5,6 @@ const Faculty = require("../models/Faculty");
 const User = require("../models/User");
 const cloudinary = require("cloudinary").v2;
 
-
 // helper to generate default password
 const generatePassword = async (empId) => {
   const password = "Sece@123";
@@ -190,6 +189,52 @@ exports.getFaculties = async (req, res) => {
   }
 };
 
+exports.searchFaculty = async (req, res) => {
+  try {
+    const { q = "" } = req.query;
+
+    const faculties = await Faculty.find({
+      $or: [
+        { name: { $regex: q, $options: "i" } },
+        { empId: { $regex: q, $options: "i" } },
+        {
+          $expr: {
+            $regexMatch: {
+              input: { $concat: ["$name"] },
+              regex: q,
+              options: "i",
+            },
+          },
+        },
+      ],
+    })
+      .select(
+        "_id empId name designation department phone email",
+      )
+      .limit(10);
+
+    const result = faculties.map((faculty) => ({
+      facultyId: faculty._id,
+      empId: faculty.empId,
+      name: faculty.name,
+      designation: faculty.designation,
+      phone: faculty.phone,
+      email: faculty.email,
+      department: faculty.department,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // ================= GET ONE =================
 exports.getFacultyId = async (req, res) => {
   try {
@@ -260,7 +305,6 @@ exports.deleteFaculty = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 exports.uploadProfileImage = async (req, res) => {
   try {
