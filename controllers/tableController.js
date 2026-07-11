@@ -303,3 +303,67 @@ exports.getDashboardTable = async (req, res) => {
     });
   }
 };
+
+exports.getFacultyDashboardTable = async (req, res) => {
+  try {
+    const { facultyId } = req.query;
+
+    if (!facultyId) {
+      return res.status(400).json({
+        success: false,
+        message: "facultyId is required",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(facultyId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid facultyId",
+      });
+    }
+
+    const events = await Event.find({
+      organizerId: facultyId,
+      status: { $ne: "Draft" },
+    })
+      .select(
+        "_id status adminApproval requestDetails.eventDetails requestDetails.organizerDetails.organizingDepartment venueDetails.venues",
+      )
+      .sort({ createdAt: -1 });
+
+    const data = events.map((event) => ({
+      eventId: event._id,
+
+      eventName: event.requestDetails?.eventDetails?.eventName || "",
+
+      eventType: event.requestDetails?.eventDetails?.eventType || "",
+
+      venues: event.venueDetails?.venues?.map((v) => v.venueName) || [],
+
+      eventDates:
+        event.requestDetails?.eventDetails?.eventSchedule?.map(
+          (d) => d.eventDate,
+        ) || [],
+
+      organizingDepartment:
+        event.requestDetails?.organizerDetails?.organizingDepartment || "",
+
+      approvedStatus: event.adminApproval,
+
+      eventStatus: event.status,
+      createdAt: event.createdAt,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (error) {
+    console.error("Faculty dashboard table error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
