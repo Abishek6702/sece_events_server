@@ -1107,6 +1107,35 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "faculty-dashboard-events-count",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/faculty-dashboard-events-count?facultyId=6a0411b04579d3137b255e77",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "faculty-dashboard-events-count"
+              ],
+              "query": [
+                {
+                  "key": "facultyId",
+                  "value": "6a0411b04579d3137b255e77",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },

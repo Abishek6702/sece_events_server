@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Event = require("../models/Event");
 const Faculty = require("../models/Faculty");
 
@@ -222,6 +223,75 @@ exports.getDepartmentWiseFacultyCount = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getFacultyDashboardEventsCount = async (req, res) => {
+  try {
+    const { facultyId } = req.query;
+
+    if (!facultyId) {
+      return res.status(400).json({
+        success: false,
+        message: "facultyId is required",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(facultyId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid facultyId",
+      });
+    }
+
+    const [
+      totalEvents,
+      approvedEvents,
+      completedEvents,
+      pendingApprovalEvents,
+    ] = await Promise.all([
+      // Total (excluding drafts)
+      Event.countDocuments({
+        organizerId: facultyId,
+        status: { $ne: "Draft" },
+      }),
+
+      // Admin approved
+      Event.countDocuments({
+        organizerId: facultyId,
+        adminApproval: true,
+      }),
+
+      // Completed (Closed)
+      Event.countDocuments({
+        organizerId: facultyId,
+        status: "Closed",
+      }),
+
+      // Submitted and waiting for approval
+      Event.countDocuments({
+        organizerId: facultyId,
+        status: "Submitted",
+        adminApproval: false,
+      }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalEvents,
+        approvedEvents,
+        completedEvents,
+        pendingApprovalEvents,
+      },
+    });
+  } catch (error) {
+    console.error("Faculty dashboard count error:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
