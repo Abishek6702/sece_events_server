@@ -630,6 +630,7 @@ const eventSchema = new mongoose.Schema(
     iqacNumber: {
       type: String,
       unique: true,
+      sparse:true,
     },
     requestDetails: requestSchema,
     venueDetails: venueSchema,
