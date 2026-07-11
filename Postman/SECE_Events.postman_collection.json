@@ -558,20 +558,19 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/events/6a0592ce9b480c88c21860ab?module=transport",
+              "raw": "{{base_url}}/api/events/6a51e536a15679324a114ced?module=requestDetails",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "events",
-                "6a0592ce9b480c88c21860ab"
+                "6a51e536a15679324a114ced"
               ],
               "query": [
                 {
                   "key": "module",
-                  "value": "transport",
-                  "type": "text"
+                  "value": "requestDetails"
                 }
               ]
             }
@@ -1016,6 +1015,29 @@
                 "media-staff-change",
                 "6a13fe668b1d51ee41e44d3d",
                 "staff-change-action"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get event by id requirements list",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/events/requirements/6a51e536a15679324a114ced",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "events",
+                "requirements",
+                "6a51e536a15679324a114ced"
               ]
             }
           },
