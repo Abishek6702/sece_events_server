@@ -717,13 +717,15 @@
                   "key": "organizerId",
                   "value": "507f1f77bcf86cd799439011",
                   "type": "text",
-                  "uuid": "8607f6ba-e87a-421f-b52f-ef1353e65a67"
+                  "uuid": "8607f6ba-e87a-421f-b52f-ef1353e65a67",
+                  "disabled": true
                 },
                 {
                   "key": "requestDetails",
                   "value": "{\n  \"organizerDetails\": {\n    \"previousEventDocumentation\": true,\n    \"previousEventReason\": \"Full test\",\n    \"isBudgetApproved\": true,\n    \"financeRequired\": true,\n    \"organizingDepartment\": \"ECE\",\n    \"organizerCount\": 1,\n    \"organizers\": [\n      {\n        \"name\": \"John\",\n        \"department\": \"CSE\",\n        \"mobile\": 9876543210,\n        \"designation\": \"Professor\",\n        \"email\": \"john@example.com\",\n        \"empId\": \"EMP100\",\n        \"facultyId\": \"507f1f77bcf86cd799439012\"\n      }\n    ]\n  },\n  \"eventDetails\": {\n    \"eventName\": \"Full\",\n    \"tagging\": [\"Tech\"],\n    \"taggingDetails\": [\"AI\"],\n    \"eventType\": \"Workshop\",\n    \"eventTypeOther\": \"\",\n    \"professionalSociety\": [\"IEEE\"],\n    \"professionalSocietyOther\": \"\",\n    \"logosInPoster\": [\"College Logo\"],\n    \"logosOther\": \"\",\n    \"targetAudience\": \"Students\",\n    \"numberOfDays\": 1,\n    \"eventSchedule\": [\n      {\n        \"eventDate\": \"2026-05-01\",\n        \"startTime\": \"10:00\",\n        \"endTime\": \"16:00\",\n        \"totalGuests\": 1,\n        \"guests\": [\n          {\n            \"name\": \"Guest 1\",\n            \"organization\": \"ABC\",\n            \"designation\": \"Speaker\",\n            \"mobile\": 9999999999,\n            \"gender\": \"Male\"\n          }\n        ]\n      }\n    ]\n  },\n  \"requirementDetails\": {\n    \"venueRequired\": true,\n    \"audioRequired\": true,\n    \"ictsRequired\": true,\n    \"transportRequired\": true,\n    \"accommodationRequired\": true,\n    \"mediaRequired\": true\n  }\n}",
                   "type": "text",
-                  "uuid": "88da58a1-7f6e-411c-880f-7a0866bb0c87"
+                  "uuid": "88da58a1-7f6e-411c-880f-7a0866bb0c87",
+                  "disabled": true
                 },
                 {
                   "key": "venueDetails",
@@ -733,44 +735,49 @@
                 },
                 {
                   "key": "ictsDetails",
-                  "value": "{\n  \"ictses\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"desktopLaptop\": true,\n      \"internetFacility\": \"High Speed\",\n      \"expectedInternetUsers\": 50,\n      \"proctoringUsers\": 10,\n      \"guestWifiNeeded\": true,\n      \"guestWifiExceed5\": false,\n      \"totalGuestCount\": 10,\n      \"requirements\": [\"WiFi\"],\n      \"otherRequirements\": \"\",\n      \"specialRequirements\": \"\"\n    }\n  ]\n}",
+                  "value": "{\n  \"ictses\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium1\",\n      \"desktopLaptop\": true,\n      \"internetFacility\": \"High Speed\",\n      \"expectedInternetUsers\": 50,\n      \"proctoringUsers\": 10,\n      \"guestWifiNeeded\": true,\n      \"guestWifiExceed5\": false,\n      \"totalGuestCount\": 10,\n      \"requirements\": [\"WiFi\"],\n      \"otherRequirements\": \"\",\n      \"specialRequirements\": \"\"\n    }\n  ]\n}",
                   "type": "text",
                   "uuid": "2128ee74-21f6-44c1-aee9-5d0307245b41"
                 },
                 {
                   "key": "audioDetails",
-                  "value": "{\n  \"audios\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"audioItems\": [\n        { \"type\": \"Mic\", \"quantity\": 2 }\n      ],\n      \"otherRequirements\": \"\",\n      \"specialRequirements\": \"\"\n    }\n  ]\n}",
+                  "value": "{\n  \"audios\": [\n    {\n      \"dayIndex\": 0,\n      \"venueName\": \"Auditorium\",\n      \"audioItems\": [\n        { \"type\": \"Mic\", \"quantity\": 3 }\n      ],\n      \"otherRequirements\": \"\",\n      \"specialRequirements\": \"\"\n    }\n  ]\n}",
                   "type": "text",
                   "uuid": "6718a1b8-20c4-49dc-b889-76342cdd4b6c"
                 },
                 {
                   "key": "refreshmentDetails",
                   "value": "{\"refreshments\":[{\"date\":\"2026-05-01\",\"resourcePersonType\":[\"Speaker\"],\"numberOfResourcePersons\":1,\"numberOfInternalAccompanyingStaff\":2,\"foodTypes\":[{\"type\":\"Lunch\",\"participants\":{\"vegCount\":50,\"nonVegCount\":20},\"vipGuests\":{\"vegCount\":5,\"nonVegCount\":2}}]}]}",
-                  "type": "text"
+                  "type": "text",
+                  "disabled": true
                 },
                 {
                   "key": "accommodationDetails",
                   "value": "{\"accommodations\":[{\"checkInDateTime\":\"2026-05-01T10:00:00.000Z\",\"checkOutDateTime\":\"2026-05-02T10:00:00.000Z\",\"guests\":[{\"name\":\"Guest1\",\"mobile\":9999999999,\"gender\":\"Male\"}],\"roomOccupancy\":[{\"type\":\"Double\",\"count\":2}],\"roomCategory\":[{\"type\":\"AC\",\"count\":2}],\"dineInRequired\":true,\"dineInCounts\":[{\"type\":\"Lunch\",\"count\":2}]}]}",
                   "type": "text",
-                  "uuid": "21fb6ae8-6f12-4fe7-beb2-ecc5c60fae5b"
+                  "uuid": "21fb6ae8-6f12-4fe7-beb2-ecc5c60fae5b",
+                  "disabled": true
                 },
                 {
                   "key": "purchaseDetails",
                   "value": "{\"purchases\":[{\"dayIndex\":0,\"requirementNeeded\":[{\"type\":\"Kit\",\"hardCount\":10,\"softCount\":0}],\"requiredFor\":[\"Students\"],\"students\":{\"registrationKitNeeded\":true,\"registrationKitQty\":10},\"guests\":{\"registrationKitNeeded\":false,\"registrationKitQty\":0}}]}",
                   "type": "text",
-                  "uuid": "fd9068bb-2b6f-4b67-af9f-e20d762f1626"
+                  "uuid": "fd9068bb-2b6f-4b67-af9f-e20d762f1626",
+                  "disabled": true
                 },
                 {
                   "key": "mediaRequirementDetails",
                   "value": "{\"mediaRequirements\":[{\"dayIndex\":0,\"typeOfMedia\":[\"poster\",\"video\"],\"poster\":{\"posterContent\":\"Poster content\",\"certificateContent\":\"Certificate content\",\"sizes\":[{\"type\":\"A3\",\"value\":1}]},\"video\":{\"videoContent\":\"Video content\"}}]}",
                   "type": "text",
-                  "uuid": "ee73a374-e9ae-4818-8c2a-65bfd3caedca"
+                  "uuid": "ee73a374-e9ae-4818-8c2a-65bfd3caedca",
+                  "disabled": true
                 },
                 {
                   "key": "previousEventDocumentation",
                   "type": "file",
                   "uuid": "2b995934-2fb7-4599-9aeb-cb4f7b8cac1a",
-                  "src": "/C:/Users/USER/Downloads/pms/pdf.pdf"
+                  "src": "/C:/Users/USER/Downloads/pms/pdf.pdf",
+                  "disabled": true
                 },
                 {
                   "key": "referencePosterFiles",
@@ -779,49 +786,61 @@
                   "src": [
                     "/C:/Users/USER/Downloads/pms/jpg.jpg",
                     "/C:/Users/USER/Downloads/pms/jpg1.jpg"
-                  ]
+                  ],
+                  "disabled": true
                 },
                 {
                   "key": "referenceCertificateFiles",
                   "type": "file",
                   "uuid": "7e0d8208-183b-4009-8a61-3f5125c4ce47",
-                  "src": "/C:/Users/USER/Downloads/pms/png.png"
+                  "src": "/C:/Users/USER/Downloads/pms/png.png",
+                  "disabled": true
                 },
                 {
                   "key": "referenceFiles",
                   "type": "file",
                   "uuid": "afeec15a-033f-4ffc-859d-4a194cefd3aa",
-                  "src": "/C:/Users/USER/Downloads/pms/jpeg.jpeg"
+                  "src": "/C:/Users/USER/Downloads/pms/jpeg.jpeg",
+                  "disabled": true
                 },
                 {
                   "key": "transportDetails",
                   "value": "{\"transports\":[{\"pickupDateTime\":\"2026-05-01T08:00:00.000Z\",\"dropDateTime\":\"2026-05-01T18:00:00.000Z\",\"pickupLocation\":\"College\",\"dropLocation\":\"College\",\"totalPassengers\":10,\"vehicles\":[{\"type\":\"Bus\",\"count\":1}],\"accompanyingStaff\":[{\"name\":\"Staff1\",\"mobile\":8888888888}]}]}",
                   "type": "text",
-                  "uuid": "55f6af99-0ea6-443e-a709-6bf098f9f9d7"
+                  "uuid": "55f6af99-0ea6-443e-a709-6bf098f9f9d7",
+                  "disabled": true
                 },
                 {
                   "key": "isSubmitted",
                   "value": "true",
                   "type": "text",
-                  "uuid": "d4f85764-51ff-4144-977c-be0912e572e3"
+                  "uuid": "d4f85764-51ff-4144-977c-be0912e572e3",
+                  "disabled": true
                 },
                 {
                   "key": "status",
                   "value": "Submitted",
                   "type": "text",
-                  "uuid": "f315675d-b130-48c7-81ea-46e6707e20d9"
+                  "uuid": "f315675d-b130-48c7-81ea-46e6707e20d9",
+                  "disabled": true
+                },
+                {
+                  "key": "adminEditRemark",
+                  "value": "hi",
+                  "type": "text",
+                  "uuid": "10cb9cb7-ccfe-44d8-ae88-a063c7c6a84d"
                 }
               ]
             },
             "url": {
-              "raw": "{{base_url}}/api/events/69f58b28d016229057a730d9",
+              "raw": "{{base_url}}/api/events/6a50a72e244de1570a9bb4d3",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "events",
-                "69f58b28d016229057a730d9"
+                "6a50a72e244de1570a9bb4d3"
               ]
             }
           },
@@ -873,7 +892,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"adminApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n{\r\n  \"action\": \"close\"\r\n}\r\n// {\r\n//   \"action\": \"acknowledge\",\r\n//   \"module\": \"media\",\r\n// \"mediaType\": \"poster\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"complete\",\r\n//   \"module\": \"venue\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n// {\r\n//   \"action\": \"adminCancel\",\r\n//   \"module\": \"icts\"\r\n\r\n// }",
+              "raw": "// {\r\n//   \"action\": \"submit\"\r\n// }\r\n// {\r\n//   \"action\": \"hodApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"adminApprove\"\r\n// }\r\n// {\r\n//   \"action\": \"reject\"\r\n// }\r\n// {\r\n//   \"action\": \"close\"\r\n// }\r\n// {\r\n//   \"action\": \"acknowledge\",\r\n//   \"module\": \"media\",\r\n// \"mediaType\": \"poster\",\r\n//   \"remarks\": \"Poster allocated\"\r\n// }\r\n{\r\n  \"action\": \"complete\",\r\n  \"module\": \"venue\",\r\n  \"remarks\": \"Poster allocated\"\r\n}\r\n// {\r\n//   \"action\": \"adminCancel\",\r\n//   \"module\": \"icts\"\r\n\r\n// }",
               "options": {
                 "raw": {
                   "language": "json"
@@ -881,14 +900,14 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/events/6a153496b9d065544cfd6625/status",
+              "raw": "{{base_url}}/api/events/6a50a72e244de1570a9bb4d3/status",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "events",
-                "6a153496b9d065544cfd6625",
+                "6a50a72e244de1570a9bb4d3",
                 "status"
               ]
             }
@@ -924,7 +943,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/events/draft/6a0411af4579d3137b255e73",
+              "raw": "{{base_url}}/api/events/draft/6a0411b04579d3137b255e77",
               "host": [
                 "{{base_url}}"
               ],
@@ -932,7 +951,7 @@
                 "api",
                 "events",
                 "draft",
-                "6a0411af4579d3137b255e73"
+                "6a0411b04579d3137b255e77"
               ]
             }
           },
@@ -1399,7 +1418,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/table/dashboard-table?module=video",
+              "raw": "{{base_url}}/api/table/dashboard-table?module=faculty",
               "host": [
                 "{{base_url}}"
               ],
@@ -1411,7 +1430,36 @@
               "query": [
                 {
                   "key": "module",
-                  "value": "video"
+                  "value": "faculty"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "faculty-dashboard-table",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/table/faculty-dashboard-table?facultyId=6a0411b04579d3137b255e77",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "table",
+                "faculty-dashboard-table"
+              ],
+              "query": [
+                {
+                  "key": "facultyId",
+                  "value": "6a0411b04579d3137b255e77",
+                  "type": "text"
                 }
               ]
             }
