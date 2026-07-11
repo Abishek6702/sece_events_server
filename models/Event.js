@@ -105,8 +105,18 @@ const eventDetailsSchema = new mongoose.Schema(
     logosOther: { type: String },
 
     targetAudience: {
-      type: String,
-      enum: ["Students", "Faculty", "Students/Faculty", "Others"],
+      type: [String],
+      enum: [
+        "Students",
+        "Faculty",
+        "Students/Faculty",
+        "Others",
+        "Internal Students",
+        "Internal Faculty",
+        "External Students",
+        "External Faculty",
+        "Industry Person",
+      ],
     },
 
     numberOfDays: { type: Number },
@@ -630,7 +640,7 @@ const eventSchema = new mongoose.Schema(
     iqacNumber: {
       type: String,
       unique: true,
-      sparse:true,
+      sparse: true,
     },
     requestDetails: requestSchema,
     venueDetails: venueSchema,
