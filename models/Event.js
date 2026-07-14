@@ -196,10 +196,12 @@ const ictsSchema = new mongoose.Schema(
 
         venueName: { type: String, trim: true },
 
-        desktopLaptop: {
-          type: Boolean,
-          default: false,
-        },
+        desktopLaptop: [
+          {
+            type: { type: String },
+            count: Number,
+          },
+        ],
 
         internetFacility: {
           type: String,
