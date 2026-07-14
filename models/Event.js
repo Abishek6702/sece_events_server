@@ -134,6 +134,8 @@ const requirementSchema = new mongoose.Schema(
     audioRequired: { type: Boolean, default: false },
     ictsRequired: { type: Boolean, default: false },
     transportRequired: { type: Boolean, default: false },
+    purchaseRequired: { type: Boolean, default: false },
+    refreshmentRequired: { type: Boolean, default: false },
     accommodationRequired: { type: Boolean, default: false },
     mediaRequired: { type: Boolean, default: false },
   },
