@@ -724,7 +724,7 @@ exports.getAllEvents = async (req, res) => {
   }
 };
 
-exports.getEventById = async (req, res) => {
+exports.  getEventById = async (req, res) => {
   try {
     const { id } = req.params;
     const { module } = req.query;
@@ -736,6 +736,7 @@ exports.getEventById = async (req, res) => {
       projection = {
         requestDetails: 1,
         status: 1,
+        iqacNumber: 1,
       };
 
       switch (module) {
