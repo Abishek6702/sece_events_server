@@ -1,4 +1,5 @@
 const express = require("express");
+const upload = require("../../middleware/multerConfig");
 const router = express.Router();
 
 const {
@@ -11,7 +12,15 @@ const {
 } = require("../../controllers/individual/transportController");
 
 // CREATE
-router.post("/", createTransport);
+router.post(
+  "/",
+  upload.fields([
+    { name: "principalApprovalForm", maxCount: 10 },
+    { name: "files", maxCount: 10 },
+    { name: "attachments", maxCount: 10 },
+  ]),
+  createTransport
+);
 
 // GET ALL
 router.get("/", getAllTransports);

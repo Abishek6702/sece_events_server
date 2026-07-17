@@ -4,11 +4,15 @@ const express = require("express");
 
 const router = express.Router();
 
+const upload = require("../../middleware/multerConfig");
 const foodController = require("../../controllers/individual/foodController");
 
 // CREATE
 router.post(
   "/",
+  upload.fields([
+    { name: "principalApprovalForm", maxCount: 1 },
+  ]),
   foodController.createFood
 );
 

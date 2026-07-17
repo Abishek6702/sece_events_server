@@ -2,6 +2,14 @@
 
 const mongoose = require("mongoose");
 
+const fileReferenceSchema = new mongoose.Schema(
+  {
+    url: { type: String },
+    publicId: { type: String },
+  },
+  { _id: false },
+);
+
 // ==============================
 // STATUS SCHEMA
 // ==============================
@@ -25,7 +33,7 @@ const departmentStatusSchema = new mongoose.Schema(
       default: "Pending",
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 // ==============================
@@ -42,7 +50,7 @@ const requirementSchema = new mongoose.Schema(
 
     softCount: Number,
   },
-  { _id: false }
+  { _id: false },
 );
 
 // ==============================
@@ -57,7 +65,7 @@ const trophySchema = new mongoose.Schema(
 
     quantity: Number,
   },
-  { _id: false }
+  { _id: false },
 );
 
 // ==============================
@@ -72,7 +80,7 @@ const voucherSchema = new mongoose.Schema(
 
     quantity: Number,
   },
-  { _id: false }
+  { _id: false },
 );
 
 // ==============================
@@ -91,7 +99,7 @@ const giftItemSchema = new mongoose.Schema(
 
     voucher: [voucherSchema],
   },
-  { _id: false }
+  { _id: false },
 );
 
 // ==============================
@@ -107,7 +115,7 @@ const personSchema = new mongoose.Schema(
 
     specialRequirements: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 // ==============================
@@ -133,7 +141,7 @@ const purchaseItemSchema = new mongoose.Schema(
 
     guests: personSchema,
   },
-  { _id: false }
+  { _id: false },
 );
 
 // ==============================
@@ -149,6 +157,21 @@ const purchaseSchema = new mongoose.Schema(
 
     purchases: [purchaseItemSchema],
 
+    referenceFiles: [fileReferenceSchema],
+    principalApprovalForm: {
+      url: {
+        type: String,
+      },
+
+      publicId: {
+        type: String,
+      },
+
+      fileName: {
+        type: String,
+      },
+    },
+
     status: {
       type: departmentStatusSchema,
       default: () => ({
@@ -160,7 +183,7 @@ const purchaseSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("IndividualPurchase", purchaseSchema);

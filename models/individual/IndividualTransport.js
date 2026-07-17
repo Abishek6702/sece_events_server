@@ -1,5 +1,13 @@
 const mongoose = require("mongoose");
 
+const fileReferenceSchema = new mongoose.Schema(
+  {
+    url: { type: String },
+    publicId: { type: String },
+  },
+  { _id: false },
+);
+
 const checkpointSchema = new mongoose.Schema({
   location: {
     type: String,
@@ -14,7 +22,19 @@ const transportSchema = new mongoose.Schema(
       ref: "Faculty",
       required: true,
     },
+    principalApprovalForm: {
+      url: {
+        type: String,
+      },
 
+      publicId: {
+        type: String,
+      },
+
+      fileName: {
+        type: String,
+      },
+    },
     pickupDateTime: {
       type: Date,
       required: true,
@@ -69,6 +89,8 @@ const transportSchema = new mongoose.Schema(
     specialRequirements: {
       type: String,
     },
+
+    referenceFiles: [fileReferenceSchema],
 
     status: {
       type: String,

@@ -8,8 +8,36 @@ const Food = require("../../models/individual/IndividualFood");
 exports.createFood = async (req, res) => {
   try {
     console.log("BODY =>", req.body);
+    console.log("FILES =>", req.files);
 
-    const food = await Food.create(req.body);
+    const foodData = {
+      ...req.body,
+
+      resourcePersonType: req.body.resourcePersonType
+        ? JSON.parse(req.body.resourcePersonType)
+        : [],
+
+      accompanyingStaff: req.body.accompanyingStaff
+        ? JSON.parse(req.body.accompanyingStaff)
+        : [],
+
+      foodTypes: req.body.foodTypes
+        ? JSON.parse(req.body.foodTypes)
+        : [],
+    };
+
+    const file =
+      req.files?.principalApprovalForm?.[0];
+
+    if (file) {
+      foodData.uploadedFile = {
+        url: file.path,
+        publicId: file.filename,
+        fileName: file.originalname,
+      };
+    }
+
+    const food = await Food.create(foodData);
 
     res.status(201).json({
       success: true,

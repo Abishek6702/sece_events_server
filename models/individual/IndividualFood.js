@@ -92,6 +92,18 @@ const foodSchema = new mongoose.Schema(
       type: String,
     },
 
+    uploadedFile: {
+      url: {
+        type: String,
+      },
+      publicId: {
+        type: String,
+      },
+      fileName: {
+        type: String,
+      },
+    },
+
     status: {
       type: String,
       enum: ["Pending", "Approved", "Rejected", "Completed"],

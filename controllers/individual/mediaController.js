@@ -39,25 +39,24 @@ const makeArray = (value) => {
 // ==============================
 // CREATE
 // ==============================
-exports.createIndividualMedia = async (
-  req,
-  res
-) => {
+exports.createIndividualMedia = async (req, res) => {
   try {
     console.log(
       "BODY =>",
       JSON.stringify(req.body, null, 2)
     );
 
-    console.log("FILES =>", req.files);
+    console.log(
+      "FILES =>",
+      req.files
+    );
 
-    // ==============================
-    // MAIN BODY
-    // ==============================
     const body = {
       employee: req.body.employee,
 
-      dayIndex: req.body.dayIndex,
+      dayIndex: Number(
+        req.body.dayIndex
+      ),
 
       status:
         req.body.status || "Pending",
@@ -65,106 +64,115 @@ exports.createIndividualMedia = async (
       typeOfMedia: makeArray(
         req.body.typeOfMedia
       ),
+
+      principalApprovalForm: null,
+
+      files: [],
+
+      poster: {
+        posterContent:
+          req.body.poster?.posterContent ||
+          "",
+
+        certificateContent:
+          req.body.poster?.certificateContent ||
+          "",
+
+        trophyContent:
+          req.body.poster?.trophyContent ||
+          "",
+
+        priority:
+          req.body.poster?.priority ||
+          "Medium",
+
+        specialRequirements:
+          req.body.poster
+            ?.specialRequirements || "",
+
+        displayNeeded: makeArray(
+          req.body.poster?.displayNeeded
+        ),
+
+        sizes:
+          req.body.poster?.sizes || [],
+
+        deliveryDate:
+          req.body.poster?.deliveryDate ||
+          null,
+
+        referencePosterFiles: [],
+
+        referenceCertificateFiles: [],
+      },
+
+      video: {
+        videoContent:
+          req.body.video?.videoContent ||
+          "",
+
+        priority:
+          req.body.video?.priority ||
+          "Medium",
+
+        specialRequirements:
+          req.body.video
+            ?.specialRequirements || "",
+
+        preEventVideos: makeArray(
+          req.body.video?.preEventVideos
+        ),
+
+        eventCoverage: makeArray(
+          req.body.video?.eventCoverage
+        ),
+
+        postEventVideos: makeArray(
+          req.body.video?.postEventVideos
+        ),
+
+        specialVideos: makeArray(
+          req.body.video?.specialVideos
+        ),
+
+        deliveryDate:
+          req.body.video?.deliveryDate ||
+          null,
+
+        referenceFiles: [],
+      },
     };
 
-    // ==============================
-    // POSTER
-    // ==============================
-    body.poster = {
-      posterContent:
-        req.body.poster?.posterContent ||
-        "",
+    // =================================
+    // PRINCIPAL APPROVAL FORM
+    // =================================
 
-      certificateContent:
-        req.body.poster
-          ?.certificateContent || "",
-
-      trophyContent:
-        req.body.poster?.trophyContent ||
-        "",
-
-      priority:
-        req.body.poster?.priority ||
-        "Medium",
-
-      specialRequirements:
-        req.body.poster
-          ?.specialRequirements || "",
-
-      displayNeeded: makeArray(
-        req.body.poster?.displayNeeded
-      ),
-
-      sizes: [],
-
-      deliveryDate:
-        req.body.poster?.deliveryDate ||
-        null,
-
-      referencePosterFiles: [],
-
-      referenceCertificateFiles: [],
-    };
-
-    // ==============================
-    // POSTER SIZES
-    // ==============================
     if (
-      req.body.poster?.sizes &&
-      Array.isArray(req.body.poster.sizes)
+      req.files?.principalApprovalForm?.length
     ) {
-      body.poster.sizes =
-        req.body.poster.sizes;
+      body.principalApprovalForm =
+        normalizeFileReference(
+          req.files.principalApprovalForm[0]
+        );
     }
 
-    // ==============================
-    // VIDEO
-    // ==============================
-    body.video = {
-      videoContent:
-        req.body.video?.videoContent ||
-        "",
+    // =================================
+    // MAIN FILES
+    // =================================
 
-      priority:
-        req.body.video?.priority ||
-        "Medium",
+    if (req.files?.files?.length) {
+      body.files =
+        req.files.files
+          .map(normalizeFileReference)
+          .filter(Boolean);
+    }
 
-      specialRequirements:
-        req.body.video
-          ?.specialRequirements || "",
+    // =================================
+    // POSTER FILES
+    // =================================
 
-      preEventVideos: makeArray(
-        req.body.video?.preEventVideos
-      ),
-
-      eventCoverage: makeArray(
-        req.body.video?.eventCoverage
-      ),
-
-      postEventVideos: makeArray(
-        req.body.video?.postEventVideos
-      ),
-
-      specialVideos: makeArray(
-        req.body.video?.specialVideos
-      ),
-
-      deliveryDate:
-        req.body.video?.deliveryDate ||
-        null,
-
-      referenceFiles: [],
-    };
-
-    // ==============================
-    // FILES
-    // ==============================
-
-    // Poster Files
     if (
-      req.files?.referencePosterFiles &&
-      req.files.referencePosterFiles
-        .length > 0
+      req.files?.referencePosterFiles?.length
     ) {
       body.poster.referencePosterFiles =
         req.files.referencePosterFiles
@@ -172,13 +180,13 @@ exports.createIndividualMedia = async (
           .filter(Boolean);
     }
 
-    // Certificate Files
+    // =================================
+    // CERTIFICATE FILES
+    // =================================
+
     if (
       req.files
-        ?.referenceCertificateFiles &&
-      req.files
-        .referenceCertificateFiles
-        .length > 0
+        ?.referenceCertificateFiles?.length
     ) {
       body.poster.referenceCertificateFiles =
         req.files.referenceCertificateFiles
@@ -186,11 +194,12 @@ exports.createIndividualMedia = async (
           .filter(Boolean);
     }
 
-    // Video Files
+    // =================================
+    // VIDEO FILES
+    // =================================
+
     if (
-      req.files?.referenceFiles &&
-      req.files.referenceFiles.length >
-        0
+      req.files?.referenceFiles?.length
     ) {
       body.video.referenceFiles =
         req.files.referenceFiles
@@ -198,9 +207,10 @@ exports.createIndividualMedia = async (
           .filter(Boolean);
     }
 
-    // ==============================
+    // =================================
     // CREATE
-    // ==============================
+    // =================================
+
     const media =
       await IndividualMedia.create(body);
 
@@ -211,7 +221,10 @@ exports.createIndividualMedia = async (
       data: media,
     });
   } catch (error) {
-    console.log("ERROR =>", error);
+    console.log(
+      "ERROR =>",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -219,7 +232,6 @@ exports.createIndividualMedia = async (
     });
   }
 };
-
 // ==============================
 // GET ALL
 // ==============================
