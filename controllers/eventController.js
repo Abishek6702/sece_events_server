@@ -277,14 +277,14 @@ function resetDepartment(event, module, adminRemark) {
     event.mediaRequirementDetails.mediaRequirements.forEach((media) => {
       if (media.poster) {
         media.poster.status = "Pending for Acknowledge";
-        media.poster.remarks = "";              // NEW
+        media.poster.remarks = ""; // NEW
         media.poster.adminEditRemark = adminRemark;
         media.poster.adminEditedAt = now;
       }
-      
+
       if (media.video) {
         media.video.status = "Pending for Acknowledge";
-        media.video.remarks = "";               // NEW
+        media.video.remarks = ""; // NEW
         media.video.adminEditRemark = adminRemark;
         media.video.adminEditedAt = now;
       }
@@ -294,7 +294,7 @@ function resetDepartment(event, module, adminRemark) {
       acknowledgedAt: null,
       completedAt: null,
     };
-    
+
     event.timeline.departments.video = {
       acknowledgedAt: null,
       completedAt: null,
@@ -305,21 +305,21 @@ function resetDepartment(event, module, adminRemark) {
 
   const path = moduleMap[module];
 
-if (!event[path]) return;
+  if (!event[path]) return;
 
-if (!event[path].status) {
-  event[path].status = {};
-}
+  if (!event[path].status) {
+    event[path].status = {};
+  }
 
-event[path].status.status = "Pending for Acknowledge";
-event[path].status.remarks = "";
-event[path].status.adminEditRemark = adminRemark;
-event[path].status.adminEditedAt = now;
+  event[path].status.status = "Pending for Acknowledge";
+  event[path].status.remarks = "";
+  event[path].status.adminEditRemark = adminRemark;
+  event[path].status.adminEditedAt = now;
 
-event.timeline.departments[module] = {
-  acknowledgedAt: null,
-  completedAt: null,
-};
+  event.timeline.departments[module] = {
+    acknowledgedAt: null,
+    completedAt: null,
+  };
 }
 
 exports.createEvent = async (req, res) => {
@@ -360,7 +360,7 @@ exports.createEvent = async (req, res) => {
       eventData.requestDetails.organizerDetails.principalApprovalDocument =
         normalizeFileReference(files.principalApprovalDocument[0]);
     }
-    
+
     if (
       files.previousEventDocumentation &&
       files.previousEventDocumentation[0]
@@ -450,7 +450,7 @@ exports.createEvent = async (req, res) => {
 exports.updateEvent = async (req, res) => {
   try {
     const payload = {};
-    
+
     Object.keys(req.body).forEach((key) => {
       payload[key] = deepParse(req.body[key]);
     });
@@ -524,7 +524,7 @@ exports.updateEvent = async (req, res) => {
         event.refreshmentDetails || {},
         ensureObject(payload.refreshmentDetails),
       );
-      
+
       initializeDepartmentStatus(event.refreshmentDetails);
     }
 
@@ -533,7 +533,7 @@ exports.updateEvent = async (req, res) => {
         event.accommodationDetails || {},
         ensureObject(payload.accommodationDetails),
       );
-      
+
       initializeDepartmentStatus(event.accommodationDetails);
     }
 
@@ -612,16 +612,12 @@ exports.updateEvent = async (req, res) => {
     if (event.adminApproval) {
       Object.entries(changedModules).forEach(([module, changed]) => {
         if (changed) {
-          resetDepartment(
-            event,
-            module,
-            payload.adminEditRemark || ""
-          );
+          resetDepartment(event, module, payload.adminEditRemark || "");
         }
       });
     }
     event.timeline.updatedAt = new Date();
-    
+
     const updatedEvent = await event.save();
     res
       .status(200)
@@ -657,6 +653,61 @@ exports.submitEvent = async (req, res) => {
         event.requestDetails || {},
         ensureObject(payload.requestDetails),
       );
+    }
+    if (payload.venueDetails) {
+      event.venueDetails = mergeObjects(
+        event.venueDetails || {},
+        ensureObject(payload.venueDetails),
+      );
+      initializeDepartmentStatus(event.venueDetails);
+    }
+
+    if (payload.ictsDetails) {
+      event.ictsDetails = mergeObjects(
+        event.ictsDetails || {},
+        ensureObject(payload.ictsDetails),
+      );
+      initializeDepartmentStatus(event.ictsDetails);
+    }
+
+    if (payload.audioDetails) {
+      event.audioDetails = mergeObjects(
+        event.audioDetails || {},
+        ensureObject(payload.audioDetails),
+      );
+      initializeDepartmentStatus(event.audioDetails);
+    }
+
+    if (payload.transportDetails) {
+      event.transportDetails = mergeObjects(
+        event.transportDetails || {},
+        ensureObject(payload.transportDetails),
+      );
+      initializeDepartmentStatus(event.transportDetails);
+    }
+
+    if (payload.refreshmentDetails) {
+      event.refreshmentDetails = mergeObjects(
+        event.refreshmentDetails || {},
+        ensureObject(payload.refreshmentDetails),
+      );
+      initializeDepartmentStatus(event.refreshmentDetails);
+    }
+
+    if (payload.accommodationDetails) {
+      event.accommodationDetails = mergeObjects(
+        event.accommodationDetails || {},
+        ensureObject(payload.accommodationDetails),
+      );
+      initializeDepartmentStatus(event.accommodationDetails);
+    }
+
+    if (payload.purchaseDetails) {
+      event.purchaseDetails = mergeObjects(
+        event.purchaseDetails || {},
+        ensureObject(payload.purchaseDetails),
+      );
+      initializeDepartmentStatus(event.purchaseDetails);
     }
 
     if (payload.mediaRequirementDetails) {
@@ -724,7 +775,7 @@ exports.getAllEvents = async (req, res) => {
   }
 };
 
-exports.  getEventById = async (req, res) => {
+exports.getEventById = async (req, res) => {
   try {
     const { id } = req.params;
     const { module } = req.query;
@@ -1198,14 +1249,12 @@ exports.getRequirementDetails = async (req, res) => {
       });
     }
 
-    const requirementDetails =
-      event.requestDetails?.requirementDetails || {};
+    const requirementDetails = event.requestDetails?.requirementDetails || {};
 
     const financeRequired =
       event.requestDetails?.organizerDetails?.financeRequired || false;
 
-    const media =
-      event.mediaRequirementDetails?.mediaRequirements?.[0];
+    const media = event.mediaRequirementDetails?.mediaRequirements?.[0];
 
     const departments = {
       venue: {

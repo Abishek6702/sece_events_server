@@ -246,7 +246,12 @@ const deleteJson = async (url) => {
               dayIndex: 0,
               venueId: '507f1f77bcf86cd799439015',
               venueName: 'Seminar Hall A',
-              desktopLaptop: true,
+              desktopLaptop: [
+                {
+                  type: 'laptop',
+                  count: 10,
+                },
+              ],
               internetFacility: 'WiFi',
               expectedInternetUsers: 100,
               proctoringUsers: 0,
@@ -261,7 +266,7 @@ const deleteJson = async (url) => {
               dayIndex: 1,
               venueId: '507f1f77bcf86cd799439016',
               venueName: 'Lab 101',
-              desktopLaptop: true,
+              desktopLaptop: [{ type: 'laptop', count: 50 }],
               internetFacility: 'LAN',
               expectedInternetUsers: 50,
               proctoringUsers: 0,
@@ -276,7 +281,7 @@ const deleteJson = async (url) => {
               dayIndex: 2,
               venueId: '507f1f77bcf86cd799439017',
               venueName: 'Auditorium',
-              desktopLaptop: false,
+              desktopLaptop: [{ type: 'laptop', count: 0 }],
               internetFacility: 'WiFi',
               expectedInternetUsers: 150,
               proctoringUsers: 0,
@@ -434,12 +439,15 @@ const deleteJson = async (url) => {
                 giftItems: [
                   {
                     giftType: 'Certificate',
-                    trophy: [],
+                    trophy: [{
+                      trophyType: 'ak',
+                      quantity: 12,
+                    },],
                     cashPrizeAmount: 0,
                     voucher: [
                       {
-                        voucherWorth: "0",
-                        quantity: 0,
+                        voucherWorth: "1",
+                        quantity: 100,
                       },
                     ],
                   },
@@ -674,7 +682,7 @@ const deleteJson = async (url) => {
     console.log('GET AFTER SUBMIT RESPONSE:', getAfterSubmit.status);
     console.log(JSON.stringify(getAfterSubmit.body, null, 2));
 
-    const deleteResponse = await deleteJson(`${serverUrl}/api/events/${eventId}`);
+    // const deleteResponse = await deleteJson(`${serverUrl}/api/events/${eventId}`);
     console.log('DELETE RESPONSE:', deleteResponse.status);
     console.log(JSON.stringify(deleteResponse.body, null, 2));
 
