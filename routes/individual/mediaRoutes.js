@@ -23,6 +23,8 @@ const {
 router.post(
   "/create",
   upload.fields([
+    { name: "principalApprovalForm", maxCount: 1 },
+    { name: "files", maxCount: 10 },
     { name: "referencePosterFiles", maxCount: 10 },
     { name: "referenceCertificateFiles", maxCount: 10 },
     { name: "referenceFiles", maxCount: 10 },

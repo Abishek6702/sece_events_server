@@ -2,18 +2,71 @@
 
 const Purchase = require("../../models/individual/IndividualPurchase");
 
+const normalizeFileReference = (file) => {
+  if (!file) return null;
+
+  return {
+    url: file.path || file.secure_url || file.url || "",
+    publicId: file.filename || file.public_id || "",
+  };
+};
+
 // ==============================
 // CREATE
 // ==============================
 exports.createPurchase = async (req, res) => {
   try {
     console.log("BODY =>", req.body);
+    console.log("FILES =>", req.files);
 
-    const purchase = await Purchase.create(req.body);
+    const body = {
+      ...req.body,
+
+      purchases: req.body.purchases
+        ? JSON.parse(req.body.purchases)
+        : [],
+    };
+
+    // =====================================
+    // PRINCIPAL APPROVAL FORM
+    // =====================================
+
+    if (
+      req.files?.principalApprovalForm?.length
+    ) {
+      const file =
+        req.files.principalApprovalForm[0];
+
+      body.principalApprovalForm =
+        normalizeFileReference(file);
+    }
+
+    // =====================================
+    // REFERENCE FILES
+    // =====================================
+
+    const uploadedFiles =
+      req.files?.referenceFiles ||
+      req.files?.files ||
+      req.files?.attachments;
+
+    if (
+      uploadedFiles &&
+      uploadedFiles.length > 0
+    ) {
+      body.referenceFiles =
+        uploadedFiles
+          .map(normalizeFileReference)
+          .filter(Boolean);
+    }
+
+    const purchase =
+      await Purchase.create(body);
 
     res.status(201).json({
       success: true,
-      message: "Purchase created successfully",
+      message:
+        "Purchase created successfully",
       data: purchase,
     });
   } catch (error) {

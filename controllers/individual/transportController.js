@@ -2,18 +2,92 @@
 
 const Transport = require("../../models/individual/IndividualTransport");
 
+const normalizeFileReference = (file) => {
+  if (!file) return null;
+
+  return {
+    url: file.path || file.secure_url || file.url || "",
+    publicId: file.filename || file.public_id || "",
+  };
+};
+
 // ==============================
 // CREATE TRANSPORT
 // ==============================
 exports.createTransport = async (req, res) => {
   try {
     console.log("BODY =>", req.body);
+    console.log("FILES =>", req.files);
 
-    const transport = await Transport.create(req.body);
+    const body = {
+      ...req.body,
+
+      // Parse multipart/form-data JSON fields
+      checkpoints: req.body.checkpoints
+        ? JSON.parse(req.body.checkpoints)
+        : [],
+
+      vehicles: req.body.vehicles
+        ? JSON.parse(req.body.vehicles)
+        : [],
+
+      accompanyingStaff: req.body.accompanyingStaff
+        ? JSON.parse(req.body.accompanyingStaff)
+        : [],
+
+      totalPassengers: Number(
+        req.body.totalPassengers
+      ),
+
+      numberOfBusNeeded: Number(
+        req.body.numberOfBusNeeded
+      ),
+
+      numberOfAccompanyingStaff: Number(
+        req.body.numberOfAccompanyingStaff
+      ),
+    };
+
+    // =====================================
+    // PRINCIPAL APPROVAL FORM
+    // =====================================
+
+    if (
+      req.files?.principalApprovalForm?.length
+    ) {
+      const file =
+        req.files.principalApprovalForm[0];
+
+      body.principalApprovalForm =
+        normalizeFileReference(file);
+    }
+
+    // =====================================
+    // REFERENCE FILES
+    // =====================================
+
+    const uploadedFiles =
+      req.files?.referenceFiles ||
+      req.files?.files ||
+      req.files?.attachments;
+
+    if (
+      uploadedFiles &&
+      uploadedFiles.length > 0
+    ) {
+      body.referenceFiles =
+        uploadedFiles
+          .map(normalizeFileReference)
+          .filter(Boolean);
+    }
+
+    const transport =
+      await Transport.create(body);
 
     res.status(201).json({
       success: true,
-      message: "Transport created successfully",
+      message:
+        "Transport created successfully",
       data: transport,
     });
   } catch (error) {

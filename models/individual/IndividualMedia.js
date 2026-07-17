@@ -60,12 +60,27 @@ const individualMediaSchema = new mongoose.Schema(
       default: 1,
     },
 
+    files: [fileReferenceSchema],
+
     typeOfMedia: [
       {
         type: String,
         enum: ["Poster", "Video"],
       },
     ],
+    principalApprovalForm: {
+  url: {
+    type: String,
+  },
+
+  publicId: {
+    type: String,
+  },
+
+  fileName: {
+    type: String,
+  },
+},
 
     // =========================
     // POSTER SECTION
