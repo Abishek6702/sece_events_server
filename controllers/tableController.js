@@ -29,16 +29,16 @@ exports.getDashboardTable = async (req, res) => {
   try {
     const { module } = req.query;
 
-    const page = parseInt(req.query.page) || 1;
-
-    const limit = parseInt(req.query.limit) || 10;
-
-    const skip = (page - 1) * limit;
-
+  
     const baseQuery = {
       status: { $ne: "Draft" },
     };
-
+    
+    // For all modules except admin and faculty,
+    // only return events approved by admin.
+    if (module !== "admin" && module !== "faculty") {
+      baseQuery.adminApproval = true;
+    }
     const events = await Event.find(baseQuery)
       .populate("organizerId", "name email")
       .lean();
@@ -277,23 +277,16 @@ exports.getDashboardTable = async (req, res) => {
       }
     }
 
-    const totalRecords = data.length;
 
-    const paginatedData = data.slice(skip, skip + limit);
 
     return res.status(200).json({
       module,
 
-      count: totalRecords,
+      count: data.length,
 
-      pagination: {
-        totalRecords,
-        currentPage: page,
-        totalPages: Math.ceil(totalRecords / limit),
-        limit,
-      },
+      
 
-      data: paginatedData,
+      data,
     });
   } catch (error) {
     console.error("Dashboard table error:", error);
