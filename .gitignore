@@ -12,3 +12,21 @@ logs
 # OS files
 .DS_Store
 Thumbs.db
+
+# Uploads
+uploads/
+
+# Documentation
+docs/
+
+# Files
+files/
+
+# Postman
+Postman/
+
+# Tests
+tests/
+
+# Sample data
+sample_event_data.json
