@@ -5,13 +5,43 @@ const Faculty = require("../models/Faculty");
 const User = require("../models/User");
 const cloudinary = require("cloudinary").v2;
 
-// helper to generate default password
-const generatePassword = async (empId) => {
-  const password = "Sece@123";
-  const hashed = await bcrypt.hash(password, 10);
-  return { plain: password, hashed };
-};
+const parseDate = (value) => {
+  if (!value) return null;
 
+  // Already a JS Date
+  if (value instanceof Date) return value;
+
+  // Excel serial number
+  if (typeof value === "number") {
+    const parsed = XLSX.SSF.parse_date_code(value);
+
+    return new Date(
+      parsed.y,
+      parsed.m - 1,
+      parsed.d
+    );
+  }
+
+  // String
+  if (typeof value === "string") {
+    const str = value.trim();
+
+    // DD-MM-YYYY or DD/MM/YYYY
+    const parts = str.split(/[-/]/);
+
+    if (parts.length === 3) {
+      const [day, month, year] = parts.map(Number);
+
+      return new Date(year, month - 1, day);
+    }
+
+    // fallback
+    const d = new Date(str);
+    if (!isNaN(d)) return d;
+  }
+
+  return null;
+};
 // ================= IMPORT EXCEL =================
 const XLSX = require("xlsx");
 
@@ -47,9 +77,9 @@ exports.importExcelFaculty = async (req, res) => {
         phone: data.phone,
         department: data.department,
         originalDepartment: data.originalDepartment,
-        dob: data.dob,
+        dob: parseDate(data.dob), 
         gender: data.gender,
-        doj: data.doj,
+        doj: parseDate(data.doj),
         designation: data.designation,
         employeeCategory: data.employeeCategory,
         location: data.location,
