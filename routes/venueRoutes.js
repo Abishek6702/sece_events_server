@@ -13,30 +13,32 @@ const {
 } = require('../controllers/venueController');
 
 const upload = require('../middleware/upload'); 
+const protect = require("../middleware/protect");
+
 
 
 
 // ➤ Create all
-router.post('/import', upload.single('file'), importVenuesFromExcel);
+router.post('/import',protect, upload.single('file'), importVenuesFromExcel);
 
 // ➤ Create
-router.post('/', createVenue);
+router.post('/',protect, createVenue);
 
 // ➤ Get all
-router.get('/', getAllVenues);
+router.get('/',protect, getAllVenues);
 
 // ➤ Get venue options
-router.get('/options', getVenueOptions);
-router.get('/booking-counts', getVenueBookingCounts);
+router.get('/options',protect, getVenueOptions);
+router.get('/booking-counts',protect, getVenueBookingCounts);
 
 // ➤ Get by ID (IMPORTANT: keep AFTER other GET routes)
-router.get('/:id', getVenueById);
+router.get('/:id',protect, getVenueById);
 
 // ➤ Update
-router.put('/:id', updateVenue);
+router.put('/:id',protect, updateVenue);
 
 // ➤ Delete
-router.delete('/:id', deleteVenue);
+router.delete('/:id',protect, deleteVenue);
 
 
 

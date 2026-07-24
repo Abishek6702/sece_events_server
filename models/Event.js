@@ -506,7 +506,7 @@ const mediaRequirementSchema = new mongoose.Schema(
           sizes: [
             {
               type: { type: String },
-              value: Number,
+              value: String,
             },
           ],
 

@@ -18,7 +18,7 @@ router.post("/login", login);
 router.post("/verify-login-otp", verifyLoginOtp);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
-router.post("/change-password", changePassword);
+router.post("/change-password",protect, changePassword);
 router.post("/add-admin", createAdmin);
 router.get("/me", protect, getProfile);
 

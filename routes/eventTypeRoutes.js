@@ -10,19 +10,21 @@ const {
   deleteDocument,
   toggleDocumentStatus,
 } = require("../controllers/eventTypeController");
+const protect = require("../middleware/protect");
 
-router.post("/", createEventType);
 
-router.get("/", getAllEventTypes);
+router.post("/",protect, createEventType);
 
-router.get("/:id", getEventType);
+router.get("/",protect, getAllEventTypes);
 
-router.put("/:id", updateEventType);
+router.get("/:id",protect, getEventType);
 
-router.delete("/:id", deleteEventType);
+router.put("/:id",protect, updateEventType);
 
-router.delete("/:eventId/document/:documentId", deleteDocument);
+router.delete("/:id",protect, deleteEventType);
 
-router.patch("/:eventId/document/:documentId/toggle", toggleDocumentStatus);
+router.delete("/:eventId/document/:documentId",protect, deleteDocument);
+
+router.patch("/:eventId/document/:documentId/toggle",protect, toggleDocumentStatus);
 
 module.exports = router;

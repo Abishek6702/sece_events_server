@@ -10,22 +10,22 @@ const {
   deleteTransportInventory,
   getTransportAvailability,
 } = require("../controllers/transportInventoryController");
+const protect = require("../middleware/protect");
 
 // CREATE
-router.post("/", createTransportInventory);
+router.post("/", protect, createTransportInventory);
 
 // GET ALL
-router.get("/", getAllTransportInventory);
+router.get("/", protect, getAllTransportInventory);
 
-router.get("/available", getTransportAvailability);
+router.get("/available", protect, getTransportAvailability);
 // GET SINGLE
-router.get("/:id", getTransportInventoryById);
-
+router.get("/:id", protect, getTransportInventoryById);
 
 // UPDATE
-router.put("/:id", updateTransportInventory);
+router.put("/:id", protect, updateTransportInventory);
 
 // DELETE
-router.delete("/:id", deleteTransportInventory);
+router.delete("/:id", protect, deleteTransportInventory);
 
 module.exports = router;

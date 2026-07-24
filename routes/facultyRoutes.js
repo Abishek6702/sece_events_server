@@ -11,7 +11,8 @@ const {
   deleteProfileImage,
   searchFaculty,
 } = require("../controllers/facultyController");
-const { protect } = require("../middleware/protect");
+const protect = require("../middleware/protect");
+
 const upload = require("../middleware/upload");
 const uploadCloudinary = require("../middleware/multerConfig.js");
 
@@ -19,25 +20,25 @@ const router = express.Router();
 
 router.post("/import-faculty", upload.single("faculties"), importExcelFaculty);
 
-router.post("/", addIndividualFaculty);
+router.post("/", protect, addIndividualFaculty);
 
-router.get("/", getFaculties);
+router.get("/", protect, getFaculties);
 
-router.get("/search", searchFaculty);
+router.get("/search", protect, searchFaculty);
 
+router.get("/:id", protect, getFacultyId);
 
-router.get("/:id", getFacultyId);
+router.delete("/:id", protect, deleteFaculty);
 
-router.delete("/:id", deleteFaculty);
-
-router.put("/:id", editFaculty);
+router.put("/:id", protect, editFaculty);
 
 router.patch(
   "/:id/profile-image",
+  protect,
   uploadCloudinary.single("profileImage"),
   uploadProfileImage,
 );
 
-router.delete("/:id/profile-image", deleteProfileImage);
+router.delete("/:id/profile-image", protect, deleteProfileImage);
 
 module.exports = router;
