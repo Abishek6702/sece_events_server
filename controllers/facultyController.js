@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const fs = require("fs");
+const path = require("path");
 
 const Faculty = require("../models/Faculty");
 const User = require("../models/User");
@@ -369,7 +371,17 @@ exports.uploadProfileImage = async (req, res) => {
     }
 
     if (faculty.profileImage?.publicId) {
-      await cloudinary.uploader.destroy(faculty.profileImage.publicId);
+      try {
+        const safeFilename = path.basename(faculty.profileImage.publicId);
+        const filePath = path.join(__dirname, "../uploads/profiles", safeFilename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        } else {
+          await cloudinary.uploader.destroy(faculty.profileImage.publicId);
+        }
+      } catch (err) {
+        console.error("Failed to delete old profile image:", err);
+      }
     }
 
     faculty.profileImage = {
@@ -402,7 +414,17 @@ exports.deleteProfileImage = async (req, res) => {
       return res.status(400).json({ message: "No image to delete" });
     }
 
-    await cloudinary.uploader.destroy(faculty.profileImage.publicId);
+    try {
+      const safeFilename = path.basename(faculty.profileImage.publicId);
+      const filePath = path.join(__dirname, "../uploads/profiles", safeFilename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      } else {
+        await cloudinary.uploader.destroy(faculty.profileImage.publicId);
+      }
+    } catch (err) {
+      console.error("Failed to delete profile image:", err);
+    }
 
     faculty.profileImage = null;
     await faculty.save();
