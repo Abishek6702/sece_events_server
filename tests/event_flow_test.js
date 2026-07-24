@@ -8,12 +8,22 @@ const ensureFile = (filePath, contents) => {
   }
 };
 
-const serverUrl = 'http://localhost:5005';
+const serverUrl = `http://localhost:${process.env.PORT || '5006'}`;
 const testPdf = path.join(__dirname, 'test.pdf');
 const testPng = path.join(__dirname, 'test.png');
 
 ensureFile(testPdf, '%PDF-1.4\n1 0 obj<< /Type /Catalog /Pages 2 0 R>>\nendobj\n2 0 obj<< /Type /Pages /Kids [3 0 R]/Count 1>>\nendobj\n3 0 obj<< /Type /Page /Parent 2 0 R/MediaBox [0 0 200 200]/Contents 4 0 R>>\nendobj\n4 0 obj<< /Length 44>>\nstream\nBT /F1 24 Tf 72 712 Td (Hello) Tj ET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000010 00000 n \n0000000053 00000 n \n0000000103 00000 n \n0000000157 00000 n \ntrailer<< /Root 1 0 R/Size 5>>\nstartxref\n224\n%%EOF');
 ensureFile(testPng, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=', 'base64'));
+
+let authToken = '';
+
+const getHeaders = (extraHeaders = {}) => {
+  const headers = { ...extraHeaders };
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+  return headers;
+};
 
 const postForm = async ({ url, fields, files }) => {
   const fd = new FormData();
@@ -29,6 +39,7 @@ const postForm = async ({ url, fields, files }) => {
   const res = await fetch(url, {
     method: 'POST',
     body: fd,
+    headers: getHeaders(),
   });
   const body = await res.text();
   let parsed;
@@ -48,6 +59,7 @@ const putForm = async ({ url, fields, files }) => {
   const res = await fetch(url, {
     method: 'PUT',
     body: fd,
+    headers: getHeaders(),
   });
   const body = await res.text();
   let parsed;
@@ -67,6 +79,7 @@ const patchForm = async ({ url, fields, files }) => {
   const res = await fetch(url, {
     method: 'PATCH',
     body: fd,
+    headers: getHeaders(),
   });
   const body = await res.text();
   let parsed;
@@ -75,7 +88,9 @@ const patchForm = async ({ url, fields, files }) => {
 };
 
 const getJson = async (url) => {
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: getHeaders(),
+  });
   const body = await res.text();
   let parsed;
   try { parsed = JSON.parse(body); } catch (e) { parsed = body; }
@@ -83,7 +98,10 @@ const getJson = async (url) => {
 };
 
 const deleteJson = async (url) => {
-  const res = await fetch(url, { method: 'DELETE' });
+  const res = await fetch(url, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
   const body = await res.text();
   let parsed;
   try { parsed = JSON.parse(body); } catch (e) { parsed = body; }
@@ -92,6 +110,47 @@ const deleteJson = async (url) => {
 
 (async () => {
   try {
+    // 1. Create a temporary Admin User
+    const testEmail = `test_${Date.now()}@example.com`;
+    const testPhone = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+    console.log(`Creating test admin with email: ${testEmail} and phone: ${testPhone}...`);
+    const registerRes = await fetch(`${serverUrl}/api/auth/add-admin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Test Admin User',
+        email: testEmail,
+        phone: testPhone,
+        department: 'CSE',
+        role: 'Admin'
+      })
+    });
+    
+    if (registerRes.status !== 201) {
+      const regErr = await registerRes.text();
+      throw new Error(`Failed to create test admin: ${regErr}`);
+    }
+
+    // 2. Login to get authToken
+    console.log('Logging in test admin...');
+    const loginRes = await fetch(`${serverUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: testEmail,
+        password: 'Admin@123'
+      })
+    });
+    
+    if (loginRes.status !== 200) {
+      const logErr = await loginRes.text();
+      throw new Error(`Failed to login test admin: ${logErr}`);
+    }
+    
+    const loginData = await loginRes.json();
+    authToken = loginData.token;
+    console.log('Auth token acquired successfully.');
+
     const draftCreate = await postForm({
       url: `${serverUrl}/api/events`,
       fields: {
@@ -606,22 +665,22 @@ const deleteJson = async (url) => {
     const videoFiles = createdEvent.mediaRequirementDetails?.mediaRequirements?.[0]?.video?.referenceFiles;
 
     if (!prevDoc || !prevDoc.url || !prevDoc.publicId) {
-      throw new Error('Expected Cloudinary previousEventDocumentationDetails to include url and publicId');
+      throw new Error('Expected previousEventDocumentationDetails to include url and publicId');
     }
 
     if (!Array.isArray(posterFiles) || posterFiles.length === 0 || !posterFiles[0].url || !posterFiles[0].publicId) {
-      throw new Error('Expected Cloudinary poster.referencePosterFiles to include url and publicId');
+      throw new Error('Expected poster.referencePosterFiles to include url and publicId');
     }
 
     if (!Array.isArray(certFiles) || certFiles.length === 0 || !certFiles[0].url || !certFiles[0].publicId) {
-      throw new Error('Expected Cloudinary poster.referenceCertificateFiles to include url and publicId');
+      throw new Error('Expected poster.referenceCertificateFiles to include url and publicId');
     }
 
     if (!Array.isArray(videoFiles) || videoFiles.length === 0 || !videoFiles[0].url || !videoFiles[0].publicId) {
-      throw new Error('Expected Cloudinary video.referenceFiles to include url and publicId');
+      throw new Error('Expected video.referenceFiles to include url and publicId');
     }
 
-    console.log('Cloudinary file links validated');
+    console.log('File links validated');
 
     const draftUpdate = await putForm({
       url: `${serverUrl}/api/events/${eventId}`,
@@ -682,7 +741,7 @@ const deleteJson = async (url) => {
     console.log('GET AFTER SUBMIT RESPONSE:', getAfterSubmit.status);
     console.log(JSON.stringify(getAfterSubmit.body, null, 2));
 
-    // const deleteResponse = await deleteJson(`${serverUrl}/api/events/${eventId}`);
+    const deleteResponse = await deleteJson(`${serverUrl}/api/events/${eventId}`);
     console.log('DELETE RESPONSE:', deleteResponse.status);
     console.log(JSON.stringify(deleteResponse.body, null, 2));
 

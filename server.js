@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const hpp = require("hpp");
+const path = require("path");
 const connectDB = require("./config/db");
 const { apiLimiter } = require("./middleware/rateLimiter.js");
 const auditLogger = require("./middleware/auditLogger.js");
@@ -70,6 +71,7 @@ app.use(
 
 app.use(hpp());
 app.use(auditLogger);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api", apiLimiter);
 app.use("/api/test", testRoutes);
 app.use("/api/auth", authRoutes);
