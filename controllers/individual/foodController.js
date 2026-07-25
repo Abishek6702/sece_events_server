@@ -2,16 +2,33 @@
 
 const Food = require("../../models/individual/IndividualFood");
 
+const normalizeFinanceValue = (financeRequired) => {
+  if (typeof financeRequired === "string") {
+    return ["yes", "true"].includes(
+      financeRequired.trim().toLowerCase(),
+    )
+      ? "Yes"
+      : "No";
+  }
+
+  return financeRequired === true ? "Yes" : "No";
+};
+
 // ==========================================
 // CREATE FOOD
 // ==========================================
 exports.createFood = async (req, res) => {
+  
   try {
-    console.log("BODY =>", req.body);
-    console.log("FILES =>", req.files);
+//     console.log("BODY =>", req.body);
+//     console.log("FILES =>", req.files);
+//     console.log("Finance Required:", req.body.financeRequired);
+// console.log("Advance Amount:", req.body.advanceAmount);
+// console.log("Advance Purpose:", req.body.advancePurpose);
 
     const foodData = {
       ...req.body,
+      employee: req.user?.facultyId || req.body.employee || req.user?._id,
 
       resourcePersonType: req.body.resourcePersonType
         ? JSON.parse(req.body.resourcePersonType)
@@ -24,7 +41,56 @@ exports.createFood = async (req, res) => {
       foodTypes: req.body.foodTypes
         ? JSON.parse(req.body.foodTypes)
         : [],
+
+      // Finance fields - default handling will be validated below
+      financeRequired: normalizeFinanceValue(
+        req.body.financeRequired,
+      ),
+      advanceAmount:
+        req.body.advanceAmount !== undefined &&
+        req.body.advanceAmount !== null &&
+        String(req.body.advanceAmount).trim() !== ""
+          ? Number(req.body.advanceAmount)
+          : null,
+      advancePurpose:
+        req.body.advancePurpose !== undefined &&
+        req.body.advancePurpose !== null
+          ? String(req.body.advancePurpose).trim()
+          : "",
     };
+
+    // ======== Finance validation & workflowStage =========
+    const fin = String(foodData.financeRequired || "No");
+
+    if (fin === "Yes") {
+      const amt = req.body.advanceAmount;
+      const purpose = req.body.advancePurpose;
+
+      if (
+        amt === undefined ||
+        amt === null ||
+        String(amt).trim() === "" ||
+        purpose === undefined ||
+        purpose === null ||
+        String(purpose).trim() === ""
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Advance Amount and Purpose of Advance are required when Finance Required is Yes.",
+        });
+      }
+
+      foodData.financeRequired = "Yes";
+      foodData.advanceAmount = Number(amt);
+      foodData.advancePurpose = String(purpose).trim();
+      foodData.workflowStage = "Submitted";
+    } else {
+      foodData.financeRequired = "No";
+      foodData.advanceAmount = null;
+      foodData.advancePurpose = "";
+      foodData.workflowStage = "Submitted";
+    }
 
     const file =
       req.files?.principalApprovalForm?.[0];
@@ -36,6 +102,26 @@ exports.createFood = async (req, res) => {
         fileName: file.originalname,
       };
     }
+
+    foodData.status = "Pending";
+    foodData.finalStatus = "Pending";
+    foodData.workflowStage = "Submitted";
+    foodData.approvalHistory = [
+      {
+        role: "faculty",
+        approvedBy: foodData.employee,
+        action: "Submitted",
+        remarks: "Request Submitted",
+        actionDate: new Date(),
+      },
+      {
+        role: "hod",
+        approvedBy: null,
+        action: "Pending",
+        remarks: "Waiting for HOD approval",
+        actionDate: null,
+      },
+    ];
 
     const food = await Food.create(foodData);
 

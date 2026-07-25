@@ -2,6 +2,18 @@
 
 const Purchase = require("../../models/individual/IndividualPurchase");
 
+const normalizeFinanceValue = (financeRequired) => {
+  if (typeof financeRequired === "string") {
+    return ["yes", "true"].includes(
+      financeRequired.trim().toLowerCase(),
+    )
+      ? "Yes"
+      : "No";
+  }
+
+  return financeRequired === true ? "Yes" : "No";
+};
+
 const normalizeFileReference = (file) => {
   if (!file) return null;
 
@@ -21,11 +33,60 @@ exports.createPurchase = async (req, res) => {
 
     const body = {
       ...req.body,
+      employee: req.user?.facultyId || req.body.employee || req.user?._id,
 
       purchases: req.body.purchases
         ? JSON.parse(req.body.purchases)
         : [],
+
+      financeRequired: normalizeFinanceValue(
+        req.body.financeRequired,
+      ),
+      advanceAmount:
+        req.body.advanceAmount !== undefined &&
+        req.body.advanceAmount !== null &&
+        String(req.body.advanceAmount).trim() !== ""
+          ? Number(req.body.advanceAmount)
+          : null,
+      advancePurpose:
+        req.body.advancePurpose !== undefined &&
+        req.body.advancePurpose !== null
+          ? String(req.body.advancePurpose).trim()
+          : "",
     };
+
+    // ======== Finance validation & workflowStage =========
+    const fin = String(body.financeRequired || "No");
+
+    if (fin === "Yes") {
+      const amt = req.body.advanceAmount;
+      const purpose = req.body.advancePurpose;
+
+      if (
+        amt === undefined ||
+        amt === null ||
+        String(amt).trim() === "" ||
+        purpose === undefined ||
+        purpose === null ||
+        String(purpose).trim() === ""
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Advance Amount and Purpose of Advance are required when Finance Required is Yes.",
+        });
+      }
+
+      body.financeRequired = "Yes";
+      body.advanceAmount = Number(amt);
+      body.advancePurpose = String(purpose).trim();
+      body.workflowStage = "Submitted";
+    } else {
+      body.financeRequired = "No";
+      body.advanceAmount = null;
+      body.advancePurpose = "";
+      body.workflowStage = "Submitted";
+    }
 
     // =====================================
     // PRINCIPAL APPROVAL FORM
@@ -59,6 +120,30 @@ exports.createPurchase = async (req, res) => {
           .map(normalizeFileReference)
           .filter(Boolean);
     }
+
+    body.status = {
+      admin: "Pending",
+      accounts: "Pending",
+      purchase: "Pending",
+    };
+    body.finalStatus = "Pending";
+    body.workflowStage = "Submitted";
+    body.approvalHistory = [
+      {
+        role: "faculty",
+        approvedBy: body.employee,
+        action: "Submitted",
+        remarks: "Request Submitted",
+        actionDate: new Date(),
+      },
+      {
+        role: "hod",
+        approvedBy: null,
+        action: "Pending",
+        remarks: "Waiting for HOD approval",
+        actionDate: null,
+      },
+    ];
 
     const purchase =
       await Purchase.create(body);
