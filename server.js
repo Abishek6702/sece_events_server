@@ -23,6 +23,7 @@ const transportInventoryRoutes = require("./routes/transportInventoryRoutes");
 const tableRoutes = require("./routes/tableRoutes");
 const eventTypeRoutes = require("./routes/eventTypeRoutes");
 const testRoutes = require("./routes/testRoutes");
+const calendarRoutes = require("./routes/calendarRoutes");
 
 dotenv.config();
 const app = express();
@@ -88,6 +89,7 @@ app.use("/api/media-staff-change", mediaStaffChangeRoutes);
 app.use("/api/transport-inventory", transportInventoryRoutes);
 app.use("/api/table", tableRoutes);
 app.use("/api/eventTypes", eventTypeRoutes);
+app.use("/api/calendar",calendarRoutes)
 
 const PORT = process.env.PORT || 5000;
 
