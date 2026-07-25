@@ -19,19 +19,27 @@ const HARDCODED_VENUES = [
 // Colors keyed by organizing department — mirrors the sidebar legend on the
 // frontend. Kept here too so any server-rendered / exported views agree.
 const DEPARTMENT_COLORS = {
-  Placement: "purple",
-  EEE: "blue",
-  ECE: "green",
+  "CCE": "purple",
+  "MECH": "cyan",
+  "AIML": "orange",
+  "CSE": "teal",
+  "ECE": "green",
+  "EEE": "blue",
   "AI&DS": "red",
-  "AI&ML": "orange",
-  CIVIL: "pink",
-  MECH: "cyan",
-  AUTOMOBILE: "amber",
-  IT: "red",
-  CSE: "teal",
-  "CYBER SECURITY": "emerald",
+  "CFRD": "pink",
+  "IQAC": "indigo",
+  "MATHS": "amber",
+  "S&H": "lime",
+  "IR": "sky",
+  "CSBS": "emerald",
+  "IT": "rose",
+  "CYS": "fuchsia",
+  "PLACEMENT": "violet",
+  "PD": "yellow",
+  "INNOVATION": "stone",
+  "COE": "slate",
+  "HR": "zinc",
 };
-
 function getVenues(req, res) {
   return res.status(200).json({ venues: HARDCODED_VENUES });
 }
