@@ -55,6 +55,12 @@ const individualMediaSchema = new mongoose.Schema(
       required: true,
     },
 
+    requestNo: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
     dayIndex: {
       type: Number,
       default: 1,

@@ -22,6 +22,11 @@ const transportSchema = new mongoose.Schema(
       ref: "Faculty",
       required: true,
     },
+    requestNo: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     principalApprovalForm: {
       url: {
         type: String,

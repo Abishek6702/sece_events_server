@@ -67,6 +67,12 @@ const foodSchema = new mongoose.Schema(
       required: true,
     },
 
+    requestNo: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
     date: {
       type: Date,
       required: true,

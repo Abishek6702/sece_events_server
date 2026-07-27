@@ -1,6 +1,8 @@
 // controllers/purchase/purchaseController.js
 
 const Purchase = require("../../models/individual/IndividualPurchase");
+const Faculty = require("../../models/Faculty");
+const generateIndividualRequestNumber = require("../../utils/generateIndividualRequestNumber");
 
 const normalizeFinanceValue = (financeRequired) => {
   if (typeof financeRequired === "string") {
@@ -128,6 +130,10 @@ exports.createPurchase = async (req, res) => {
     };
     body.finalStatus = "Pending";
     body.workflowStage = "Submitted";
+    body.requestNo = await generateIndividualRequestNumber(
+      "PURCHASE",
+      req.user?.department || req.body.department || "UNKNOWN"
+    );
     body.approvalHistory = [
       {
         role: "faculty",
@@ -147,12 +153,17 @@ exports.createPurchase = async (req, res) => {
 
     const purchase =
       await Purchase.create(body);
+    const facultyDoc = await Faculty.findById(body.employee).select("empId").lean();
 
     res.status(201).json({
       success: true,
       message:
         "Purchase created successfully",
-      data: purchase,
+      data: {
+        ...purchase.toObject(),
+        empId: facultyDoc?.empId || null,
+        requestNo: purchase.requestNo,
+      },
     });
   } catch (error) {
     console.log(error);

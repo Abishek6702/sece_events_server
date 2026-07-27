@@ -1,6 +1,8 @@
 // controllers/individual/mediaController.js
 
 const IndividualMedia = require("../../models/individual/IndividualMedia");
+const Faculty = require("../../models/Faculty");
+const generateIndividualRequestNumber = require("../../utils/generateIndividualRequestNumber");
 
 const normalizeFinanceValue = (financeRequired) => {
   if (typeof financeRequired === "string") {
@@ -274,6 +276,10 @@ exports.createIndividualMedia = async (req, res) => {
     body.status = "Pending";
     body.finalStatus = "Pending";
     body.workflowStage = "Submitted";
+    body.requestNo = await generateIndividualRequestNumber(
+      "MEDIA",
+      req.user?.department || req.body.department || "UNKNOWN"
+    );
     body.approvalHistory = [
       {
         role: "faculty",
@@ -293,12 +299,17 @@ exports.createIndividualMedia = async (req, res) => {
 
     const media =
       await IndividualMedia.create(body);
+    const facultyDoc = await Faculty.findById(body.employee).select("empId").lean();
 
     res.status(201).json({
       success: true,
       message:
         "Individual media created successfully",
-      data: media,
+      data: {
+        ...media.toObject(),
+        empId: facultyDoc?.empId || null,
+        requestNo: media.requestNo,
+      },
     });
   } catch (error) {
     console.log(

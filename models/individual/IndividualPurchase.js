@@ -155,6 +155,12 @@ const purchaseSchema = new mongoose.Schema(
       required: true,
     },
 
+    requestNo: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
     purchases: [purchaseItemSchema],
 
     referenceFiles: [fileReferenceSchema],

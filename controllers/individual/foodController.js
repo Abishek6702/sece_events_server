@@ -1,6 +1,8 @@
 // controllers/foodController.js
 
 const Food = require("../../models/individual/IndividualFood");
+const Faculty = require("../../models/Faculty");
+const generateIndividualRequestNumber = require("../../utils/generateIndividualRequestNumber");
 
 const normalizeFinanceValue = (financeRequired) => {
   if (typeof financeRequired === "string") {
@@ -106,6 +108,10 @@ exports.createFood = async (req, res) => {
     foodData.status = "Pending";
     foodData.finalStatus = "Pending";
     foodData.workflowStage = "Submitted";
+    foodData.requestNo = await generateIndividualRequestNumber(
+      "FOOD",
+      req.user?.department || req.body.department || "UNKNOWN"
+    );
     foodData.approvalHistory = [
       {
         role: "faculty",
@@ -124,11 +130,16 @@ exports.createFood = async (req, res) => {
     ];
 
     const food = await Food.create(foodData);
+    const facultyDoc = await Faculty.findById(foodData.employee).select("empId").lean();
 
     res.status(201).json({
       success: true,
       message: "Food request created successfully",
-      data: food,
+      data: {
+        ...food.toObject(),
+        empId: facultyDoc?.empId || null,
+        requestNo: food.requestNo,
+      },
     });
   } catch (error) {
     console.log(error);
