@@ -3,19 +3,19 @@ const Faculty = require("../models/Faculty");
 const User = require("../models/User");
 
 // Department head roles mapping
-const DEPARTMENT_HEAD_ROLES = {
-  venue: "Venue Coordinator",
-  audio: "Audio Coordinator",
-  icts: "ICTS Coordinator",
-  transport: "Transport Coordinator",
-  food: "Food Coordinator",
-  accommodation: "Accommodation Coordinator",
-  purchase: "Purchase Coordinator",
-  media: "Media Coordinator",
+// const DEPARTMENT_HEAD_ROLES = {
+//   venue: "Venue Coordinator",
+//   audio: "Audio Coordinator",
+//   icts: "ICTS Coordinator",
+//   transport: "Transport Coordinator",
+//   food: "Food Coordinator",
+//   accommodation: "Accommodation Coordinator",
+//   purchase: "Purchase Coordinator",
+//   media: "Media Coordinator",
 
-  poster: "Poster Coordinator",
-  video: "Video Coordinator",
-};
+//   poster: "Poster Coordinator",
+//   video: "Video Coordinator",
+// };
 
 /**
  * Get Super Admin email
@@ -24,11 +24,10 @@ const getSuperAdminEmails = async () => {
   try {
     const superAdmins = await User.find({
       isadmin: true,
-      role: { $in: ["super admin 1", "super admin 2"] }
+      role: { $in: ["super admin 1", "super admin 2"] },
     }).select("email");
 
-    return superAdmins.map(admin => admin.email);
-
+    return superAdmins.map((admin) => admin.email);
   } catch (error) {
     console.error("Error fetching super admins:", error);
     return [];
@@ -81,32 +80,32 @@ const getOrganizersEmails = (event) => {
   }
   return emails;
 };
-
+const REQUIREMENT_DEPARTMENTS = {
+  venue: "Venue",
+  audio: "Audio",
+  icts: "ICTS",
+  transport: "Transport",
+  accommodation: "Accommodation",
+  media: "Media",
+  food: "Food",
+  purchase: "Purchase",
+  poster: "Poster",
+  video: "Video",
+};
 /**
  * Get department head email for specific requirement type
  */
-const getDepartmentHeadEmail = async (requirementType) => {
+const getDepartmentHeadEmail = async (department) => {
   try {
-    const role = DEPARTMENT_HEAD_ROLES[requirementType?.toLowerCase()];
-    if (!role) return null;
-
-    const coordinator = await User.findOne({
-      role: { $regex: role, $options: "i" },
+    const heads = await User.find({
+      role: "head",
+      department: { $regex: `^${department}$`, $options: "i" },
     }).select("email");
 
-    if (coordinator) {
-      return coordinator.email;
-    }
-
-    // Fallback: look in Faculty model
-    const coordinatorFaculty = await Faculty.findOne({
-      designation: { $regex: role, $options: "i" },
-    }).select("email");
-
-    return coordinatorFaculty?.email || null;
+    return heads.map((head) => head.email);
   } catch (error) {
-    console.error("Error fetching department head:", error);
-    return null;
+    console.error("Error fetching department heads:", error);
+    return [];
   }
 };
 
@@ -134,15 +133,24 @@ const getAllDepartmentHeadEmails = async (event) => {
     for (const deptType of departmentTypes) {
       const key = deptType;
 
-      const isRequired = requirements[`${key}Required`] === true ||
-                       requirements[`${key}Required`] === "true" ||
-                       requirements[key] === true;
+      const isRequired =
+        requirements[`${key}Required`] === true ||
+        requirements[`${key}Required`] === "true" ||
+        requirements[key] === true;
 
       if (isRequired) {
-        const email = await getDepartmentHeadEmail(key);
-        if (email) {
-          emails.push({ type: key, email });
-        }
+        const department = REQUIREMENT_DEPARTMENTS[key];
+
+        if (!department) continue;
+
+        const departmentEmails = await getDepartmentHeadEmail(department);
+
+        departmentEmails.forEach((email) => {
+          emails.push({
+            type: key,
+            email,
+          });
+        });
       }
     }
   } catch (error) {
@@ -160,10 +168,16 @@ const notifyEventCreation = async (event) => {
   try {
     const eventCreationTemplate = require("./mailTemplates/eventCreation");
 
-    const eventName = event.requestDetails?.eventDetails?.eventName || "Untitled Event";
-    const organizerName = event.requestDetails?.organizerDetails?.organizers?.[0]?.name || "Organizer";
-    const organizingDepartment = event.requestDetails?.organizerDetails?.organizingDepartment || "";
-    const eventDate = event.requestDetails?.eventDetails?.eventSchedule?.[0]?.eventDate || new Date();
+    const eventName =
+      event.requestDetails?.eventDetails?.eventName || "Untitled Event";
+    const organizerName =
+      event.requestDetails?.organizerDetails?.organizers?.[0]?.name ||
+      "Organizer";
+    const organizingDepartment =
+      event.requestDetails?.organizerDetails?.organizingDepartment || "";
+    const eventDate =
+      event.requestDetails?.eventDetails?.eventSchedule?.[0]?.eventDate ||
+      new Date();
 
     const htmlContent = eventCreationTemplate({
       eventName,
@@ -177,7 +191,11 @@ const notifyEventCreation = async (event) => {
     const hodEmail = await getHODEmail(organizingDepartment);
     const superAdminEmails = await getSuperAdminEmails();
 
-    const recipients = [...new Set([...organizersEmails, hodEmail,  ...superAdminEmails].filter(Boolean))];
+    const recipients = [
+      ...new Set(
+        [...organizersEmails, hodEmail, ...superAdminEmails].filter(Boolean),
+      ),
+    ];
 
     // Send to all recipients
     for (const email of recipients) {
@@ -185,14 +203,16 @@ const notifyEventCreation = async (event) => {
         await sendMail(
           email,
           `[SECE Events] Event Created: ${eventName}`,
-          htmlContent
+          htmlContent,
         );
       } catch (error) {
         console.error(`Error sending event creation email to ${email}:`, error);
       }
     }
 
-    console.log(`✓ Event creation notification sent to ${recipients.length} recipients`);
+    console.log(
+      `✓ Event creation notification sent to ${recipients.length} recipients`,
+    );
   } catch (error) {
     console.error("Error in notifyEventCreation:", error);
   }
@@ -206,9 +226,13 @@ const notifyHODApproval = async (event) => {
   try {
     const hodApprovalTemplate = require("./mailTemplates/hodApproval");
 
-    const eventName = event.requestDetails?.eventDetails?.eventName || "Untitled Event";
-    const organizingDepartment = event.requestDetails?.organizerDetails?.organizingDepartment || "";
-    const eventDate = event.requestDetails?.eventDetails?.eventSchedule?.[0]?.eventDate || new Date();
+    const eventName =
+      event.requestDetails?.eventDetails?.eventName || "Untitled Event";
+    const organizingDepartment =
+      event.requestDetails?.organizerDetails?.organizingDepartment || "";
+    const eventDate =
+      event.requestDetails?.eventDetails?.eventSchedule?.[0]?.eventDate ||
+      new Date();
 
     const htmlContent = hodApprovalTemplate({
       eventName,
@@ -223,14 +247,16 @@ const notifyHODApproval = async (event) => {
         await sendMail(
           email,
           `[SECE Events] HOD Approved: ${eventName}`,
-          htmlContent
+          htmlContent,
         );
       } catch (error) {
         console.error(`Error sending HOD approval email to ${email}:`, error);
       }
     }
 
-    console.log(`✓ HOD approval notification sent to ${organizersEmails.length} organizers`);
+    console.log(
+      `✓ HOD approval notification sent to ${organizersEmails.length} organizers`,
+    );
   } catch (error) {
     console.error("Error in notifyHODApproval:", error);
   }
@@ -244,12 +270,18 @@ const notifyAdminApproval = async (event) => {
   try {
     const adminApprovalTemplate = require("./mailTemplates/adminApproval");
 
-    const eventName = event.requestDetails?.eventDetails?.eventName || "Untitled Event";
-    const organizingDepartment = event.requestDetails?.organizerDetails?.organizingDepartment || "";
-    const eventDate = event.requestDetails?.eventDetails?.eventSchedule?.[0]?.eventDate || new Date();
+    const eventName =
+      event.requestDetails?.eventDetails?.eventName || "Untitled Event";
+    const organizingDepartment =
+      event.requestDetails?.organizerDetails?.organizingDepartment || "";
+    const eventDate =
+      event.requestDetails?.eventDetails?.eventSchedule?.[0]?.eventDate ||
+      new Date();
 
     const departmentHeadsList = await getAllDepartmentHeadEmails(event);
-    const departmentTypes = departmentHeadsList.map(d => d.type.toUpperCase());
+    const departmentTypes = departmentHeadsList.map((d) =>
+      d.type.toUpperCase(),
+    );
 
     const htmlContent = adminApprovalTemplate({
       eventName,
@@ -260,23 +292,33 @@ const notifyAdminApproval = async (event) => {
 
     const organizersEmails = getOrganizersEmails(event);
     const superAdminEmails = await getSuperAdminEmails();
-    const departmentHeadEmails = departmentHeadsList.map(d => d.email);
+    const departmentHeadEmails = departmentHeadsList.map((d) => d.email);
 
-    const recipients = [...new Set([...organizersEmails,  ...superAdminEmails, ...departmentHeadEmails].filter(Boolean))];
+    const recipients = [
+      ...new Set(
+        [
+          ...organizersEmails,
+          ...superAdminEmails,
+          ...departmentHeadEmails,
+        ].filter(Boolean),
+      ),
+    ];
 
     for (const email of recipients) {
       try {
         await sendMail(
           email,
           `[SECE Events] Admin Approved: ${eventName}`,
-          htmlContent
+          htmlContent,
         );
       } catch (error) {
         console.error(`Error sending admin approval email to ${email}:`, error);
       }
     }
 
-    console.log(`✓ Admin approval notification sent to ${recipients.length} recipients`);
+    console.log(
+      `✓ Admin approval notification sent to ${recipients.length} recipients`,
+    );
   } catch (error) {
     console.error("Error in notifyAdminApproval:", error);
   }
@@ -289,9 +331,13 @@ const notifyDepartmentHeads = async (event) => {
   try {
     const departmentHeadTemplate = require("./mailTemplates/departmentHeadNotification");
 
-    const eventName = event.requestDetails?.eventDetails?.eventName || "Untitled Event";
-    const organizingDepartment = event.requestDetails?.organizerDetails?.organizingDepartment || "";
-    const eventDate = event.requestDetails?.eventDetails?.eventSchedule?.[0]?.eventDate || new Date();
+    const eventName =
+      event.requestDetails?.eventDetails?.eventName || "Untitled Event";
+    const organizingDepartment =
+      event.requestDetails?.organizerDetails?.organizingDepartment || "";
+    const eventDate =
+      event.requestDetails?.eventDetails?.eventSchedule?.[0]?.eventDate ||
+      new Date();
     const eventId = event._id;
 
     const departmentHeadsList = await getAllDepartmentHeadEmails(event);
@@ -309,14 +355,19 @@ const notifyDepartmentHeads = async (event) => {
         await sendMail(
           email,
           `[SECE Events] Action Required: ${eventName} - ${type.toUpperCase()}`,
-          htmlContent
+          htmlContent,
         );
       } catch (error) {
-        console.error(`Error sending department head email for ${type} to ${email}:`, error);
+        console.error(
+          `Error sending department head email for ${type} to ${email}:`,
+          error,
+        );
       }
     }
 
-    console.log(`✓ Department head notifications sent to ${departmentHeadsList.length} departments`);
+    console.log(
+      `✓ Department head notifications sent to ${departmentHeadsList.length} departments`,
+    );
   } catch (error) {
     console.error("Error in notifyDepartmentHeads:", error);
   }
@@ -330,9 +381,13 @@ const notifyEventRejection = async (event, reason = "") => {
   try {
     const eventRejectionTemplate = require("./mailTemplates/eventRejection");
 
-    const eventName = event.requestDetails?.eventDetails?.eventName || "Untitled Event";
-    const organizerName = event.requestDetails?.organizerDetails?.organizers?.[0]?.name || "Organizer";
-    const organizingDepartment = event.requestDetails?.organizerDetails?.organizingDepartment || "";
+    const eventName =
+      event.requestDetails?.eventDetails?.eventName || "Untitled Event";
+    const organizerName =
+      event.requestDetails?.organizerDetails?.organizers?.[0]?.name ||
+      "Organizer";
+    const organizingDepartment =
+      event.requestDetails?.organizerDetails?.organizingDepartment || "";
 
     const htmlContent = eventRejectionTemplate({
       eventName,
@@ -348,14 +403,16 @@ const notifyEventRejection = async (event, reason = "") => {
         await sendMail(
           email,
           `[SECE Events] Event Rejected: ${eventName}`,
-          htmlContent
+          htmlContent,
         );
       } catch (error) {
         console.error(`Error sending rejection email to ${email}:`, error);
       }
     }
 
-    console.log(`✓ Event rejection notification sent to ${organizersEmails.length} organizers`);
+    console.log(
+      `✓ Event rejection notification sent to ${organizersEmails.length} organizers`,
+    );
   } catch (error) {
     console.error("Error in notifyEventRejection:", error);
   }
@@ -369,9 +426,13 @@ const notifyEventClosure = async (event, closureReason = "") => {
   try {
     const eventClosedTemplate = require("./mailTemplates/eventClosed");
 
-    const eventName = event.requestDetails?.eventDetails?.eventName || "Untitled Event";
-    const organizingDepartment = event.requestDetails?.organizerDetails?.organizingDepartment || "";
-    const eventDate = event.requestDetails?.eventDetails?.eventSchedule?.[0]?.eventDate || new Date();
+    const eventName =
+      event.requestDetails?.eventDetails?.eventName || "Untitled Event";
+    const organizingDepartment =
+      event.requestDetails?.organizerDetails?.organizingDepartment || "";
+    const eventDate =
+      event.requestDetails?.eventDetails?.eventSchedule?.[0]?.eventDate ||
+      new Date();
 
     const htmlContent = eventClosedTemplate({
       eventName,
@@ -384,23 +445,34 @@ const notifyEventClosure = async (event, closureReason = "") => {
     const hodEmail = await getHODEmail(organizingDepartment);
     const superAdminEmails = await getSuperAdminEmails();
     const departmentHeadsList = await getAllDepartmentHeadEmails(event);
-    const departmentHeadEmails = departmentHeadsList.map(d => d.email);
+    const departmentHeadEmails = departmentHeadsList.map((d) => d.email);
 
-    const recipients = [...new Set([...organizersEmails, hodEmail,  ...superAdminEmails, ...departmentHeadEmails].filter(Boolean))];
+    const recipients = [
+      ...new Set(
+        [
+          ...organizersEmails,
+          hodEmail,
+          ...superAdminEmails,
+          ...departmentHeadEmails,
+        ].filter(Boolean),
+      ),
+    ];
 
     for (const email of recipients) {
       try {
         await sendMail(
           email,
           `[SECE Events] Event Closed: ${eventName}`,
-          htmlContent
+          htmlContent,
         );
       } catch (error) {
         console.error(`Error sending event closure email to ${email}:`, error);
       }
     }
 
-    console.log(`✓ Event closure notification sent to ${recipients.length} recipients`);
+    console.log(
+      `✓ Event closure notification sent to ${recipients.length} recipients`,
+    );
   } catch (error) {
     console.error("Error in notifyEventClosure:", error);
   }
