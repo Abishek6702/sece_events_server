@@ -8,13 +8,14 @@ const {
   getFeedbackById,
   deleteFeedback,
 } = require("../controllers/feedbackController");
+const protect = require("../middleware/protect");
 
-router.post("/", createFeedback);
+router.post("/", protect, createFeedback);
 
-router.get("/event/:eventId", getFeedbackByEvent);
+router.get("/event/:eventId", protect, getFeedbackByEvent);
 
-router.get("/:feedbackId", getFeedbackById);
+router.get("/:feedbackId", protect, getFeedbackById);
 
-router.delete("/:feedbackId", deleteFeedback);
+router.delete("/:feedbackId", protect, deleteFeedback);
 
 module.exports = router;

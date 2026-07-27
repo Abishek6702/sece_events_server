@@ -1422,3 +1422,177 @@ exports.requestMediaStaffChange = async (req, res) => {
     });
   }
 };
+
+exports.checkVenueAvailability = async (req, res) => {
+  try {
+    const { eventSchedule = [], venues = [] } = req.body;
+
+    if (!Array.isArray(eventSchedule) || !eventSchedule.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Event schedule is required.",
+      });
+    }
+
+    if (!Array.isArray(venues) || !venues.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Venue list is required.",
+      });
+    }
+
+    const events = await Event.find({
+      status: {
+        $nin: ["Rejected", "Closed"],
+      },
+    }).select(
+      "requestDetails.eventDetails.eventSchedule venueDetails.venues requestDetails.eventDetails.eventName status"
+    );
+
+    const availableVenues = [];
+    const unavailableVenues = [];
+
+    const timeToMinutes = (time) => {
+      if (!time) return 0;
+
+      const [hour, minute] = time.split(":").map(Number);
+
+      return hour * 60 + minute;
+    };
+
+    const isOverlapping = (
+      existingStart,
+      existingEnd,
+      requestedStart,
+      requestedEnd
+    ) => {
+      const s1 = timeToMinutes(existingStart);
+      const e1 = timeToMinutes(existingEnd);
+
+      const s2 = timeToMinutes(requestedStart);
+      const e2 = timeToMinutes(requestedEnd);
+
+      return s1 < e2 && s2 < e1;
+    };
+
+    for (const venue of venues) {
+      const schedule =
+        eventSchedule.find(
+          (item) => item.dayIndex === venue.dayIndex
+        ) || eventSchedule[venue.dayIndex];
+
+      if (!schedule) continue;
+
+      let isBooked = false;
+
+      for (const event of events) {
+        const existingSchedules =
+          event.requestDetails?.eventDetails?.eventSchedule || [];
+
+        const existingVenues =
+          event.venueDetails?.venues || [];
+
+        if (!existingSchedules.length || !existingVenues.length) {
+          continue;
+        }
+
+        const existingSchedule =
+          existingSchedules[venue.dayIndex];
+
+        if (!existingSchedule) {
+          continue;
+        }
+
+        const existingVenue = existingVenues.find(
+          (v) =>
+            v.dayIndex === venue.dayIndex &&
+            v.venueName?.trim().toLowerCase() ===
+              venue.venueName?.trim().toLowerCase()
+        );
+
+        if (!existingVenue) {
+          continue;
+        }
+
+        const requestDate = new Date(schedule.eventDate)
+          .toISOString()
+          .split("T")[0];
+
+        const existingDate = new Date(existingSchedule.eventDate)
+          .toISOString()
+          .split("T")[0];
+
+        if (requestDate !== existingDate) {
+          continue;
+        }
+
+        const overlap = isOverlapping(
+          existingSchedule.startTime,
+          existingSchedule.endTime,
+          schedule.startTime,
+          schedule.endTime
+        );
+
+        if (overlap) {
+          isBooked = true;
+
+          unavailableVenues.push({
+            venueName: venue.venueName,
+            status: "Booked",
+            eventName:
+              event.requestDetails?.eventDetails?.eventName || "",
+            eventId: event._id,
+            date: requestDate,
+            startTime: existingSchedule.startTime,
+            endTime: existingSchedule.endTime,
+          });
+
+          break;
+        }
+      }
+
+      if (!isBooked) {
+        availableVenues.push({
+          venueName: venue.venueName,
+          status: "Available",
+        });
+      }
+    }
+
+    let status = "AVAILABLE";
+    let message = "All selected venues are available.";
+
+    if (
+      unavailableVenues.length > 0 &&
+      availableVenues.length > 0
+    ) {
+      status = "PARTIALLY_AVAILABLE";
+      message = "Some selected venues are already booked.";
+    } else if (
+      unavailableVenues.length === venues.length
+    ) {
+      status = "NOT_AVAILABLE";
+      message =
+        "None of the selected venues are available.";
+    }
+
+    return res.status(200).json({
+      success: true,
+      status,
+      message,
+      allAvailable: unavailableVenues.length === 0,
+      availableCount: availableVenues.length,
+      unavailableCount: unavailableVenues.length,
+      availableVenues,
+      unavailableVenues,
+    });
+  } catch (error) {
+    console.error("Venue Availability Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};

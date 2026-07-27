@@ -1,9 +1,12 @@
 const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
-const axios = require("axios");
-
+const helmet = require("helmet");
+const hpp = require("hpp");
+const path = require("path");
 const connectDB = require("./config/db");
+const { apiLimiter } = require("./middleware/rateLimiter.js");
+const auditLogger = require("./middleware/auditLogger.js");
 
 const authRoutes = require("./routes/authRoutes");
 const facultyRoutes = require("./routes/facultyRoutes");
@@ -23,13 +26,24 @@ const eventTypeRoutes = require("./routes/eventTypeRoutes");
 const individualSubmissionRoutes = require("./routes/individual/individualSubmissionRoutes");
 // const calendarRoutes = require("./routes/calendarRoutes");
 const testRoutes = require("./routes/testRoutes");
+const calendarRoutes = require("./routes/calendarRoutes");
 
 dotenv.config();
-
 const app = express();
+app.disable("x-powered-by");
 app.set("trust proxy", 1);
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+      },
+    },
+  }),
+);
 
-const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:5173"];
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -46,10 +60,24 @@ app.use(
 );
 
 connectDB();
+app.use(
+  express.json({
+    limit: "5mb",
+  }),
+);
 
-app.use(express.json());
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "5mb",
+  }),
+);
 
-app.use("/api/test",testRoutes);
+app.use(hpp());
+app.use(auditLogger);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api", apiLimiter);
+app.use("/api/test", testRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/faculty", facultyRoutes);
 app.use("/api/venues", venueRoutes);
@@ -67,6 +95,7 @@ app.use("/api/eventTypes", eventTypeRoutes);
 app.use("/api/individual-submissions", individualSubmissionRoutes);
 // console.log("individualSubmissionRoutes:", individualSubmissionRoutes);
 // app.use("/api/calendar", calendarRoutes);
+app.use("/api/calendar",calendarRoutes)
 
 const PORT = process.env.PORT || 5000;
 

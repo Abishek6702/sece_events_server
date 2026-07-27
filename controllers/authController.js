@@ -44,6 +44,100 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.loginV1 = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    // ❌ USER NOT FOUND
+    if (!user) {
+      return res.status(401).json({ message: "User Not Found" });
+    }
+    if (!user.hasAccess) {
+      return res.status(403).json({
+        message: "Access denied. Contact HR.",
+      });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    // ❌ WRONG PASSWORD
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    user.loginOtp = otp;
+    user.loginOtpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+
+    await user.save();
+
+    await sendMail(
+      user.email,
+      "Login OTP",
+      `<h3>Your Login OTP</h3>
+       <p>${otp}</p>
+       <p>Valid for 5 minutes.</p>`,
+    );
+
+    return res.json({
+      otpRequired: true,
+      email: user.email,
+      message: "OTP sent successfully",
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.verifyLoginOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (
+      user.loginOtp !== otp ||
+      !user.loginOtpExpiry ||
+      user.loginOtpExpiry < new Date()
+    ) {
+      return res.status(400).json({
+        message: "Invalid or expired OTP",
+      });
+    }
+    user.loginOtp = undefined;
+    user.loginOtpExpiry = undefined;
+
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone,
+      department: user.department,
+      role: user.role,
+      isFirstTimeLogin: user.isFirstTimeLogin,
+      facultyId: user.facultyId,
+      hasAccess: user.hasAccess,
+      token: generateToken(user),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;

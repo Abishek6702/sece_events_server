@@ -2,11 +2,27 @@ const mongoose = require("mongoose");
 
 const facultySchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
+    salutation: {
+      type: String,
+      enum: ["Mr", "Mrs", "Ms", "Dr", "Prof", "Lt"],
+    },
+
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     empId: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     phone: { type: Number, required: true, unique: true },
     department: { type: String, required: true },
+    originalDepartment: { type: String, required: true },
     dob: { type: Date, required: true },
     gender: { type: String, required: true, enum: ["Male", "Female", "Other"] },
     doj: { type: Date, required: true },
@@ -21,7 +37,7 @@ const facultySchema = new mongoose.Schema(
     profileImage: {
       url: String,
       publicId: String,
-    }
+    },
   },
   { timestamps: true },
 );

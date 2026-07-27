@@ -8,12 +8,14 @@ const {
   getFacultyDashboardEventsCount,
 } = require("../controllers/dashboardController");
 
-router.get("/stats", getDashboardStats);
-router.get("/department-wise", getDepartmentWiseStats);
-router.get("/department-wise-faculty", getDepartmentWiseFacultyCount);
+
+
+router.get("/stats",protect, getDashboardStats);
+router.get("/department-wise",protect, getDepartmentWiseStats);
+router.get("/department-wise-faculty",protect, getDepartmentWiseFacultyCount);
 
 // faculty dashboard events count stats card
 
-router.get("/faculty-dashboard-events-count", getFacultyDashboardEventsCount);
+router.get("/faculty-dashboard-events-count",protect, getFacultyDashboardEventsCount);
 
 module.exports = router;

@@ -1,53 +1,27 @@
 const departmentCodeMap = {
-  "Computer Science and Engineering": "CSE",
-  "Computer Science & Engineering": "CSE",
 
-  "Electronics and Communication Engineering": "ECE",
-  "Electronics & Communication Engineering": "ECE",
+  //  final departments
+"CCE":"CCE",
+"MECH":"MECH",
+"AIML":"AIML",
+"CSE":"CSE",
+"ECE":"ECE",
+"EEE":"EEE",
+"AI&DS":"AI&DS",
+"CFRD":"CFRD",
+"IQAC":"IQAC",
+"MATHS":"MATHS",
+"S&H":"S&H",
+"IR":"IR",
+"CSBS":"CSBS",
+"IT":"IT",
+"CYS":"CYS",
+"PLACEMENT":"PLACEMENT",
+"PD":"PD",
+"INNOVATION":"INNOVATION",
+"COE":"COE",
+"HR":"HR",
 
-  "Electrical and Electronics Engineering": "EEE",
-  "Electrical & Electronics Engineering": "EEE",
-
-  "Information Technology": "IT",
-
-  "Mechanical Engineering": "MECH",
-
-  "Civil Engineering": "CIVIL",
-
-  "Artificial Intelligence and Data Science": "AIDS",
-
-  "Artificial Intelligence & Data Science": "AIDS",
-
-  "Artificial Intelligence and Machine Learning": "AIML",
-
-  "Master of Business Administration": "MBA",
-
-  "Master of Computer Applications": "MCA",
-
-  "Science and Humanities": "S&H",
-
-  "Physics": "PHY",
-
-  "Chemistry": "CHEM",
-
-  'Mathematics': "MATH",
-
-  "English": "ENG",
-  "CSE": "CSE",
-  "ECE": "ECE",
-  "EEE": "EEE",
-  "IT": "IT",
-  "MECH": "MECH",
-  "CIVIL": "CIVIL",
-  "AIDS": "AIDS",
-  "AIML": "AIML",
-  "MBA": "MBA",
-  "MCA": "MCA",
-  "S&H": "S&H",
-  "PHY": "PHY",
-  "CHEM": "CHEM",
-  "MATH": "MATH",
-  "ENG": "ENG",
 };
 
 function getDepartmentCode(department) {

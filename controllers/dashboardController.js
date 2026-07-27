@@ -4,17 +4,11 @@ const Faculty = require("../models/Faculty");
 
 exports.getDashboardStats = async (req, res) => {
   try {
-    // for faculty login use:
-    // const filter = { organizerId: req.user.id };
+    const { module } = req.query;
 
-    // for admin:
     const filter = {
       status: { $ne: "Draft" },
     };
-
-    // =========================
-    // EVENT LEVEL COUNTS
-    // =========================
 
     const totalEvents = await Event.countDocuments(filter);
 
@@ -35,10 +29,6 @@ exports.getDashboardStats = async (req, res) => {
       },
     });
 
-    // =========================
-    // MODULES
-    // =========================
-
     const modules = {
       venue: "venueDetails",
       icts: "ictsDetails",
@@ -50,30 +40,36 @@ exports.getDashboardStats = async (req, res) => {
       media: "mediaRequirementDetails",
     };
 
+    // Validate module
+    if (module && !modules[module]) {
+      return res.status(400).json({
+        message: "Invalid module",
+      });
+    }
+
     const moduleStats = {};
 
-    for (const key in modules) {
+    // If module is provided, calculate only that module
+    const moduleKeys = module ? [module] : Object.keys(modules);
+
+    for (const key of moduleKeys) {
       const path = modules[key];
 
-      // total module requests
       const total = await Event.countDocuments({
         ...filter,
         [path]: { $exists: true },
       });
 
-      // approved / acknowledged
       const approved = await Event.countDocuments({
         ...filter,
         [`${path}.status.status`]: "Acknowledged",
       });
 
-      // completed
       const completed = await Event.countDocuments({
         ...filter,
         [`${path}.status.status`]: "Completed",
       });
 
-      // pending
       const pending = await Event.countDocuments({
         ...filter,
         $or: [

@@ -1,17 +1,49 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const fs = require("fs");
+const path = require("path");
 
 const Faculty = require("../models/Faculty");
 const User = require("../models/User");
 const cloudinary = require("cloudinary").v2;
 
-// helper to generate default password
-const generatePassword = async (empId) => {
-  const password = "Sece@123";
-  const hashed = await bcrypt.hash(password, 10);
-  return { plain: password, hashed };
-};
+const parseDate = (value) => {
+  if (!value) return null;
 
+  // Already a JS Date
+  if (value instanceof Date) return value;
+
+  // Excel serial number
+  if (typeof value === "number") {
+    const parsed = XLSX.SSF.parse_date_code(value);
+
+    return new Date(
+      parsed.y,
+      parsed.m - 1,
+      parsed.d
+    );
+  }
+
+  // String
+  if (typeof value === "string") {
+    const str = value.trim();
+
+    // DD-MM-YYYY or DD/MM/YYYY
+    const parts = str.split(/[-/]/);
+
+    if (parts.length === 3) {
+      const [day, month, year] = parts.map(Number);
+
+      return new Date(year, month - 1, day);
+    }
+
+    // fallback
+    const d = new Date(str);
+    if (!isNaN(d)) return d;
+  }
+
+  return null;
+};
 // ================= IMPORT EXCEL =================
 const XLSX = require("xlsx");
 
@@ -39,21 +71,24 @@ exports.importExcelFaculty = async (req, res) => {
     for (let data of faculties) {
       // map column names (IMPORTANT)
       const facultyData = {
-        name: data.name,
+        salutation: data.salutation,
+        firstName: data.firstName,
+        lastName: data.lastName,
         empId: data.empId,
         email: data.email,
         phone: data.phone,
         department: data.department,
-        dob: data.dob,
+        originalDepartment: data.originalDepartment,
+        dob: parseDate(data.dob), 
         gender: data.gender,
-        doj: data.doj,
+        doj: parseDate(data.doj),
         designation: data.designation,
         employeeCategory: data.employeeCategory,
         location: data.location,
       };
 
       const exists = await Faculty.findOne({
-        $or: [{ email: facultyData.email }, { empId: facultyData.empId }],
+        $or: [{ email: facultyData.email }, { empId: facultyData.empId },   { phone: facultyData.phone },],
       });
 
       if (exists) continue;
@@ -64,7 +99,7 @@ exports.importExcelFaculty = async (req, res) => {
       const hashed = await bcrypt.hash(password, 10);
 
       await User.create({
-        name: facultyData.name,
+        name: `${faculty.salutation} ${faculty.firstName} ${faculty.lastName}`,
         email: facultyData.email,
         phone: facultyData.phone,
         password: hashed,
@@ -91,11 +126,14 @@ exports.importExcelFaculty = async (req, res) => {
 exports.addIndividualFaculty = async (req, res) => {
   try {
     const {
-      name,
+      salutation,
+      firstName,
+      lastName,
       empId,
       email,
       phone,
       department,
+      originalDepartment,
       dob,
       gender,
       doj,
@@ -108,11 +146,13 @@ exports.addIndividualFaculty = async (req, res) => {
 
     // ✅ Validation
     if (
-      !name ||
+      !firstName ||
+      !lastName ||
       !empId ||
       !email ||
       !phone ||
       !department ||
+      !originalDepartment ||
       !dob ||
       !gender ||
       !doj ||
@@ -120,7 +160,9 @@ exports.addIndividualFaculty = async (req, res) => {
       !employeeCategory ||
       !location
     ) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({
+        message: "All fields are required",
+      });
     }
 
     // ✅ Duplicate check
@@ -136,11 +178,14 @@ exports.addIndividualFaculty = async (req, res) => {
 
     // ✅ Create faculty
     const faculty = await Faculty.create({
-      name,
+      salutation,
+      firstName,
+      lastName,
       empId,
       email,
       phone,
       department,
+      originalDepartment,
       dob: new Date(dob),
       gender,
       doj: new Date(doj),
@@ -156,7 +201,7 @@ exports.addIndividualFaculty = async (req, res) => {
 
     // ✅ Create login
     await User.create({
-      name,
+      name: `${salutation} ${firstName} ${lastName}`,
       email,
       phone,
       password: hashed,
@@ -195,12 +240,15 @@ exports.searchFaculty = async (req, res) => {
 
     const faculties = await Faculty.find({
       $or: [
-        { name: { $regex: q, $options: "i" } },
+        { firstName: { $regex: q, $options: "i" } },
+        { lastName: { $regex: q, $options: "i" } },
         { empId: { $regex: q, $options: "i" } },
         {
           $expr: {
             $regexMatch: {
-              input: { $concat: ["$name"] },
+              input: {
+                $concat: ["$firstName", " ", "$lastName"],
+              },
               regex: q,
               options: "i",
             },
@@ -209,14 +257,14 @@ exports.searchFaculty = async (req, res) => {
       ],
     })
       .select(
-        "_id empId name designation department phone email",
+        "_id salutation firstName lastName empId designation department phone email",
       )
       .limit(10);
 
     const result = faculties.map((faculty) => ({
       facultyId: faculty._id,
       empId: faculty.empId,
-      name: faculty.name,
+      name: `${faculty.salutation} ${faculty.firstName} ${faculty.lastName}`,
       designation: faculty.designation,
       phone: faculty.phone,
       email: faculty.email,
@@ -260,6 +308,7 @@ exports.editFaculty = async (req, res) => {
 
     const faculty = await Faculty.findByIdAndUpdate(id, data, {
       new: true,
+      runValidators: true,
     });
 
     if (!faculty) {
@@ -270,8 +319,10 @@ exports.editFaculty = async (req, res) => {
     await User.findOneAndUpdate(
       { facultyId: id },
       {
-        name: data.name,
+        name: `${data.salutation} ${data.firstName} ${data.lastName}`,
         email: data.email,
+        phone: data.phone,
+        department: data.department,
       },
     );
 
@@ -320,7 +371,17 @@ exports.uploadProfileImage = async (req, res) => {
     }
 
     if (faculty.profileImage?.publicId) {
-      await cloudinary.uploader.destroy(faculty.profileImage.publicId);
+      try {
+        const safeFilename = path.basename(faculty.profileImage.publicId);
+        const filePath = path.join(__dirname, "../uploads/profiles", safeFilename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        } else {
+          await cloudinary.uploader.destroy(faculty.profileImage.publicId);
+        }
+      } catch (err) {
+        console.error("Failed to delete old profile image:", err);
+      }
     }
 
     faculty.profileImage = {
@@ -353,7 +414,17 @@ exports.deleteProfileImage = async (req, res) => {
       return res.status(400).json({ message: "No image to delete" });
     }
 
-    await cloudinary.uploader.destroy(faculty.profileImage.publicId);
+    try {
+      const safeFilename = path.basename(faculty.profileImage.publicId);
+      const filePath = path.join(__dirname, "../uploads/profiles", safeFilename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      } else {
+        await cloudinary.uploader.destroy(faculty.profileImage.publicId);
+      }
+    } catch (err) {
+      console.error("Failed to delete profile image:", err);
+    }
 
     faculty.profileImage = null;
     await faculty.save();
