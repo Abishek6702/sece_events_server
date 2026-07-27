@@ -4,6 +4,7 @@ const express = require("express");
 const upload = require("../../middleware/multerConfig");
 
 const router = express.Router();
+const protect = require("../../middleware/protect");
 
 const {
   createPurchase,
@@ -12,6 +13,8 @@ const {
   updatePurchase,
   deletePurchase,patchPurchase,getPurchaseDashboard
 } = require("../../controllers/individual/purchaseController");
+
+router.use(protect);
 
 // CREATE
 router.post(

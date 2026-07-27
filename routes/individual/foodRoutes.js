@@ -5,7 +5,10 @@ const express = require("express");
 const router = express.Router();
 
 const upload = require("../../middleware/multerConfig");
+const protect = require("../../middleware/protect");
 const foodController = require("../../controllers/individual/foodController");
+
+router.use(protect);
 
 // CREATE
 router.post(

@@ -3,6 +3,9 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const upload = require("../../middleware/multerConfig");
+const protect = require("../../middleware/protect");
+
+router.use(protect);
 
 const {
   createIndividualMedia,

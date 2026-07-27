@@ -1,5 +1,6 @@
 const express = require("express");
 const upload = require("../../middleware/multerConfig");
+const protect = require("../../middleware/protect");
 const router = express.Router();
 
 const {
@@ -10,6 +11,8 @@ const {
   deleteTransport,
   patchTransport,getTransportDashboard
 } = require("../../controllers/individual/transportController");
+
+router.use(protect);
 
 // CREATE
 router.post(

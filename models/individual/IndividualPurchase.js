@@ -172,6 +172,137 @@ const purchaseSchema = new mongoose.Schema(
       },
     },
 
+    workflowStage: {
+      type: String,
+      enum: [
+        "Submitted",
+        "SuperAdmin1",
+        "SuperAdmin2",
+        "AdminApproved",
+        "DepartmentReview",
+        "Approved",
+        "Rejected",
+        "Completed",
+      ],
+      default: "Submitted",
+    },
+
+    hodApproval: {
+      status: {
+        type: String,
+        enum: ["Pending", "Approved", "Rejected"],
+        default: "Pending",
+      },
+      reason: {
+        type: String,
+        default: "",
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      approvedAt: {
+        type: Date,
+        default: null,
+      },
+      updatedAt: {
+        type: Date,
+        default: null,
+      },
+    },
+
+    superAdminApproval: {
+      status: {
+        type: String,
+        enum: ["Pending", "Approved", "Rejected"],
+        default: "Pending",
+      },
+      reason: {
+        type: String,
+        default: "",
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      approvedAt: {
+        type: Date,
+        default: null,
+      },
+      updatedAt: {
+        type: Date,
+        default: null,
+      },
+    },
+
+    headApproval: {
+      status: {
+        type: String,
+        enum: ["Pending", "Acknowledged", "Completed", "Approved", "Rejected"],
+        default: "Pending",
+      },
+      reason: {
+        type: String,
+        default: "",
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      approvedAt: {
+        type: Date,
+        default: null,
+      },
+      updatedAt: {
+        type: Date,
+        default: null,
+      },
+    },
+
+    finalStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected", "Completed", "Closed"],
+      default: "Pending",
+    },
+
+    approvalHistory: [
+      {
+        role: String,
+        approvedBy: {
+          type: mongoose.Schema.Types.Mixed,
+          default: null,
+        },
+        action: {
+          type: String,
+          enum: ["Submitted", "Pending", "Approved", "Rejected", "Acknowledged", "Completed"],
+        },
+        remarks: {
+          type: String,
+          default: "",
+        },
+        actionDate: {
+          type: Date,
+          default: null,
+        },
+      },
+    ],
+
+    overallStatus: {
+      type: String,
+      enum: [
+        "Pending",
+        "AdminApproved",
+        "DepartmentReview",
+        "Approved",
+        "Rejected",
+        "Completed",
+      ],
+      default: "Pending",
+    },
+
     status: {
       type: departmentStatusSchema,
       default: () => ({
@@ -180,10 +311,31 @@ const purchaseSchema = new mongoose.Schema(
         purchase: "Pending",
       }),
     },
+    financeRequired: {
+      type: String,
+      enum: ["Yes", "No"],
+      required: true,
+      default: "No",
+    },
+
+    advanceAmount: {
+      type: Number,
+      default: null,
+    },
+
+    advancePurpose: {
+      type: String,
+      trim: true,
+      default: "",
+    },
   },
   {
     timestamps: true,
   },
 );
+
+purchaseSchema.index({ employee: 1, createdAt: -1 });
+purchaseSchema.index({ overallStatus: 1, createdAt: -1 });
+purchaseSchema.index({ "status.admin": 1, createdAt: -1 });
 
 module.exports = mongoose.model("IndividualPurchase", purchaseSchema);
