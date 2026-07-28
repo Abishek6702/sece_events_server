@@ -6,7 +6,10 @@ const {
   getDepartmentWiseStats,
   getDepartmentWiseFacultyCount,
   getFacultyDashboardEventsCount,
+  getPosterHeadDashboard,
+  getVideoHeadDashboard,
 } = require("../controllers/dashboardController");
+
 
 
 
@@ -15,7 +18,10 @@ router.get("/department-wise",protect, getDepartmentWiseStats);
 router.get("/department-wise-faculty",protect, getDepartmentWiseFacultyCount);
 
 // faculty dashboard events count stats card
+router.get("/faculty-dashboard-events-count", protect, getFacultyDashboardEventsCount);
 
-router.get("/faculty-dashboard-events-count",protect, getFacultyDashboardEventsCount);
+// media head dashboards (poster & video)
+router.get("/poster-dashboard", getPosterHeadDashboard);
+router.get("/video-dashboard", getVideoHeadDashboard);
 
 module.exports = router;

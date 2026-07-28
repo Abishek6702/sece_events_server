@@ -293,3 +293,156 @@ exports.getFacultyDashboardEventsCount = async (req, res) => {
     });
   }
 };
+
+// ─── Poster Head Dashboard ───────────────────────────────────────────────────
+exports.getPosterHeadDashboard = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "email is required" });
+    }
+
+    // Find all non-draft events where this email appears in any poster.staff[]
+    const events = await Event.find({
+      status: { $ne: "Draft" },
+      "mediaRequirementDetails.mediaRequirements.poster.staff.email": email,
+    })
+      .select(
+        "_id iqacNumber status requestDetails.eventDetails.eventName " +
+          "requestDetails.organizerDetails.organizingDepartment " +
+          "requestDetails.eventDetails.eventSchedule " +
+          "mediaRequirementDetails.mediaRequirements"
+      )
+      .lean();
+
+    // For each event, keep only the media requirement days where this email is in poster.staff[]
+    const result = events.map((event) => {
+      const filteredMedia = (
+        event.mediaRequirementDetails?.mediaRequirements || []
+      )
+        .filter((m) =>
+          (m.poster?.staff || []).some((s) => s.email === email)
+        )
+        .map((m) => ({
+          dayIndex: m.dayIndex,
+          typeOfMedia: m.typeOfMedia,
+          posterContent: m.poster?.posterContent,
+          certificateContent: m.poster?.certificateContent,
+          trophyContent: m.poster?.trophyContent,
+          displayNeeded: m.poster?.displayNeeded,
+          sizes: m.poster?.sizes,
+          referencePosterFiles: m.poster?.referencePosterFiles,
+          referenceCertificateFiles: m.poster?.referenceCertificateFiles,
+          deliveryDate: m.poster?.deliveryDate,
+          priority: m.poster?.priority,
+          specialRequirements: m.poster?.specialRequirements,
+          staff: m.poster?.staff,
+          staffChangeRequest: m.poster?.staffChangeRequest,
+          status: m.poster?.status,
+          remarks: m.poster?.remarks,
+        }));
+
+      return {
+        _id: event._id,
+        iqacNumber: event.iqacNumber,
+        status: event.status,
+        eventName: event.requestDetails?.eventDetails?.eventName,
+        organizingDepartment:
+          event.requestDetails?.organizerDetails?.organizingDepartment,
+        eventSchedule:
+          event.requestDetails?.eventDetails?.eventSchedule || [],
+        posterRequirements: filteredMedia,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      email,
+      totalEvents: result.length,
+      events: result,
+    });
+  } catch (error) {
+    console.error("Poster head dashboard error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+// ─── Video Head Dashboard ─────────────────────────────────────────────────────
+exports.getVideoHeadDashboard = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "email is required" });
+    }
+
+    // Find all non-draft events where this email appears in any video.staff[]
+    const events = await Event.find({
+      status: { $ne: "Draft" },
+      "mediaRequirementDetails.mediaRequirements.video.staff.email": email,
+    })
+      .select(
+        "_id iqacNumber status requestDetails.eventDetails.eventName " +
+          "requestDetails.organizerDetails.organizingDepartment " +
+          "requestDetails.eventDetails.eventSchedule " +
+          "mediaRequirementDetails.mediaRequirements"
+      )
+      .lean();
+
+    // For each event, keep only the media requirement days where this email is in video.staff[]
+    const result = events.map((event) => {
+      const filteredMedia = (
+        event.mediaRequirementDetails?.mediaRequirements || []
+      )
+        .filter((m) =>
+          (m.video?.staff || []).some((s) => s.email === email)
+        )
+        .map((m) => ({
+          dayIndex: m.dayIndex,
+          typeOfMedia: m.typeOfMedia,
+          videoContent: m.video?.videoContent,
+          preEventVideos: m.video?.preEventVideos,
+          eventCoverage: m.video?.eventCoverage,
+          postEventVideos: m.video?.postEventVideos,
+          specialVideos: m.video?.specialVideos,
+          referenceFiles: m.video?.referenceFiles,
+          deliveryDate: m.video?.deliveryDate,
+          priority: m.video?.priority,
+          specialRequirements: m.video?.specialRequirements,
+          staff: m.video?.staff,
+          staffChangeRequest: m.video?.staffChangeRequest,
+          status: m.video?.status,
+          remarks: m.video?.remarks,
+        }));
+
+      return {
+        _id: event._id,
+        iqacNumber: event.iqacNumber,
+        status: event.status,
+        eventName: event.requestDetails?.eventDetails?.eventName,
+        organizingDepartment:
+          event.requestDetails?.organizerDetails?.organizingDepartment,
+        eventSchedule:
+          event.requestDetails?.eventDetails?.eventSchedule || [],
+        videoRequirements: filteredMedia,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      email,
+      totalEvents: result.length,
+      events: result,
+    });
+  } catch (error) {
+    console.error("Video head dashboard error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
