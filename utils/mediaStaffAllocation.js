@@ -12,8 +12,8 @@ const allocateDefaultMediaStaff = async (event) => {
   const defaultPosterStaffs = [
     {
       facultyId: new mongoose.Types.ObjectId(),
-      name: "Poster Staff 1",
-      email:"poster.staff1@example.com"
+      name: "Poster Admin1",
+      email:"code.with.nishanth03@gmail.com"
     },
     // {
     //   facultyId: new mongoose.Types.ObjectId(),
@@ -25,8 +25,8 @@ const allocateDefaultMediaStaff = async (event) => {
   const defaultVideoStaffs = [
     {
       facultyId: new mongoose.Types.ObjectId(),
-      name: "Video Staff 1",
-      email:"video.staff1@example.com"
+      name: "Video Admin",
+      email:"video@gmail.com"
     },
     // {
     //   facultyId: new mongoose.Types.ObjectId(),

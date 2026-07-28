@@ -297,7 +297,7 @@ exports.getFacultyDashboardEventsCount = async (req, res) => {
 // ─── Poster Head Dashboard ───────────────────────────────────────────────────
 exports.getPosterHeadDashboard = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email } = req.query;
 
     if (!email) {
       return res.status(400).json({ success: false, message: "email is required" });
@@ -374,7 +374,7 @@ exports.getPosterHeadDashboard = async (req, res) => {
 // ─── Video Head Dashboard ─────────────────────────────────────────────────────
 exports.getVideoHeadDashboard = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email } = req.query;
 
     if (!email) {
       return res.status(400).json({ success: false, message: "email is required" });

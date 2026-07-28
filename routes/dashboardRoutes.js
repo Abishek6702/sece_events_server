@@ -21,7 +21,7 @@ router.get("/department-wise-faculty",protect, getDepartmentWiseFacultyCount);
 router.get("/faculty-dashboard-events-count", protect, getFacultyDashboardEventsCount);
 
 // media head dashboards (poster & video)
-router.get("/poster-dashboard", getPosterHeadDashboard);
-router.get("/video-dashboard", getVideoHeadDashboard);
+router.get("/poster-dashboard",protect, getPosterHeadDashboard);
+router.get("/video-dashboard",protect, getVideoHeadDashboard);
 
 module.exports = router;
