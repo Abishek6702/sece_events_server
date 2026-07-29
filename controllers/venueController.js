@@ -322,6 +322,110 @@ const getVenueBookingCounts = async (req, res) => {
   }
 };
 
+const getVenueAvailabilitySchedule = async (req, res) => {
+  try {
+    const { venue, startDate, endDate } = req.query;
+
+    if (!venue) {
+      return res.status(400).json({ success: false, message: "Venue parameter is required" });
+    }
+
+    const start = startDate ? new Date(startDate) : new Date();
+    const end = endDate ? new Date(endDate) : new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return res.status(400).json({ success: false, message: "Invalid startDate or endDate" });
+    }
+
+    const occurrences = await Event.aggregate([
+      { $unwind: "$venueDetails.venues" },
+      {
+        $match: {
+          "venueDetails.venues.venueName": venue,
+        },
+      },
+      {
+        $addFields: {
+          scheduleDay: {
+            $arrayElemAt: [
+              "$requestDetails.eventDetails.eventSchedule",
+              "$venueDetails.venues.dayIndex",
+            ],
+          },
+        },
+      },
+      {
+        $match: {
+          "scheduleDay.eventDate": {
+            $gte: start,
+            $lte: end,
+          },
+        },
+      },
+      // Populate organizer from top-level organizerId → Faculty collection
+      {
+        $lookup: {
+          from: "faculties",
+          localField: "organizerId",
+          foreignField: "_id",
+          as: "organizerFaculty",
+        },
+      },
+      {
+        $addFields: {
+          organizerDoc: { $arrayElemAt: ["$organizerFaculty", 0] },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          eventId: "$_id",
+          dayIndex: "$venueDetails.venues.dayIndex",
+          eventName: "$requestDetails.eventDetails.eventName",
+          eventType: "$requestDetails.eventDetails.eventType",
+          department: "$requestDetails.organizerDetails.organizingDepartment",
+          venueName: "$venueDetails.venues.venueName",
+          seatingCapacity: "$venueDetails.venues.seatingCapacity",
+          eventDate: "$scheduleDay.eventDate",
+          startTime: "$scheduleDay.startTime",
+          endTime: "$scheduleDay.endTime",
+          venueStatus: "$venueDetails.status.status",
+          eventStatus: "$status",
+          // From Faculty document looked up via top-level organizerId
+          organizerName: {
+            $cond: {
+              if: { $ifNull: ["$organizerDoc", false] },
+              then: {
+                $concat: [
+                  { $ifNull: ["$organizerDoc.salutation", ""] },
+                  { $cond: [{ $gt: [{ $strLenCP: { $ifNull: ["$organizerDoc.salutation", ""] } }, 0] }, " ", ""] },
+                  { $ifNull: ["$organizerDoc.firstName", ""] },
+                  " ",
+                  { $ifNull: ["$organizerDoc.lastName", ""] },
+                ],
+              },
+              else: "N/A",
+            },
+          },
+          organizerEmpId: { $ifNull: ["$organizerDoc.empId", "N/A"] },
+          organizerMobile: { $ifNull: ["$organizerDoc.phone", "N/A"] },
+        },
+      },
+      { $sort: { eventDate: 1, startTime: 1 } },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      venue,
+      range: { start, end },
+      events: occurrences,
+    });
+  } catch (err) {
+    console.error("getVenueAvailabilitySchedule error:", err);
+    return res.status(500).json({ success: false, message: "Failed to fetch venue availability schedule" });
+  }
+};
+
 module.exports = {
   importVenuesFromExcel,
   createVenue,
@@ -330,5 +434,6 @@ module.exports = {
   updateVenue,
   deleteVenue,
   getVenueOptions,
-  getVenueBookingCounts
+  getVenueBookingCounts,
+  getVenueAvailabilitySchedule
 };

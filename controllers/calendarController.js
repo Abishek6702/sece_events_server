@@ -106,9 +106,7 @@ async function getEvents(req, res) {
     const { start, end } = getRangeForView(view, anchorDate);
 
     const occurrences = await Event.aggregate([
-      {
-        $unwind: "$venueDetails.venues",
-      },
+      { $unwind: "$venueDetails.venues" },
       {
         $match: {
           "venueDetails.venues.venueName": venue,
@@ -132,6 +130,20 @@ async function getEvents(req, res) {
           },
         },
       },
+      // Populate organizer from top-level organizerId → Faculty collection
+      {
+        $lookup: {
+          from: "faculties",
+          localField: "organizerId",
+          foreignField: "_id",
+          as: "organizerFaculty",
+        },
+      },
+      {
+        $addFields: {
+          organizerDoc: { $arrayElemAt: ["$organizerFaculty", 0] },
+        },
+      },
       {
         $project: {
           _id: 0,
@@ -139,8 +151,7 @@ async function getEvents(req, res) {
           dayIndex: "$venueDetails.venues.dayIndex",
           eventName: "$requestDetails.eventDetails.eventName",
           eventType: "$requestDetails.eventDetails.eventType",
-          department:
-            "$requestDetails.organizerDetails.organizingDepartment",
+          department: "$requestDetails.organizerDetails.organizingDepartment",
           venueName: "$venueDetails.venues.venueName",
           seatingCapacity: "$venueDetails.venues.seatingCapacity",
           eventDate: "$scheduleDay.eventDate",
@@ -148,14 +159,27 @@ async function getEvents(req, res) {
           endTime: "$scheduleDay.endTime",
           venueStatus: "$venueDetails.status.status",
           eventStatus: "$status",
+          // From Faculty document looked up via top-level organizerId
+          organizerName: {
+            $cond: {
+              if: { $ifNull: ["$organizerDoc", false] },
+              then: {
+                $concat: [
+                  { $ifNull: ["$organizerDoc.salutation", ""] },
+                  { $cond: [{ $gt: [{ $strLenCP: { $ifNull: ["$organizerDoc.salutation", ""] } }, 0] }, " ", ""] },
+                  { $ifNull: ["$organizerDoc.firstName", ""] },
+                  " ",
+                  { $ifNull: ["$organizerDoc.lastName", ""] },
+                ],
+              },
+              else: "N/A",
+            },
+          },
+          organizerEmpId: { $ifNull: ["$organizerDoc.empId", "N/A"] },
+          organizerMobile: { $ifNull: ["$organizerDoc.phone", "N/A"] },
         },
       },
-      {
-        $sort: {
-          eventDate: 1,
-          startTime: 1,
-        },
-      },
+      { $sort: { eventDate: 1, startTime: 1 } },
     ]);
 
     const events = occurrences.map((occ) => ({
