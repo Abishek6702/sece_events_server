@@ -3,11 +3,10 @@ const Event = require("../models/Event.js");
 require("dotenv").config();
 const mongoose = require("mongoose");
 
-exports.requestMediaStaffChange = async (req, res) => {
+exports.changeMediaStaff = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const { mediaType, requestedStaff, reason } = req.body;
+    const { mediaType, staff, reason } = req.body;
 
     const event = await Event.findById(id);
 
@@ -17,113 +16,40 @@ exports.requestMediaStaffChange = async (req, res) => {
       });
     }
 
-    if (!mediaType || !["poster", "video"].includes(mediaType)) {
+    if (!["poster", "video"].includes(mediaType)) {
       return res.status(400).json({
-        message: "Valid mediaType is required",
+        message: "Invalid media type",
       });
     }
 
     event.mediaRequirementDetails.mediaRequirements.forEach((media) => {
-      media[mediaType].staffChangeRequest = {
-        requested: true,
-
-        requestedStaff,
-
-        staffChangeStatus: "Pending",
-
-        staffChangeReason: reason,
-
-        rejectReason: "",
-
-        approvedAt: null,
-      };
+      media[mediaType].staffHistory.push({
+        previousStaff: media[mediaType].staff,
+        newStaff: staff,
+        reason,
+        changedBy: req.user
+          ? {
+              name: req.user.name,
+              email: req.user.email,
+            }
+          : undefined,
+        changedAt: new Date(),
+      });
+    
+      media[mediaType].staff = staff;
     });
 
     await event.save();
 
     res.status(200).json({
-      message: `${mediaType} staff change requested successfully`,
+      message: "Staff updated successfully",
       data: event,
     });
-  } catch (error) {
-    console.error("Staff change request error:", error);
+  } catch (err) {
+    console.error(err);
 
     res.status(500).json({
-      message: "Server error",
-    });
-  }
-};
-
-exports.staffChangeAction = async (req, res) => {
-  try {
-
-    const { mediaType, action, rejectReason } = req.body;
-
-    const event = await Event.findById(req.params.id);
-
-    if (!event) {
-      return res.status(404).json({
-        message: "Event not found"
-      });
-    }
-
-    if (!["poster", "video"].includes(mediaType)) {
-      return res.status(400).json({
-        message: "Valid mediaType required"
-      });
-    }
-
-    if (!["approve", "reject"].includes(action)) {
-      return res.status(400).json({
-        message: "Invalid action"
-      });
-    }
-
-    event.mediaRequirementDetails.mediaRequirements.forEach(
-      (media) => {
-
-        const request =
-          media[mediaType].staffChangeRequest;
-
-        if (!request?.requested) {
-          return;
-        }
-
-        // APPROVE
-        if (action === "approve") {
-
-          media[mediaType].staff =
-            request.requestedStaff;
-
-          request.staffChangeStatus = "Approved";
-
-          request.approvedAt = new Date();
-        }
-
-        // REJECT
-        if (action === "reject") {
-
-          request.staffChangeStatus = "Rejected";
-
-          request.rejectReason =
-            rejectReason || "";
-        }
-      }
-    );
-
-    await event.save();
-
-    return res.status(200).json({
-      message: `Staff change ${action}d successfully`,
-      data: event
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    return res.status(500).json({
-      message: "Server Error"
+      message: "Server Error",
     });
   }
 };

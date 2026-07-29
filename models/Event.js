@@ -517,43 +517,40 @@ const mediaRequirementSchema = new mongoose.Schema(
           //default staff if wnat changed and updated
           staff: [
             {
-              facultyId: {
-                type: mongoose.Types.ObjectId,
-                ref: "Faculty",
-              },
               name: String,
               email: String,
             },
           ],
-          staffChangeRequest: {
-            requested: {
-              type: Boolean,
-              default: false,
-            },
-
-            requestedStaff: [
-              {
-                facultyId: {
-                  type: mongoose.Types.ObjectId,
-                  ref: "Faculty",
+          
+          staffHistory: [
+            {
+              previousStaff: [
+                {
+                  name: String,
+                  email: String,
                 },
+              ],
+          
+              newStaff: [
+                {
+                  name: String,
+                  email: String,
+                },
+              ],
+          
+              reason: String,
+          
+              changedBy: {
                 name: String,
                 email: String,
               },
-            ],
-
-            staffChangeStatus: {
-              type: String,
-              enum: ["Pending", "Approved", "Rejected", "Not Requested"],
-              default: "Not Requested",
+          
+              changedAt: {
+                type: Date,
+                default: Date.now,
+              },
             },
-
-            staffChangeReason: String,
-
-            rejectReason: String,
-
-            approvedAt: Date,
-          },
+          ],
           status: {
             type: String,
             enum: ["Pending for Acknowledge", "Acknowledged", "Completed"],
@@ -581,43 +578,47 @@ const mediaRequirementSchema = new mongoose.Schema(
           //default staff if wnat changed and updated
           staff: [
             {
-              facultyId: {
-                type: mongoose.Types.ObjectId,
-                ref: "Faculty",
-              },
               name: String,
               email: String,
             },
           ],
-          staffChangeRequest: {
-            requested: {
-              type: Boolean,
-              default: false,
-            },
-
-            requestedStaff: [
-              {
-                facultyId: {
-                  type: mongoose.Types.ObjectId,
-                  ref: "Faculty",
+          staffHistory: [
+            {
+              previousStaff: [
+                {
+                  facultyId: {
+                    type: mongoose.Types.ObjectId,
+                    ref: "Faculty",
+                  },
+                  name: String,
+                  email: String,
                 },
+              ],
+
+              newStaff: [
+                {
+                  facultyId: {
+                    type: mongoose.Types.ObjectId,
+                    ref: "Faculty",
+                  },
+                  name: String,
+                  email: String,
+                },
+              ],
+
+              reason: String,
+
+              changedBy: {
                 name: String,
                 email: String,
               },
-            ],
 
-            staffChangeStatus: {
-              type: String,
-              enum: ["Pending", "Approved", "Rejected", "Not Requested"],
-              default: "Not Requested",
+              changedAt: {
+                type: Date,
+                default: Date.now,
+              },
             },
-
-            staffChangeReason: String,
-
-            rejectReason: String,
-
-            approvedAt: Date,
-          },
+          ],
           status: {
             type: String,
             enum: ["Pending for Acknowledge", "Acknowledged", "Completed"],
