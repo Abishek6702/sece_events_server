@@ -12,8 +12,8 @@ const allocateDefaultMediaStaff = async (event) => {
   const defaultPosterStaffs = [
     {
       facultyId: new mongoose.Types.ObjectId(),
-      name: "Poster Admin1",
-      email:"code.with.nishanth03@gmail.com"
+      name: "ANAND BABU P",
+      email:"anand.p@sece.ac.in"
     },
     // {
     //   facultyId: new mongoose.Types.ObjectId(),
@@ -25,8 +25,8 @@ const allocateDefaultMediaStaff = async (event) => {
   const defaultVideoStaffs = [
     {
       facultyId: new mongoose.Types.ObjectId(),
-      name: "Video Admin",
-      email:"video@gmail.com"
+      name: "BALAJI S",
+      email:"balaji.s@sece.ac.in"
     },
     // {
     //   facultyId: new mongoose.Types.ObjectId(),
