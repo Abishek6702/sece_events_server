@@ -1,5 +1,5 @@
-const FinancialYearCounter = require("../models/FinancialYearCounter");
-const DepartmentCounter = require("../models/DepartmentCounter");
+const IndividualFinancialYearCounter = require("../models/individual/IndividualFinancialYearCounter");
+const IndividualDepartmentCounter = require("../models/individual/IndividualDepartmentCounter");
 
 function getFinancialYear(date = new Date()) {
   const currentYear = date.getFullYear();
@@ -21,13 +21,22 @@ function formatIndividualRequestNumber({
   const normalizedModule = String(moduleName || "").toUpperCase();
   const normalizedDepartment = String(departmentCode || "").trim().toUpperCase();
 
+  if (
+    globalCounterValue === null ||
+    globalCounterValue === undefined ||
+    departmentCounterValue === null ||
+    departmentCounterValue === undefined
+  ) {
+    throw new Error("Counter values are required for request number generation.");
+  }
+
   const globalNo = String(globalCounterValue).padStart(6, "0");
   const deptNo = String(departmentCounterValue).padStart(4, "0");
 
   return `${normalizedModule}/${financialYear}/${globalNo}/${normalizedDepartment}/${deptNo}`;
 }
 
-async function generateIndividualRequestNumber(moduleName, departmentCode, session = null) {
+async function generateIndividualRequestNumber(moduleName, departmentCode, session = null, options = {}) {
   const normalizedModule = String(moduleName || "").trim().toUpperCase();
   const normalizedDepartment = String(departmentCode || "").trim().toUpperCase();
 
@@ -42,11 +51,11 @@ async function generateIndividualRequestNumber(moduleName, departmentCode, sessi
   const financialYear = getFinancialYear();
 
   const [globalCounter, departmentCounter] = await Promise.all([
-    FinancialYearCounter.findOneAndUpdate(
-      { financialYear },
+    IndividualFinancialYearCounter.findOneAndUpdate(
+      { module: normalizedModule, financialYear },
       {
-        $inc: { counter: 1 },
-        $setOnInsert: { financialYear },
+        $inc: { lastSequence: 1 },
+        $setOnInsert: { module: normalizedModule, financialYear },
       },
       {
         returnDocument: "after",
@@ -54,16 +63,18 @@ async function generateIndividualRequestNumber(moduleName, departmentCode, sessi
         session,
       },
     ),
-    DepartmentCounter.findOneAndUpdate(
+    IndividualDepartmentCounter.findOneAndUpdate(
       {
+        module: normalizedModule,
         financialYear,
-        department: normalizedDepartment,
+        departmentCode: normalizedDepartment,
       },
       {
-        $inc: { counter: 1 },
+        $inc: { lastSequence: 1 },
         $setOnInsert: {
+          module: normalizedModule,
           financialYear,
-          department: normalizedDepartment,
+          departmentCode: normalizedDepartment,
         },
       },
       {
@@ -74,13 +85,37 @@ async function generateIndividualRequestNumber(moduleName, departmentCode, sessi
     ),
   ]);
 
-  return formatIndividualRequestNumber({
+  if (!globalCounter || !departmentCounter) {
+    throw new Error("Unable to initialize request counters for the current financial year.");
+  }
+
+  const globalCounterValue = Number(globalCounter.lastSequence);
+  const departmentCounterValue = Number(departmentCounter.lastSequence);
+
+  if (!Number.isFinite(globalCounterValue) || !Number.isFinite(departmentCounterValue)) {
+    throw new Error("Counter values are required for request number generation.");
+  }
+
+  const result = {
     moduleName: normalizedModule,
     financialYear,
-    globalCounterValue: globalCounter.counter,
+    requestSequence: globalCounterValue,
     departmentCode: normalizedDepartment,
-    departmentCounterValue: departmentCounter.counter,
-  });
+    departmentSequence: departmentCounterValue,
+    requestNo: formatIndividualRequestNumber({
+      moduleName: normalizedModule,
+      financialYear,
+      globalCounterValue,
+      departmentCode: normalizedDepartment,
+      departmentCounterValue,
+    }),
+  };
+
+  if (options?.returnDetails) {
+    return result;
+  }
+
+  return result.requestNo;
 }
 
 module.exports = generateIndividualRequestNumber;

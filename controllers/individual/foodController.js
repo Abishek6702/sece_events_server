@@ -108,10 +108,24 @@ exports.createFood = async (req, res) => {
     foodData.status = "Pending";
     foodData.finalStatus = "Pending";
     foodData.workflowStage = "Submitted";
-    foodData.requestNo = await generateIndividualRequestNumber(
+
+    const requestNumbering = await generateIndividualRequestNumber(
       "FOOD",
-      req.user?.department || req.body.department || "UNKNOWN"
+      req.user?.department || req.body.department || "UNKNOWN",
+      null,
+      { returnDetails: true }
     );
+
+    if (!requestNumbering?.requestNo || !String(requestNumbering.requestNo).trim()) {
+      throw new Error("Request number could not be generated.");
+    }
+
+    foodData.requestNo = requestNumbering.requestNo;
+    foodData.module = requestNumbering.moduleName;
+    foodData.financialYear = requestNumbering.financialYear;
+    foodData.departmentCode = requestNumbering.departmentCode;
+    foodData.requestSequence = requestNumbering.requestSequence;
+    foodData.departmentSequence = requestNumbering.departmentSequence;
     foodData.approvalHistory = [
       {
         role: "faculty",
@@ -143,6 +157,14 @@ exports.createFood = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
+
+    if (error?.code === 11000 && /requestNo/i.test(error.message)) {
+      return res.status(409).json({
+        success: false,
+        message: "A request number collision occurred. Please try again.",
+        error: error.message,
+      });
+    }
 
     res.status(500).json({
       success: false,

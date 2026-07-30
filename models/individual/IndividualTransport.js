@@ -27,6 +27,35 @@ const transportSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+
+    module: {
+      type: String,
+      required: true,
+      default: "TRANSPORT",
+    },
+
+    financialYear: {
+      type: String,
+      required: true,
+      default: "",
+    },
+
+    departmentCode: {
+      type: String,
+      required: true,
+      default: "",
+    },
+
+    requestSequence: {
+      type: Number,
+      default: 0,
+    },
+
+    departmentSequence: {
+      type: Number,
+      default: 0,
+    },
+
     principalApprovalForm: {
       url: {
         type: String,

@@ -2,7 +2,9 @@
 
 const IndividualMedia = require("../../models/individual/IndividualMedia");
 const Faculty = require("../../models/Faculty");
+const User = require("../../models/User");
 const generateIndividualRequestNumber = require("../../utils/generateIndividualRequestNumber");
+const { getDefaultMediaAdminEmail } = require("../../utils/mediaAssignment");
 
 const normalizeFinanceValue = (financeRequired) => {
   if (typeof financeRequired === "string") {
@@ -276,10 +278,28 @@ exports.createIndividualMedia = async (req, res) => {
     body.status = "Pending";
     body.finalStatus = "Pending";
     body.workflowStage = "Submitted";
-    body.requestNo = await generateIndividualRequestNumber(
+    const requestNumbering = await generateIndividualRequestNumber(
       "MEDIA",
-      req.user?.department || req.body.department || "UNKNOWN"
+      req.user?.department || req.body.department || "UNKNOWN",
+      null,
+      { returnDetails: true }
     );
+    body.requestNo = requestNumbering.requestNo;
+    body.module = requestNumbering.moduleName;
+    body.financialYear = requestNumbering.financialYear;
+    body.departmentCode = requestNumbering.departmentCode;
+    body.requestSequence = requestNumbering.requestSequence;
+    body.departmentSequence = requestNumbering.departmentSequence;
+
+    const defaultAdminEmail = getDefaultMediaAdminEmail(body.typeOfMedia);
+    const defaultAdmin = await User.findOne({ email: defaultAdminEmail }).select("_id name email role department").lean();
+
+    if (defaultAdmin) {
+      body.assignedTo = defaultAdmin._id;
+      body.assignedBy = req.user?._id || null;
+      body.assignedAt = new Date();
+    }
+
     body.approvalHistory = [
       {
         role: "faculty",

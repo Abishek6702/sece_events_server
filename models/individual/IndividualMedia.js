@@ -61,6 +61,34 @@ const individualMediaSchema = new mongoose.Schema(
       unique: true,
     },
 
+    module: {
+      type: String,
+      required: true,
+      default: "MEDIA",
+    },
+
+    financialYear: {
+      type: String,
+      required: true,
+      default: "",
+    },
+
+    departmentCode: {
+      type: String,
+      required: true,
+      default: "",
+    },
+
+    requestSequence: {
+      type: Number,
+      default: 0,
+    },
+
+    departmentSequence: {
+      type: Number,
+      default: 0,
+    },
+
     dayIndex: {
       type: Number,
       default: 1,
@@ -199,6 +227,23 @@ const individualMediaSchema = new mongoose.Schema(
         type: Date,
         default: null,
       },
+    },
+
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    assignedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    assignedAt: {
+      type: Date,
+      default: null,
     },
 
     finalStatus: {

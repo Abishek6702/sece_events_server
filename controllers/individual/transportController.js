@@ -149,10 +149,18 @@ exports.createTransport = async (req, res) => {
     body.status = "Pending";
     body.finalStatus = "Pending";
     body.workflowStage = "Submitted";
-    body.requestNo = await generateIndividualRequestNumber(
+    const requestNumbering = await generateIndividualRequestNumber(
       "TRANSPORT",
-      req.user?.department || req.body.department || "UNKNOWN"
+      req.user?.department || req.body.department || "UNKNOWN",
+      null,
+      { returnDetails: true }
     );
+    body.requestNo = requestNumbering.requestNo;
+    body.module = requestNumbering.moduleName;
+    body.financialYear = requestNumbering.financialYear;
+    body.departmentCode = requestNumbering.departmentCode;
+    body.requestSequence = requestNumbering.requestSequence;
+    body.departmentSequence = requestNumbering.departmentSequence;
     body.approvalHistory = [
       {
         role: "faculty",
