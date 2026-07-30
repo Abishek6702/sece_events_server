@@ -155,6 +155,40 @@ const purchaseSchema = new mongoose.Schema(
       required: true,
     },
 
+    requestNo: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
+    module: {
+      type: String,
+      required: true,
+      default: "PURCHASE",
+    },
+
+    financialYear: {
+      type: String,
+      required: true,
+      default: "",
+    },
+
+    departmentCode: {
+      type: String,
+      required: true,
+      default: "",
+    },
+
+    requestSequence: {
+      type: Number,
+      default: 0,
+    },
+
+    departmentSequence: {
+      type: Number,
+      default: 0,
+    },
+
     purchases: [purchaseItemSchema],
 
     referenceFiles: [fileReferenceSchema],

@@ -5,6 +5,11 @@ const IndividualTransport = require("../../models/individual/IndividualTransport
 const IndividualMedia = require("../../models/individual/IndividualMedia");
 const Faculty = require("../../models/Faculty");
 const User = require("../../models/User");
+const {
+  isAllowedMediaAssignmentInterchange,
+  isValidMediaAssignmentTargetDepartment,
+  buildMediaRequestVisibilityFilter,
+} = require("../../utils/mediaAssignment");
 
 const resolveEmployee = async (employeeRef) => {
   if (!employeeRef) {
@@ -95,6 +100,52 @@ const buildApprovalHistoryEntry = ({
   actionDate: actionDate ? new Date(actionDate) : null,
 });
 
+const getAssignmentTargetDepartment = (item) => {
+  const mediaTypes = Array.isArray(item?.typeOfMedia)
+    ? item.typeOfMedia
+    : [item?.typeOfMedia].filter(Boolean);
+
+  if (mediaTypes.includes("Video")) {
+    return "Video";
+  }
+
+  if (mediaTypes.includes("Poster")) {
+    return "Poster";
+  }
+
+  return "Media";
+};
+
+const buildInterchangeResponse = async (item, updatedByUser, targetUser) => {
+  const assignmentDepartment = getAssignmentTargetDepartment(item);
+  const targetUserPayload = targetUser
+    ? {
+        _id: targetUser._id,
+        name: targetUser.name,
+        email: targetUser.email,
+        role: targetUser.role,
+        department: targetUser.department,
+      }
+    : null;
+
+  return {
+    success: true,
+    message: `Request reassigned to ${targetUser?.name || "the selected team member"}`,
+    data: {
+      id: item._id,
+      requestNo: item.requestNo,
+      assignmentDepartment,
+      assignedTo: targetUserPayload,
+      reassignedBy: {
+        _id: updatedByUser?._id,
+        name: updatedByUser?.name,
+        email: updatedByUser?.email,
+      },
+      updatedAt: item.updatedAt,
+    },
+  };
+};
+
 const upsertApprovalHistoryEntry = (item, entry) => {
   if (!item || !entry) return;
   item.approvalHistory = item.approvalHistory || [];
@@ -154,6 +205,20 @@ const setSubmissionStatus = (item, statusValue) => {
     return;
   }
 
+  if (item?.constructor?.modelName === "IndividualMedia") {
+    const mappedValue =
+      normalizedValue === "Rejected"
+        ? "Rejected"
+        : normalizedValue === "Approved"
+          ? "Completed"
+          : normalizedValue === "Completed"
+            ? "Completed"
+            : "Pending";
+
+    item.status = mappedValue;
+    return;
+  }
+
   item.status = normalizedValue;
 };
 
@@ -207,6 +272,85 @@ const getDepartmentFacultyIds = async (department) => {
     .lean();
 
   return facultyDocs.map((item) => item._id);
+};
+
+const getDepartmentTeamStats = async (departmentName) => {
+  const normalizedDepartment = String(departmentName || "").trim();
+
+  if (!normalizedDepartment) {
+    return {
+      headCount: 0,
+      memberCount: 0,
+      totalTeamCount: 0,
+      heads: [],
+    };
+  }
+
+  const departmentRegex = new RegExp(`^${normalizedDepartment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+
+  const [headCount, memberCount, totalTeamCount, heads] = await Promise.all([
+    User.countDocuments({ department: departmentRegex, role: "head" }),
+    User.countDocuments({ department: departmentRegex, role: "member" }),
+    User.countDocuments({ department: departmentRegex }),
+    User.find({ department: departmentRegex, role: "head" })
+      .select("_id name email department role")
+      .lean(),
+  ]);
+
+  return {
+    headCount,
+    memberCount,
+    totalTeamCount,
+    heads,
+  };
+};
+
+const buildMediaHeadListFilter = async ({
+  user,
+  mediaType,
+  includeAll = false,
+}) => {
+  const filter = {
+    $or: [
+      { workflowStage: "DepartmentReview" },
+      { workflowStage: "SuperAdmin1" },
+      { workflowStage: "SuperAdmin2" },
+      { workflowStage: "Submitted" },
+      { workflowStage: "AdminApproved" },
+    ],
+  };
+
+  const role = normalizeRole(user?.role);
+  const normalizedMediaType = String(mediaType || "")
+    .trim()
+    .toLowerCase();
+
+  if (normalizedMediaType === "poster") {
+    filter.typeOfMedia = { $in: ["Poster"] };
+  } else if (normalizedMediaType === "video") {
+    filter.typeOfMedia = { $in: ["Video"] };
+  } else {
+    filter.typeOfMedia = { $in: ["Poster", "Video"] };
+  }
+
+  if (!includeAll) {
+    filter.$and = filter.$and || [];
+    filter.$and.push({
+      $or: [
+        { "headApproval.status": "Pending" },
+        { "headApproval.status": "Acknowledged" },
+        { "headApproval.status": { $exists: false } },
+      ],
+    });
+  }
+
+  if (role === "poster head") {
+    filter.typeOfMedia = { $in: ["Poster"] };
+  } else if (role === "video head") {
+    filter.typeOfMedia = { $in: ["Video"] };
+  }
+
+  return filter;
 };
 
 const buildSubmissionFilter = async ({
@@ -344,6 +488,215 @@ const buildSubmissionFilter = async ({
   console.log("buildSubmissionFilter generated filter:", filter);
 
   return filter;
+};
+
+const getMediaHeadList = async (req, res) => {
+  try {
+    const currentUser = req.user || {};
+    const filter = await buildMediaHeadListFilter({
+      user: currentUser,
+      mediaType: "",
+      includeAll: req.query.includeAll === "true" || req.query.includeAll === "1",
+    });
+
+    const items = await IndividualMedia.find(filter)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const data = await Promise.all(
+      items.map(async (item) => {
+        const resolvedEmployee = await resolveEmployee(item.employee);
+        return buildSubmissionItem(item, "Media", resolvedEmployee);
+      }),
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch media head list",
+      error: error.message,
+    });
+  }
+};
+
+const getPosterRequests = async (req, res) => {
+  try {
+    const filter = buildMediaRequestVisibilityFilter(req.user, "Poster");
+    const items = await IndividualMedia.find(filter)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const data = await Promise.all(
+      items.map(async (item) => {
+        const resolvedEmployee = await resolveEmployee(item.employee);
+        return buildSubmissionItem(item, "Poster", resolvedEmployee);
+      }),
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch poster requests",
+      error: error.message,
+    });
+  }
+};
+
+const getPosterRequestById = async (req, res) => {
+  try {
+    const filter = buildMediaRequestVisibilityFilter(req.user, "Poster");
+    const item = await IndividualMedia.findOne({
+      _id: req.params.id,
+      ...filter,
+    }).lean();
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Poster request not found",
+      });
+    }
+
+    const resolvedEmployee = await resolveEmployee(item.employee);
+    return res.status(200).json({
+      success: true,
+      data: buildSubmissionItem(item, "Poster", resolvedEmployee),
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch poster request",
+      error: error.message,
+    });
+  }
+};
+
+const getVideoRequests = async (req, res) => {
+  try {
+    const filter = buildMediaRequestVisibilityFilter(req.user, "Video");
+    const items = await IndividualMedia.find(filter)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const data = await Promise.all(
+      items.map(async (item) => {
+        const resolvedEmployee = await resolveEmployee(item.employee);
+        return buildSubmissionItem(item, "Video", resolvedEmployee);
+      }),
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch video requests",
+      error: error.message,
+    });
+  }
+};
+
+const getVideoRequestById = async (req, res) => {
+  try {
+    const filter = buildMediaRequestVisibilityFilter(req.user, "Video");
+    const item = await IndividualMedia.findOne({
+      _id: req.params.id,
+      ...filter,
+    }).lean();
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Video request not found",
+      });
+    }
+
+    const resolvedEmployee = await resolveEmployee(item.employee);
+    return res.status(200).json({
+      success: true,
+      data: buildSubmissionItem(item, "Video", resolvedEmployee),
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch video request",
+      error: error.message,
+    });
+  }
+};
+
+const getPosterHeadList = async (req, res) => {
+  try {
+    const currentUser = req.user || {};
+    const filter = await buildMediaHeadListFilter({
+      user: currentUser,
+      mediaType: "Poster",
+      includeAll: req.query.includeAll === "true" || req.query.includeAll === "1",
+    });
+
+    const teamStats = await getDepartmentTeamStats("Poster");
+
+    return res.status(200).json({
+      success: true,
+      headCount: teamStats.headCount,
+      memberCount: teamStats.memberCount,
+      totalTeamCount: teamStats.totalTeamCount,
+      heads: teamStats.heads,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch poster head list",
+      error: error.message,
+    });
+  }
+};
+
+const getVideoHeadList = async (req, res) => {
+  try {
+    const currentUser = req.user || {};
+    const filter = await buildMediaHeadListFilter({
+      user: currentUser,
+      mediaType: "Video",
+      includeAll: req.query.includeAll === "true" || req.query.includeAll === "1",
+    });
+
+    const teamStats = await getDepartmentTeamStats("Video");
+
+    return res.status(200).json({
+      success: true,
+      headCount: teamStats.headCount,
+      memberCount: teamStats.memberCount,
+      totalTeamCount: teamStats.totalTeamCount,
+      heads: teamStats.heads,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch video head list",
+      error: error.message,
+    });
+  }
 };
 
 const getAllIndividualSubmissions = async (req, res) => {
@@ -971,6 +1324,99 @@ const headApproval = async (req, res) => {
   }
 };
 
+const interchangeMediaAssignment = async (req, res) => {
+  try {
+    const currentUser = req.user || {};
+    const rawTargetUserId = String(req.body.targetUserId || req.query.targetUserId || "").trim();
+    const staffPayload = Array.isArray(req.body.staff) ? req.body.staff : [];
+    const staffSelection = staffPayload[0] || null;
+    const submission = await resolveSubmissionById(req.params.id);
+
+    if (!submission) {
+      return res.status(404).json({
+        success: false,
+        message: "Individual submission not found",
+      });
+    }
+
+    const { item, Model } = submission;
+
+    if (Model !== IndividualMedia) {
+      return res.status(400).json({
+        success: false,
+        message: "Interchange is only supported for media submissions",
+      });
+    }
+
+    const department = getAssignmentTargetDepartment(item);
+    const assignedOwner = item.assignedTo
+      ? await User.findById(item.assignedTo).select("_id name email role department").lean()
+      : null;
+
+    if (!isAllowedMediaAssignmentInterchange(currentUser, department, assignedOwner)) {
+      return res.status(403).json({
+        success: false,
+        message: `Only the ${department} admin can interchange this request`,
+      });
+    }
+
+    let targetUserId = rawTargetUserId;
+
+    if (!targetUserId && staffSelection?.email) {
+      const resolvedByEmail = await User.findOne({ email: staffSelection.email }).select("_id name email role department").lean();
+      if (resolvedByEmail) {
+        targetUserId = String(resolvedByEmail._id);
+      }
+    }
+
+    if (!targetUserId || !mongoose.Types.ObjectId.isValid(targetUserId)) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid targetUserId is required",
+      });
+    }
+
+    const targetUser = await User.findById(targetUserId).select("_id name email role department").lean();
+
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Target user not found",
+      });
+    }
+
+    const targetDepartment = String(targetUser.department || "").trim();
+    const isDepartmentMatch = isValidMediaAssignmentTargetDepartment(
+      currentUser,
+      department,
+      targetDepartment,
+    );
+
+    if (!isDepartmentMatch) {
+      return res.status(400).json({
+        success: false,
+        message: `Target user must belong to the ${department} department`,
+      });
+    }
+
+    item.assignedTo = targetUser._id;
+    item.assignedBy = currentUser._id;
+    item.assignedAt = new Date();
+    item.updatedAt = new Date();
+
+    await item.save();
+
+    return res.status(200).json(await buildInterchangeResponse(item, currentUser, targetUser));
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to interchange media assignment",
+      error: error.message,
+    });
+  }
+};
+
 const closeIndividualSubmission = async (req, res) => {
   try {
     const submission = await resolveSubmissionById(req.params.id);
@@ -1013,9 +1459,19 @@ const closeIndividualSubmission = async (req, res) => {
 module.exports = {
   buildApprovalHistoryEntry,
   upsertApprovalHistoryEntry,
+  buildMediaHeadListFilter,
+  getDepartmentTeamStats,
   getAllIndividualSubmissions,
   getIndividualSubmissionById,
   getRequestByFacultyModule,
+  getMediaHeadList,
+  getPosterRequests,
+  getPosterRequestById,
+  getVideoRequests,
+  getVideoRequestById,
+  getPosterHeadList,
+  getVideoHeadList,
+  interchangeMediaAssignment,
   hodApproval,
   superAdminApproval,
   headApproval,

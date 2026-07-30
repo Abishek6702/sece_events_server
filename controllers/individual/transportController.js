@@ -1,6 +1,8 @@
 // controllers/transportController.js
 
 const Transport = require("../../models/individual/IndividualTransport");
+const Faculty = require("../../models/Faculty");
+const generateIndividualRequestNumber = require("../../utils/generateIndividualRequestNumber");
 
 const normalizeFinanceValue = (financeRequired) => {
   if (typeof financeRequired === "string") {
@@ -147,6 +149,18 @@ exports.createTransport = async (req, res) => {
     body.status = "Pending";
     body.finalStatus = "Pending";
     body.workflowStage = "Submitted";
+    const requestNumbering = await generateIndividualRequestNumber(
+      "TRANSPORT",
+      req.user?.department || req.body.department || "UNKNOWN",
+      null,
+      { returnDetails: true }
+    );
+    body.requestNo = requestNumbering.requestNo;
+    body.module = requestNumbering.moduleName;
+    body.financialYear = requestNumbering.financialYear;
+    body.departmentCode = requestNumbering.departmentCode;
+    body.requestSequence = requestNumbering.requestSequence;
+    body.departmentSequence = requestNumbering.departmentSequence;
     body.approvalHistory = [
       {
         role: "faculty",
@@ -166,12 +180,17 @@ exports.createTransport = async (req, res) => {
 
     const transport =
       await Transport.create(body);
+    const facultyDoc = await Faculty.findById(body.employee).select("empId").lean();
 
     res.status(201).json({
       success: true,
       message:
         "Transport created successfully",
-      data: transport,
+      data: {
+        ...transport.toObject(),
+        empId: facultyDoc?.empId || null,
+        requestNo: transport.requestNo,
+      },
     });
   } catch (error) {
     console.log(error);
