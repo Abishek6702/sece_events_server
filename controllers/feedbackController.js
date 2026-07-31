@@ -89,7 +89,22 @@ const getDepartmentFeedbacks = async (req, res) => {
     if (scope.error) {
       return res.status(400).json({ success: false, message: scope.error });
     }
-    const { pipeline } = scope;
+    const { pipeline, normalizedDepartment } = scope;
+
+    // Poster and video already join the organizer to apply the email filter.
+    if (!EMAIL_SCOPED_DEPARTMENTS.has(normalizedDepartment)) {
+      pipeline.push(
+        {
+          $lookup: {
+            from: "faculties",
+            localField: "organizerId",
+            foreignField: "_id",
+            as: "organizer",
+          },
+        },
+        { $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true } },
+      );
+    }
 
     pipeline.push(
       {
@@ -129,6 +144,18 @@ const getDepartmentFeedbacks = async (req, res) => {
                 _id: 0,
                 feedbackId: "$_id",
                 eventId: "$eventId",
+                organizerId: "$organizerId",
+                organizerName: {
+                  $trim: {
+                    input: {
+                      $concat: [
+                        { $ifNull: ["$organizer.firstName", ""] },
+                        " ",
+                        { $ifNull: ["$organizer.lastName", ""] },
+                      ],
+                    },
+                  },
+                },
                 eventName: "$event.requestDetails.eventDetails.eventName",
                 eventType: "$event.requestDetails.eventDetails.eventType",
                 organizingDepartment: "$event.requestDetails.organizerDetails.organizingDepartment",
@@ -284,7 +311,7 @@ const getFeedbackByEvent = async (req, res) => {
     const { eventId } = req.params;
 
     const feedbacks = await Feedback.find({ eventId })
-      .populate("organizerId", "name email")
+      .populate("organizerId", "firstName lastName email empId")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -307,7 +334,7 @@ const getFeedbackById = async (req, res) => {
 
     const feedback = await Feedback.findById(feedbackId)
       .populate("eventId")
-      .populate("organizerId", "name email");
+      .populate("organizerId", "firstName lastName email empId");
 
     if (!feedback) {
       return res.status(404).json({
