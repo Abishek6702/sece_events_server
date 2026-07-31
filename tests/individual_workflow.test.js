@@ -30,4 +30,11 @@ controller.upsertApprovalHistoryEntry(
 
 assert.strictEqual(item.approvalHistory[0].action, "Approved");
 assert.strictEqual(item.approvalHistory[0].approvedBy, "user-1");
+
+const mediaItem = { constructor: { modelName: "IndividualMedia" }, status: "Pending" };
+controller.setSubmissionStatus(mediaItem, "Approved");
+assert.strictEqual(mediaItem.status, "Completed");
+controller.setSubmissionStatus(mediaItem, "Rejected");
+assert.strictEqual(mediaItem.status, "Rejected");
+
 console.log("workflow history tests passed");

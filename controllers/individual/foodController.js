@@ -1,6 +1,8 @@
 // controllers/foodController.js
 
 const Food = require("../../models/individual/IndividualFood");
+const Faculty = require("../../models/Faculty");
+const generateIndividualRequestNumber = require("../../utils/generateIndividualRequestNumber");
 
 const normalizeFinanceValue = (financeRequired) => {
   if (typeof financeRequired === "string") {
@@ -106,6 +108,24 @@ exports.createFood = async (req, res) => {
     foodData.status = "Pending";
     foodData.finalStatus = "Pending";
     foodData.workflowStage = "Submitted";
+
+    const requestNumbering = await generateIndividualRequestNumber(
+      "FOOD",
+      req.user?.department || req.body.department || "UNKNOWN",
+      null,
+      { returnDetails: true }
+    );
+
+    if (!requestNumbering?.requestNo || !String(requestNumbering.requestNo).trim()) {
+      throw new Error("Request number could not be generated.");
+    }
+
+    foodData.requestNo = requestNumbering.requestNo;
+    foodData.module = requestNumbering.moduleName;
+    foodData.financialYear = requestNumbering.financialYear;
+    foodData.departmentCode = requestNumbering.departmentCode;
+    foodData.requestSequence = requestNumbering.requestSequence;
+    foodData.departmentSequence = requestNumbering.departmentSequence;
     foodData.approvalHistory = [
       {
         role: "faculty",
@@ -124,14 +144,27 @@ exports.createFood = async (req, res) => {
     ];
 
     const food = await Food.create(foodData);
+    const facultyDoc = await Faculty.findById(foodData.employee).select("empId").lean();
 
     res.status(201).json({
       success: true,
       message: "Food request created successfully",
-      data: food,
+      data: {
+        ...food.toObject(),
+        empId: facultyDoc?.empId || null,
+        requestNo: food.requestNo,
+      },
     });
   } catch (error) {
     console.log(error);
+
+    if (error?.code === 11000 && /requestNo/i.test(error.message)) {
+      return res.status(409).json({
+        success: false,
+        message: "A request number collision occurred. Please try again.",
+        error: error.message,
+      });
+    }
 
     res.status(500).json({
       success: false,

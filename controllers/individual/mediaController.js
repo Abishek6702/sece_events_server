@@ -1,6 +1,10 @@
 // controllers/individual/mediaController.js
 
 const IndividualMedia = require("../../models/individual/IndividualMedia");
+const Faculty = require("../../models/Faculty");
+const User = require("../../models/User");
+const generateIndividualRequestNumber = require("../../utils/generateIndividualRequestNumber");
+const { getDefaultMediaAdminEmail } = require("../../utils/mediaAssignment");
 
 const normalizeFinanceValue = (financeRequired) => {
   if (typeof financeRequired === "string") {
@@ -274,6 +278,28 @@ exports.createIndividualMedia = async (req, res) => {
     body.status = "Pending";
     body.finalStatus = "Pending";
     body.workflowStage = "Submitted";
+    const requestNumbering = await generateIndividualRequestNumber(
+      "MEDIA",
+      req.user?.department || req.body.department || "UNKNOWN",
+      null,
+      { returnDetails: true }
+    );
+    body.requestNo = requestNumbering.requestNo;
+    body.module = requestNumbering.moduleName;
+    body.financialYear = requestNumbering.financialYear;
+    body.departmentCode = requestNumbering.departmentCode;
+    body.requestSequence = requestNumbering.requestSequence;
+    body.departmentSequence = requestNumbering.departmentSequence;
+
+    const defaultAdminEmail = getDefaultMediaAdminEmail(body.typeOfMedia);
+    const defaultAdmin = await User.findOne({ email: defaultAdminEmail }).select("_id name email role department").lean();
+
+    if (defaultAdmin) {
+      body.assignedTo = defaultAdmin._id;
+      body.assignedBy = req.user?._id || null;
+      body.assignedAt = new Date();
+    }
+
     body.approvalHistory = [
       {
         role: "faculty",
@@ -293,12 +319,17 @@ exports.createIndividualMedia = async (req, res) => {
 
     const media =
       await IndividualMedia.create(body);
+    const facultyDoc = await Faculty.findById(body.employee).select("empId").lean();
 
     res.status(201).json({
       success: true,
       message:
         "Individual media created successfully",
-      data: media,
+      data: {
+        ...media.toObject(),
+        empId: facultyDoc?.empId || null,
+        requestNo: media.requestNo,
+      },
     });
   } catch (error) {
     console.log(
