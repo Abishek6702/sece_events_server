@@ -36,7 +36,8 @@ const organizerSchema = new mongoose.Schema(
 
     isBudgetApproved: { type: Boolean, default: false },
     financeRequired: { type: Boolean, default: false },
-
+    estimatedBudget: { type: Number },
+    
     advanceAmount: { type: Number },
     purposeOfAdvance: { type: String },
 

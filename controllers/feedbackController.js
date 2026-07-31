@@ -3,6 +3,241 @@
 const Feedback = require("../models/Feedback");
 const Event = require("../models/Event");
 
+const DEPARTMENT_ALIASES = {
+  venue: ["venue"],
+  icts: ["icts", "ict"],
+  audio: ["audio"],
+  transport: ["transport"],
+  food: ["food", "refreshment", "refreshments"],
+  purchase: ["purchase"],
+  poster: ["poster"],
+  video: ["video"],
+  accommodation: ["accommodation"],
+  media: ["media"],
+};
+const EMAIL_SCOPED_DEPARTMENTS = new Set(["poster", "video"]);
+
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const getDepartmentFilter = (department) => {
+  const normalizedDepartment = String(department || "").trim().toLowerCase();
+
+  if (!normalizedDepartment) {
+    return null;
+  }
+
+  const keys = DEPARTMENT_ALIASES[normalizedDepartment] || [normalizedDepartment];
+  return {
+    $in: keys.map((key) => new RegExp(`^${escapeRegex(key)}$`, "i")),
+  };
+};
+
+const getDepartmentMatch = (department) => {
+  const sectionKeyFilter = getDepartmentFilter(department);
+  return sectionKeyFilter ? { "sections.sectionKey": sectionKeyFilter } : null;
+};
+
+const getDepartmentPipeline = (department) => {
+  const match = getDepartmentMatch(department);
+  return match ? [{ $match: match }, { $unwind: "$sections" }, { $match: match }] : [];
+};
+
+const getScopedDepartmentPipeline = (department, email) => {
+  const normalizedDepartment = String(department || "").trim().toLowerCase();
+  const pipeline = getDepartmentPipeline(normalizedDepartment);
+
+  if (!pipeline.length) {
+    return { error: "Department is required" };
+  }
+
+  if (!EMAIL_SCOPED_DEPARTMENTS.has(normalizedDepartment)) {
+    return { pipeline, normalizedDepartment };
+  }
+
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  if (!normalizedEmail) {
+    return {
+      error: "Email is required when retrieving poster or video feedback",
+    };
+  }
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: "faculties",
+        localField: "organizerId",
+        foreignField: "_id",
+        as: "organizer",
+      },
+    },
+    { $unwind: "$organizer" },
+    { $match: { "organizer.email": new RegExp(`^${escapeRegex(normalizedEmail)}$`, "i") } },
+  );
+
+  return { pipeline, normalizedDepartment };
+};
+
+// Department feedback table: one row per submitted feedback section.
+const getDepartmentFeedbacks = async (req, res) => {
+  try {
+    const { department } = req.params;
+    const search = String(req.query.search || "").trim();
+    const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 20, 1), 100);
+    const scope = getScopedDepartmentPipeline(department, req.query.email);
+
+    if (scope.error) {
+      return res.status(400).json({ success: false, message: scope.error });
+    }
+    const { pipeline } = scope;
+
+    pipeline.push(
+      {
+        $lookup: {
+          from: "events",
+          localField: "eventId",
+          foreignField: "_id",
+          as: "event",
+        },
+      },
+      { $unwind: { path: "$event", preserveNullAndEmptyArrays: true } },
+    );
+
+    if (search) {
+      const searchPattern = new RegExp(escapeRegex(search), "i");
+      pipeline.push({
+        $match: {
+          $or: [
+            { "event.requestDetails.eventDetails.eventName": searchPattern },
+            { "event.requestDetails.eventDetails.eventType": searchPattern },
+            { "sections.comment": searchPattern },
+          ],
+        },
+      });
+    }
+
+    const [result] = await Feedback.aggregate([
+      ...pipeline,
+      { $sort: { submittedAt: -1, createdAt: -1 } },
+      {
+        $facet: {
+          rows: [
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+            {
+              $project: {
+                _id: 0,
+                feedbackId: "$_id",
+                eventId: "$eventId",
+                eventName: "$event.requestDetails.eventDetails.eventName",
+                eventType: "$event.requestDetails.eventDetails.eventType",
+                organizingDepartment: "$event.requestDetails.organizerDetails.organizingDepartment",
+                department: "$sections.sectionKey",
+                type: "$sections.sectionTitle",
+                rating: "$sections.rating",
+                ratingLabel: "$sections.ratingLabel",
+                feedback: "$sections.comment",
+                organizerEmail: "$organizer.email",
+                submittedAt: 1,
+              },
+            },
+          ],
+          total: [{ $count: "count" }],
+        },
+      },
+    ]);
+
+    const total = result.total[0]?.count || 0;
+    return res.status(200).json({
+      success: true,
+      data: result.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Rating used by the circular overall-rating component.
+const getDepartmentOverallRating = async (req, res) => {
+  try {
+    const { department } = req.params;
+    const scope = getScopedDepartmentPipeline(department, req.query.email);
+
+    if (scope.error) {
+      return res.status(400).json({ success: false, message: scope.error });
+    }
+    const { pipeline, normalizedDepartment } = scope;
+
+    const [summary] = await Feedback.aggregate([
+      ...pipeline,
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: "$sections.rating" },
+          totalResponses: { $sum: 1 },
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        department: normalizedDepartment,
+        averageRating: Number((summary?.averageRating || 0).toFixed(1)),
+        maxRating: 5,
+        totalResponses: summary?.totalResponses || 0,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Five-star distribution used by the satisfaction-summary component.
+const getDepartmentSatisfactionSummary = async (req, res) => {
+  try {
+    const { department } = req.params;
+    const scope = getScopedDepartmentPipeline(department, req.query.email);
+
+    if (scope.error) {
+      return res.status(400).json({ success: false, message: scope.error });
+    }
+    const { pipeline, normalizedDepartment } = scope;
+
+    const ratings = await Feedback.aggregate([
+      ...pipeline,
+      { $group: { _id: "$sections.rating", count: { $sum: 1 } } },
+    ]);
+    const countByRating = new Map(ratings.map(({ _id, count }) => [_id, count]));
+    const totalResponses = ratings.reduce((total, item) => total + item.count, 0);
+    const distribution = [5, 4, 3, 2, 1].map((rating) => {
+      const count = countByRating.get(rating) || 0;
+      return {
+        rating,
+        count,
+        percentage: totalResponses ? Number(((count / totalResponses) * 100).toFixed(1)) : 0,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        department: normalizedDepartment,
+        totalResponses,
+        distribution,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // CREATE FEEDBACK
 const createFeedback = async (req, res) => {
   try {
@@ -134,4 +369,7 @@ module.exports = {
   getFeedbackByEvent,
   getFeedbackById,
   deleteFeedback,
+  getDepartmentFeedbacks,
+  getDepartmentOverallRating,
+  getDepartmentSatisfactionSummary,
 };
