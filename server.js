@@ -27,6 +27,7 @@ const individualSubmissionRoutes = require("./routes/individual/individualSubmis
 // const calendarRoutes = require("./routes/calendarRoutes");
 const testRoutes = require("./routes/testRoutes");
 const calendarRoutes = require("./routes/calendarRoutes");
+const roomRoutes = require("./routes/roomRoutes");
 
 dotenv.config();
 const app = express();
@@ -96,6 +97,7 @@ app.use("/api/individual-submissions", individualSubmissionRoutes);
 // console.log("individualSubmissionRoutes:", individualSubmissionRoutes);
 // app.use("/api/calendar", calendarRoutes);
 app.use("/api/calendar",calendarRoutes)
+app.use("/api/rooms", roomRoutes);
 
 const PORT = process.env.PORT || 5000;
 
