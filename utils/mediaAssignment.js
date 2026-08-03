@@ -26,10 +26,10 @@ const getDefaultMediaAdminEmail = (mediaTypes = []) => {
   const department = getMediaDepartmentName(mediaTypes);
 
   if (department === "Video") {
-    return "video@gmail.com";
+    return "balaji.s@sece.ac.in";
   }
 
-  return "code.with.nishanth03@gmail.com";
+  return "anand.p@sece.ac.in";
 };
 
 const isAllowedMediaAssignmentInterchange = (user = {}, departmentName = "", assignedOwner = null) => {
@@ -58,8 +58,8 @@ const buildMediaRequestVisibilityFilter = (user = {}, mediaType = "") => {
   const mediaValue = normalizedMediaType === "video" ? "Video" : "Poster";
   const currentUserEmail = String(user?.email || "").trim().toLowerCase();
   const defaultAdminEmail = normalizedMediaType === "video"
-    ? "video@gmail.com"
-    : "code.with.nishanth03@gmail.com";
+    ? "balaji.s@sece.ac.in"
+    : "anand.p@sece.ac.in";
 
   if (currentUserEmail === defaultAdminEmail) {
     return {
