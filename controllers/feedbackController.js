@@ -50,31 +50,43 @@ const getScopedDepartmentPipeline = (department, email) => {
     return { error: "Department is required" };
   }
 
-  if (!EMAIL_SCOPED_DEPARTMENTS.has(normalizedDepartment)) {
-    return { pipeline, normalizedDepartment };
-  }
+  return {
+    pipeline,
+    normalizedDepartment,
+    normalizedEmail: String(email || "").trim().toLowerCase(),
+  };
+};
 
-  const normalizedEmail = String(email || "").trim().toLowerCase();
-  if (!normalizedEmail) {
-    return {
-      error: "Email is required when retrieving poster or video feedback",
-    };
-  }
+// Poster/Video dashboards can be limited to the staff member assigned to that
+// media type. Feedback.organizerId belongs to the event organizer, not staff.
+const appendMediaStaffEmailFilter = (pipeline, department, email) => {
+  if (!EMAIL_SCOPED_DEPARTMENTS.has(department) || !email) return;
+
+  pipeline.push({
+    $match: {
+      [`event.mediaRequirementDetails.mediaRequirements.${department}.staff.email`]: new RegExp(
+        `^${escapeRegex(email)}$`,
+        "i",
+      ),
+    },
+  });
+};
+
+const appendMediaStaffEmailScope = (pipeline, department, email) => {
+  if (!EMAIL_SCOPED_DEPARTMENTS.has(department) || !email) return;
 
   pipeline.push(
     {
       $lookup: {
-        from: "faculties",
-        localField: "organizerId",
+        from: "events",
+        localField: "eventId",
         foreignField: "_id",
-        as: "organizer",
+        as: "event",
       },
     },
-    { $unwind: "$organizer" },
-    { $match: { "organizer.email": new RegExp(`^${escapeRegex(normalizedEmail)}$`, "i") } },
+    { $unwind: "$event" },
   );
-
-  return { pipeline, normalizedDepartment };
+  appendMediaStaffEmailFilter(pipeline, department, email);
 };
 
 // Department feedback table: one row per submitted feedback section.
@@ -89,22 +101,7 @@ const getDepartmentFeedbacks = async (req, res) => {
     if (scope.error) {
       return res.status(400).json({ success: false, message: scope.error });
     }
-    const { pipeline, normalizedDepartment } = scope;
-
-    // Poster and video already join the organizer to apply the email filter.
-    if (!EMAIL_SCOPED_DEPARTMENTS.has(normalizedDepartment)) {
-      pipeline.push(
-        {
-          $lookup: {
-            from: "faculties",
-            localField: "organizerId",
-            foreignField: "_id",
-            as: "organizer",
-          },
-        },
-        { $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true } },
-      );
-    }
+    const { pipeline, normalizedDepartment, normalizedEmail } = scope;
 
     pipeline.push(
       {
@@ -116,6 +113,19 @@ const getDepartmentFeedbacks = async (req, res) => {
         },
       },
       { $unwind: { path: "$event", preserveNullAndEmptyArrays: true } },
+    );
+    appendMediaStaffEmailFilter(pipeline, normalizedDepartment, normalizedEmail);
+
+    pipeline.push(
+      {
+        $lookup: {
+          from: "faculties",
+          localField: "organizerId",
+          foreignField: "_id",
+          as: "organizer",
+        },
+      },
+      { $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true } },
     );
 
     if (search) {
@@ -199,7 +209,8 @@ const getDepartmentOverallRating = async (req, res) => {
     if (scope.error) {
       return res.status(400).json({ success: false, message: scope.error });
     }
-    const { pipeline, normalizedDepartment } = scope;
+    const { pipeline, normalizedDepartment, normalizedEmail } = scope;
+    appendMediaStaffEmailScope(pipeline, normalizedDepartment, normalizedEmail);
 
     const [summary] = await Feedback.aggregate([
       ...pipeline,
@@ -235,7 +246,8 @@ const getDepartmentSatisfactionSummary = async (req, res) => {
     if (scope.error) {
       return res.status(400).json({ success: false, message: scope.error });
     }
-    const { pipeline, normalizedDepartment } = scope;
+    const { pipeline, normalizedDepartment, normalizedEmail } = scope;
+    appendMediaStaffEmailScope(pipeline, normalizedDepartment, normalizedEmail);
 
     const ratings = await Feedback.aggregate([
       ...pipeline,

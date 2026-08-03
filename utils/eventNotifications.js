@@ -100,14 +100,14 @@ const getDepartmentHeadEmail = async (department) => {
   try {
     const departmentNames = Array.isArray(department) ? department : [department];
     const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const departmentPatterns = departmentNames.map(
+      (name) => new RegExp(`^${escapeRegex(name)}$`, "i"),
+    );
 
     const heads = await User.find({
       role: "head",
       department: {
-        $in: departmentNames.map((name) => ({
-          $regex: `^${escapeRegex(name)}$`,
-          $options: "i",
-        })),
+        $in: departmentPatterns,
       },
     }).select("email");
 

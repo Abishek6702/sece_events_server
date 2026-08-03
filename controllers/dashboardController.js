@@ -2,9 +2,142 @@ const mongoose = require("mongoose");
 const Event = require("../models/Event");
 const Faculty = require("../models/Faculty");
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const getMediaRequirementStats = (events, requirementKey) => {
+  return events.reduce(
+    (stats, event) => {
+      for (const requirement of event[requirementKey] || []) {
+        stats.total += 1;
+
+        if (requirement.status === "Completed") {
+          stats.completed += 1;
+        } else if (requirement.status === "Acknowledged") {
+          stats.acknowledged += 1;
+          stats.approved += 1;
+        } else {
+          stats.pending += 1;
+        }
+      }
+      return stats;
+    },
+    { total: 0, pending: 0, acknowledged: 0, approved: 0, completed: 0 },
+  );
+};
+
+const getMediaDepartmentStats = (events, requirementKey) => {
+  const counts = new Map();
+
+  for (const event of events) {
+    const department = event.organizingDepartment || "Unknown";
+    const requestCount = (event[requirementKey] || []).length;
+    counts.set(department, (counts.get(department) || 0) + requestCount);
+  }
+
+  return [...counts.entries()]
+    .map(([department, count]) => ({ department, count }))
+    .sort((a, b) => b.count - a.count || a.department.localeCompare(b.department));
+};
+
+const getMediaTypeStats = async (mediaType) => {
+  const statusPath = `$mediaRequirementDetails.mediaRequirements.${mediaType}.status`;
+  const [stats] = await Event.aggregate([
+    { $match: { status: { $ne: "Draft" } } },
+    { $unwind: "$mediaRequirementDetails.mediaRequirements" },
+    { $match: { "mediaRequirementDetails.mediaRequirements.typeOfMedia": mediaType } },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: 1 },
+        approved: {
+          $sum: { $cond: [{ $eq: [statusPath, "Acknowledged"] }, 1, 0] },
+        },
+        acknowledged: {
+          $sum: { $cond: [{ $eq: [statusPath, "Acknowledged"] }, 1, 0] },
+        },
+        completed: {
+          $sum: { $cond: [{ $eq: [statusPath, "Completed"] }, 1, 0] },
+        },
+        pending: {
+          $sum: {
+            $cond: [
+              { $in: [statusPath, ["Acknowledged", "Completed"]] },
+              0,
+              1,
+            ],
+          },
+        },
+      },
+    },
+  ]);
+
+  return stats || {
+    total: 0,
+    approved: 0,
+    acknowledged: 0,
+    completed: 0,
+    pending: 0,
+  };
+};
+
+const getMediaDepartmentStatsDashboard = (mediaType) => async (req, res) => {
+  try {
+    const email = String(req.query.email || "").trim();
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "email is required" });
+    }
+
+    const events = await Event.find({
+      status: { $ne: "Draft" },
+      [`mediaRequirementDetails.mediaRequirements.${mediaType}.staff.email`]: new RegExp(
+        `^${escapeRegex(email)}$`,
+        "i",
+      ),
+    })
+      .select(
+        "requestDetails.organizerDetails.organizingDepartment mediaRequirementDetails.mediaRequirements",
+      )
+      .lean();
+
+    const requirementKey = `${mediaType}Requirements`;
+    const scopedEvents = events.map((event) => ({
+      organizingDepartment:
+        event.requestDetails?.organizerDetails?.organizingDepartment || "Unknown",
+      [requirementKey]: (event.mediaRequirementDetails?.mediaRequirements || []).filter((requirement) =>
+        (requirement[mediaType]?.staff || []).some(
+          (staff) => String(staff.email || "").toLowerCase() === email.toLowerCase(),
+        ),
+      ),
+    }));
+
+    return res.status(200).json({
+      success: true,
+      email,
+      departmentStats: getMediaDepartmentStats(scopedEvents, requirementKey),
+    });
+  } catch (error) {
+    console.error(`${mediaType} department stats error:`, error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.getPosterDepartmentStats = getMediaDepartmentStatsDashboard("poster");
+exports.getVideoDepartmentStats = getMediaDepartmentStatsDashboard("video");
+
 exports.getDashboardStats = async (req, res) => {
   try {
-    const { module } = req.query;
+    const requestedModule = String(req.query.module || "").trim().toLowerCase();
+    const moduleAliases = {
+      ict: "icts",
+      food: "refreshment",
+      refreshments: "refreshment",
+      "poster-dashboard": "poster",
+      "video-dashboard": "video",
+    };
+    const module = ["admin", "superadmin", "super-admin"].includes(requestedModule)
+      ? ""
+      : moduleAliases[requestedModule] || requestedModule;
 
     const filter = {
       status: { $ne: "Draft" },
@@ -38,6 +171,8 @@ exports.getDashboardStats = async (req, res) => {
       accommodation: "accommodationDetails",
       purchase: "purchaseDetails",
       media: "mediaRequirementDetails",
+      poster: "poster",
+      video: "video",
     };
 
     // Validate module
@@ -53,6 +188,11 @@ exports.getDashboardStats = async (req, res) => {
     const moduleKeys = module ? [module] : Object.keys(modules);
 
     for (const key of moduleKeys) {
+      if (key === "poster" || key === "video") {
+        moduleStats[key] = await getMediaTypeStats(key);
+        continue;
+      }
+
       const path = modules[key];
 
       const total = await Event.countDocuments({
@@ -297,7 +437,7 @@ exports.getFacultyDashboardEventsCount = async (req, res) => {
 // ─── Poster Head Dashboard ───────────────────────────────────────────────────
 exports.getPosterHeadDashboard = async (req, res) => {
   try {
-    const { email } = req.query;
+    const email = String(req.query.email || "").trim();
 
     if (!email) {
       return res.status(400).json({ success: false, message: "email is required" });
@@ -306,7 +446,10 @@ exports.getPosterHeadDashboard = async (req, res) => {
     // Find all non-draft events where this email appears in any poster.staff[]
     const events = await Event.find({
       status: { $ne: "Draft" },
-      "mediaRequirementDetails.mediaRequirements.poster.staff.email": email,
+      "mediaRequirementDetails.mediaRequirements.poster.staff.email": new RegExp(
+        `^${escapeRegex(email)}$`,
+        "i",
+      ),
     })
       .select(
         "_id iqacNumber status requestDetails.eventDetails.eventName " +
@@ -322,7 +465,9 @@ exports.getPosterHeadDashboard = async (req, res) => {
         event.mediaRequirementDetails?.mediaRequirements || []
       )
         .filter((m) =>
-          (m.poster?.staff || []).some((s) => s.email === email)
+          (m.poster?.staff || []).some(
+            (s) => String(s.email || "").toLowerCase() === email.toLowerCase(),
+          )
         )
         .map((m) => ({
           dayIndex: m.dayIndex,
@@ -360,7 +505,9 @@ exports.getPosterHeadDashboard = async (req, res) => {
       success: true,
       email,
       totalEvents: result.length,
-      events: result,
+      stats: getMediaRequirementStats(result, "posterRequirements"),
+      // departmentStats: getMediaDepartmentStats(result, "posterRequirements"),
+      // events: result,
     });
   } catch (error) {
     console.error("Poster head dashboard error:", error);
@@ -374,7 +521,7 @@ exports.getPosterHeadDashboard = async (req, res) => {
 // ─── Video Head Dashboard ─────────────────────────────────────────────────────
 exports.getVideoHeadDashboard = async (req, res) => {
   try {
-    const { email } = req.query;
+    const email = String(req.query.email || "").trim();
 
     if (!email) {
       return res.status(400).json({ success: false, message: "email is required" });
@@ -383,7 +530,10 @@ exports.getVideoHeadDashboard = async (req, res) => {
     // Find all non-draft events where this email appears in any video.staff[]
     const events = await Event.find({
       status: { $ne: "Draft" },
-      "mediaRequirementDetails.mediaRequirements.video.staff.email": email,
+      "mediaRequirementDetails.mediaRequirements.video.staff.email": new RegExp(
+        `^${escapeRegex(email)}$`,
+        "i",
+      ),
     })
       .select(
         "_id iqacNumber status requestDetails.eventDetails.eventName " +
@@ -399,7 +549,9 @@ exports.getVideoHeadDashboard = async (req, res) => {
         event.mediaRequirementDetails?.mediaRequirements || []
       )
         .filter((m) =>
-          (m.video?.staff || []).some((s) => s.email === email)
+          (m.video?.staff || []).some(
+            (s) => String(s.email || "").toLowerCase() === email.toLowerCase(),
+          )
         )
         .map((m) => ({
           dayIndex: m.dayIndex,
@@ -436,6 +588,8 @@ exports.getVideoHeadDashboard = async (req, res) => {
       success: true,
       email,
       totalEvents: result.length,
+      stats: getMediaRequirementStats(result, "videoRequirements"),
+      departmentStats: getMediaDepartmentStats(result, "videoRequirements"),
       events: result,
     });
   } catch (error) {
