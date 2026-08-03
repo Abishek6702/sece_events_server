@@ -323,7 +323,6 @@ function resetDepartment(event, module, adminRemark) {
 }
 
 exports.createEvent = async (req, res) => {
-  // console.log("BODY:", req.body);
   try {
     const payload = {};
 
