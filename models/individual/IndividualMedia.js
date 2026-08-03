@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-console.log("DB NAME =>", mongoose.connection.name);
 
 // const fileReferenceSchema = new mongoose.Schema(
 //   {

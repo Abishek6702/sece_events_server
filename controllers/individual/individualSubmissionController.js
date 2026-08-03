@@ -451,14 +451,7 @@ const buildSubmissionFilter = async ({
 
   const isActualDepartmentHead = isDepartmentHead && !isModuleHead;
 
-  console.log("buildSubmissionFilter role summary:", {
-    role,
-    normalizedDepartment,
-    normalizedModule,
-    isDepartmentHead,
-    isModuleHead,
-    isActualDepartmentHead,
-  });
+
 
   const superAdminWorkflowStages = {
     "super admin 1": "SuperAdmin1",
