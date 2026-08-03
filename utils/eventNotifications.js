@@ -85,7 +85,8 @@ const REQUIREMENT_DEPARTMENTS = {
   audio: "Audio",
   icts: "ICTS",
   transport: "Transport",
-  accommodation: "Accommodation",
+  // "Accomodation" is retained as an alias for existing user records.
+  accommodation: ["Accommodation", "Accomodation"],
   media: "Media",
   food: "Food",
   purchase: "Purchase",
@@ -97,9 +98,17 @@ const REQUIREMENT_DEPARTMENTS = {
  */
 const getDepartmentHeadEmail = async (department) => {
   try {
+    const departmentNames = Array.isArray(department) ? department : [department];
+    const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
     const heads = await User.find({
       role: "head",
-      department: { $regex: `^${department}$`, $options: "i" },
+      department: {
+        $in: departmentNames.map((name) => ({
+          $regex: `^${escapeRegex(name)}$`,
+          $options: "i",
+        })),
+      },
     }).select("email");
 
     return heads.map((head) => head.email);
@@ -133,10 +142,14 @@ const getAllDepartmentHeadEmails = async (event) => {
     for (const deptType of departmentTypes) {
       const key = deptType;
 
-      const isRequired =
-        requirements[`${key}Required`] === true ||
-        requirements[`${key}Required`] === "true" ||
-        requirements[key] === true;
+      // Food requirements are stored under refreshmentRequired in Event.
+      const requirementKeys =
+        key === "food" ? ["foodRequired", "refreshmentRequired", "food"] : [`${key}Required`, key];
+      const isRequired = requirementKeys.some(
+        (requirementKey) =>
+          requirements[requirementKey] === true ||
+          requirements[requirementKey] === "true",
+      );
 
       if (isRequired) {
         const department = REQUIREMENT_DEPARTMENTS[key];
