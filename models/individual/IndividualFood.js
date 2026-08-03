@@ -299,6 +299,11 @@ const foodSchema = new mongoose.Schema(
       default: null,
     },
 
+    estimatedAmount: {
+      type: Number,
+      default: null,
+    },
+
     advancePurpose: {
       type: String,
       trim: true,

@@ -16,6 +16,61 @@ const normalizeFinanceValue = (financeRequired) => {
   return financeRequired === true ? "Yes" : "No";
 };
 
+const parseNumberField = (value) =>
+  value !== undefined &&
+  value !== null &&
+  String(value).trim() !== ""
+    ? Number(value)
+    : null;
+
+const parseStringField = (value) =>
+  value !== undefined && value !== null
+    ? String(value).trim()
+    : "";
+
+const buildFinanceFields = (body) => ({
+  financeRequired: normalizeFinanceValue(body.financeRequired),
+  advanceAmount: parseNumberField(body.advanceAmount),
+  estimatedAmount: parseNumberField(body.estimatedAmount),
+  advancePurpose: parseStringField(body.advancePurpose),
+});
+
+const validateFinanceFields = ({
+  financeRequired,
+  estimatedAmount,
+  advanceAmount,
+  advancePurpose,
+}) => {
+  if (String(financeRequired) === "Yes") {
+    if (
+      estimatedAmount === null ||
+      estimatedAmount === undefined ||
+      Number.isNaN(estimatedAmount)
+    ) {
+      return {
+        valid: false,
+        message:
+          "Estimated Amount is required when Finance Required is Yes.",
+      };
+    }
+
+    if (
+      advanceAmount === null ||
+      advanceAmount === undefined ||
+      Number.isNaN(advanceAmount) ||
+      advancePurpose === ""
+    ) {
+      return {
+        valid: false,
+        message:
+          "Advance Amount and Purpose of Advance are required when Finance Required is Yes.",
+      };
+    }
+  }
+
+  return { valid: true };
+};
+
 const normalizeFileReference = (file) => {
   if (!file) return null;
 
@@ -31,8 +86,8 @@ const normalizeFileReference = (file) => {
 exports.createTransport = async (req, res) => {
   
   try {
-    console.log("BODY =>", req.body);
-    console.log("FILES =>", req.files);
+    // console.log("BODY =>", req.body);
+    // console.log("FILES =>", req.files);
 
     const body = {
       ...req.body,
@@ -41,17 +96,9 @@ exports.createTransport = async (req, res) => {
       financeRequired: normalizeFinanceValue(
         req.body.financeRequired,
       ),
-      advanceAmount:
-        req.body.advanceAmount !== undefined &&
-        req.body.advanceAmount !== null &&
-        String(req.body.advanceAmount).trim() !== ""
-          ? Number(req.body.advanceAmount)
-          : null,
-      advancePurpose:
-        req.body.advancePurpose !== undefined &&
-        req.body.advancePurpose !== null
-          ? String(req.body.advancePurpose).trim()
-          : "",
+      advanceAmount: parseNumberField(req.body.advanceAmount),
+      estimatedAmount: parseNumberField(req.body.estimatedAmount),
+      advancePurpose: parseStringField(req.body.advancePurpose),
       
 
       // Parse multipart/form-data JSON fields
@@ -81,34 +128,26 @@ exports.createTransport = async (req, res) => {
     };
 
     // ======== Finance validation & workflowStage =========
-    const fin = String(body.financeRequired || "No");
+    const financeFields = buildFinanceFields(req.body);
+    const validation = validateFinanceFields(financeFields);
 
-    if (fin === "Yes") {
-      const amt = req.body.advanceAmount;
-      const purpose = req.body.advancePurpose;
+    if (!validation.valid) {
+      return res.status(400).json({
+        success: false,
+        message: validation.message,
+      });
+    }
 
-      if (
-        amt === undefined ||
-        amt === null ||
-        String(amt).trim() === "" ||
-        purpose === undefined ||
-        purpose === null ||
-        String(purpose).trim() === ""
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Advance Amount and Purpose of Advance are required when Finance Required is Yes.",
-        });
-      }
-
+    if (financeFields.financeRequired === "Yes") {
       body.financeRequired = "Yes";
-      body.advanceAmount = Number(amt);
-      body.advancePurpose = String(purpose).trim();
+      body.advanceAmount = financeFields.advanceAmount;
+      body.estimatedAmount = financeFields.estimatedAmount;
+      body.advancePurpose = financeFields.advancePurpose;
       body.workflowStage = "Submitted";
     } else {
       body.financeRequired = "No";
       body.advanceAmount = null;
+      body.estimatedAmount = null;
       body.advancePurpose = "";
       body.workflowStage = "Submitted";
     }
@@ -261,10 +300,42 @@ exports.getSingleTransport = async (req, res) => {
 // ==============================
 exports.updateTransport = async (req, res) => {
   try {
+    const updateBody = { ...req.body };
+    const financeFieldsPresent = [
+      "financeRequired",
+      "estimatedAmount",
+      "advanceAmount",
+      "advancePurpose",
+    ].some((key) => req.body.hasOwnProperty(key));
+
+    if (financeFieldsPresent) {
+      const financeFields = buildFinanceFields(req.body);
+      const validation = validateFinanceFields(financeFields);
+
+      if (!validation.valid) {
+        return res.status(400).json({
+          success: false,
+          message: validation.message,
+        });
+      }
+
+      updateBody.financeRequired = financeFields.financeRequired;
+
+      if (financeFields.financeRequired === "Yes") {
+        updateBody.advanceAmount = financeFields.advanceAmount;
+        updateBody.estimatedAmount = financeFields.estimatedAmount;
+        updateBody.advancePurpose = financeFields.advancePurpose;
+      } else {
+        updateBody.advanceAmount = null;
+        updateBody.estimatedAmount = null;
+        updateBody.advancePurpose = "";
+      }
+    }
+
     const transport =
       await Transport.findByIdAndUpdate(
         req.params.id,
-        req.body,
+        updateBody,
         {
           new: true,
           runValidators: true,
@@ -331,7 +402,7 @@ exports.deleteTransport = async (req, res) => {
 // ==============================
 exports.patchTransport = async (req, res) => {
   try {
-    console.log("BODY =>", req.body);
+    // console.log("BODY =>", req.body);
 
     if (
       !req.body ||
@@ -352,6 +423,37 @@ exports.patchTransport = async (req, res) => {
         success: false,
         message: "Transport not found",
       });
+    }
+
+    const financeFieldsPresent = [
+      "financeRequired",
+      "estimatedAmount",
+      "advanceAmount",
+      "advancePurpose",
+    ].some((key) => req.body.hasOwnProperty(key));
+
+    if (financeFieldsPresent) {
+      const financeFields = buildFinanceFields(req.body);
+      const validation = validateFinanceFields(financeFields);
+
+      if (!validation.valid) {
+        return res.status(400).json({
+          success: false,
+          message: validation.message,
+        });
+      }
+
+      transport.financeRequired = financeFields.financeRequired;
+
+      if (financeFields.financeRequired === "Yes") {
+        transport.advanceAmount = financeFields.advanceAmount;
+        transport.estimatedAmount = financeFields.estimatedAmount;
+        transport.advancePurpose = financeFields.advancePurpose;
+      } else {
+        transport.advanceAmount = null;
+        transport.estimatedAmount = null;
+        transport.advancePurpose = "";
+      }
     }
 
     // UPDATE ONLY SENT FIELDS

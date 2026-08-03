@@ -20,31 +20,96 @@ const resolveEmployee = async (employeeRef) => {
     return employeeRef;
   }
 
-  const id = String(employeeRef);
+  const id = String(employeeRef).trim();
+
+  // If the stored value looks like an email, try resolving by email first
+  if (id.includes("@")) {
+    const facultyByEmail = await Faculty.findOne({ email: id }).select("name email").lean();
+    if (facultyByEmail) return facultyByEmail;
+
+    const userByEmail = await User.findOne({ email: id }).select("name email").lean();
+    if (userByEmail) return userByEmail;
+
+    return null;
+  }
+
+  // Otherwise, treat as an ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return null;
   }
 
   const facultyDoc = await Faculty.findById(id).select("name email").lean();
   if (facultyDoc) {
+    // If Faculty record exists but lacks a name, try to resolve a User linked to this faculty id
+    if (!facultyDoc.name) {
+      const linkedUser = await User.findOne({ facultyId: facultyDoc._id }).select("name email").lean();
+      if (linkedUser && linkedUser.name) {
+        return { _id: facultyDoc._id, email: facultyDoc.email, name: linkedUser.name };
+      }
+    }
+
     return facultyDoc;
   }
 
-  return await User.findById(id).select("name email").lean();
+  const userDoc = await User.findById(id).select("name email").lean();
+  return userDoc;
 };
 
-const buildSubmissionItem = (item, formType, resolvedEmployee) => ({
-  id: item._id,
-  formType,
-  employee: resolvedEmployee?.name || null,
-  employeeEmail: resolvedEmployee?.email || null,
-  employeeDetail: resolvedEmployee || null,
-  createdAt: item.createdAt,
-  updatedAt: item.updatedAt,
-  status: item.finalStatus || item.overallStatus || item.status,
-  workflowStage: item.workflowStage || null,
-  data: item,
-});
+const buildSubmissionItem = (item, formType, resolvedEmployee) => {
+  // If the item already has a populated employee object, prefer its name/email
+  const populatedEmployee = item && typeof item.employee === "object" ? item.employee : null;
+  const employeeNameFromItem = populatedEmployee?.name || populatedEmployee?.email || null;
+
+  // For purchase items, pick the earliest deliveryDate from purchases[] if present
+  let purchaseEarliestDate = null;
+  try {
+    if (Array.isArray(item?.purchases) && item.purchases.length > 0) {
+      const dates = item.purchases
+        .map((p) => p?.deliveryDate)
+        .filter(Boolean)
+        .map((d) => new Date(d).getTime())
+        .filter((t) => !Number.isNaN(t));
+
+      if (dates.length > 0) {
+        purchaseEarliestDate = new Date(Math.min(...dates)).toISOString();
+      }
+    }
+  } catch (e) {
+    // ignore parsing errors and leave purchaseEarliestDate null
+  }
+
+  return {
+    id: item._id,
+    formType,
+    // Prefer resolved name, fallback to resolved email, then populated item name/email,
+    // then raw id string so UI always has something to display
+    employee:
+      resolvedEmployee?.name ||
+      resolvedEmployee?.email ||
+      employeeNameFromItem ||
+      (item.employee ? String(item.employee) : null),
+    employeeEmail: resolvedEmployee?.email || populatedEmployee?.email || null,
+    employeeDetail: resolvedEmployee || populatedEmployee || null,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    status: item.finalStatus || item.overallStatus || item.status,
+    workflowStage: item.workflowStage || null,
+    // Submissions may store relevant dates in different fields per module.
+    // Provide a best-effort top-level `date` by checking common locations.
+    date:
+      item.date ||
+      item.deliveryDate ||
+      purchaseEarliestDate ||
+      item.poster?.deliveryDate ||
+      item.poster?.date ||
+      item.video?.deliveryDate ||
+      item.video?.date ||
+      item.pickupDateTime ||
+      item.dropDateTime ||
+      null,
+    data: item,
+  };
+};
 
 const normalizeRole = (role = "") => String(role).toLowerCase().trim();
 
@@ -363,8 +428,8 @@ const buildSubmissionFilter = async ({
   const filter = {};
 
   // Debug: print incoming context for tracing
-  console.log("buildSubmissionFilter user:", user);
-  console.log("buildSubmissionFilter options:", { module, includeAll, applyReviewFilter });
+  // console.log("buildSubmissionFilter user:", user);
+  // console.log("buildSubmissionFilter options:", { module, includeAll, applyReviewFilter });
 
   const role = normalizeRole(user?.role);
   const isAdmin = Boolean(user?.isadmin);
@@ -485,7 +550,7 @@ const buildSubmissionFilter = async ({
     }
   }
 
-  console.log("buildSubmissionFilter generated filter:", filter);
+  // console.log("buildSubmissionFilter generated filter:", filter);
 
   return filter;
 };

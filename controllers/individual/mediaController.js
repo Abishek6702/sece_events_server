@@ -18,8 +18,59 @@ const normalizeFinanceValue = (financeRequired) => {
   return financeRequired === true ? "Yes" : "No";
 };
 
-// ==============================
+const parseNumberField = (value) =>
+  value !== undefined &&
+  value !== null &&
+  String(value).trim() !== ""
+    ? Number(value)
+    : null;
+const parseStringField = (value) =>
+  value !== undefined && value !== null
+    ? String(value).trim()
+    : "";
 
+const buildFinanceFields = (body) => ({
+  financeRequired: normalizeFinanceValue(body.financeRequired),
+  advanceAmount: parseNumberField(body.advanceAmount),
+  estimatedAmount: parseNumberField(body.estimatedAmount),
+  advancePurpose: parseStringField(body.advancePurpose),
+});
+
+const validateFinanceFields = ({
+  financeRequired,
+  estimatedAmount,
+  advanceAmount,
+  advancePurpose,
+}) => {
+  if (String(financeRequired) === "Yes") {
+    if (
+      estimatedAmount === null ||
+      estimatedAmount === undefined ||
+      Number.isNaN(estimatedAmount)
+    ) {
+      return {
+        valid: false,
+        message:
+          "Estimated Amount is required when Finance Required is Yes.",
+      };
+    }
+
+    if (
+      advanceAmount === null ||
+      advanceAmount === undefined ||
+      Number.isNaN(advanceAmount) ||
+      advancePurpose === ""
+    ) {
+      return {
+        valid: false,
+        message:
+          "Advance Amount and Purpose of Advance are required when Finance Required is Yes.",
+      };
+    }
+  }
+
+  return { valid: true };
+};
 
 // ==============================
 // NORMALIZE FILE
@@ -80,17 +131,9 @@ exports.createIndividualMedia = async (req, res) => {
       financeRequired: normalizeFinanceValue(
         req.body.financeRequired,
       ),
-      advanceAmount:
-        req.body.advanceAmount !== undefined &&
-        req.body.advanceAmount !== null &&
-        String(req.body.advanceAmount).trim() !== ""
-          ? Number(req.body.advanceAmount)
-          : null,
-      advancePurpose:
-        req.body.advancePurpose !== undefined &&
-        req.body.advancePurpose !== null
-          ? String(req.body.advancePurpose).trim()
-          : "",
+      advanceAmount: parseNumberField(req.body.advanceAmount),
+      estimatedAmount: parseNumberField(req.body.estimatedAmount),
+      advancePurpose: parseStringField(req.body.advancePurpose),
 
       typeOfMedia: makeArray(
         req.body.typeOfMedia
@@ -175,34 +218,26 @@ exports.createIndividualMedia = async (req, res) => {
     };
 
     // ======== Finance validation & workflowStage =========
-    const fin = String(body.financeRequired || "No");
+    const financeFields = buildFinanceFields(req.body);
+    const validation = validateFinanceFields(financeFields);
 
-    if (fin === "Yes") {
-      const amt = req.body.advanceAmount;
-      const purpose = req.body.advancePurpose;
+    if (!validation.valid) {
+      return res.status(400).json({
+        success: false,
+        message: validation.message,
+      });
+    }
 
-      if (
-        amt === undefined ||
-        amt === null ||
-        String(amt).trim() === "" ||
-        purpose === undefined ||
-        purpose === null ||
-        String(purpose).trim() === ""
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Advance Amount and Purpose of Advance are required when Finance Required is Yes.",
-        });
-      }
-
+    if (financeFields.financeRequired === "Yes") {
       body.financeRequired = "Yes";
-      body.advanceAmount = Number(amt);
-      body.advancePurpose = String(purpose).trim();
+      body.advanceAmount = financeFields.advanceAmount;
+      body.estimatedAmount = financeFields.estimatedAmount;
+      body.advancePurpose = financeFields.advancePurpose;
       body.workflowStage = "Submitted";
     } else {
       body.financeRequired = "No";
       body.advanceAmount = null;
+      body.estimatedAmount = null;
       body.advancePurpose = "";
       body.workflowStage = "Submitted";
     }
@@ -402,9 +437,41 @@ exports.getSingleIndividualMedia = async (req, res) => {
 // ==============================
 exports.updateIndividualMedia = async (req, res) => {
   try {
+    const updateBody = { ...req.body };
+    const financeFieldsPresent = [
+      "financeRequired",
+      "estimatedAmount",
+      "advanceAmount",
+      "advancePurpose",
+    ].some((key) => req.body.hasOwnProperty(key));
+
+    if (financeFieldsPresent) {
+      const financeFields = buildFinanceFields(req.body);
+      const validation = validateFinanceFields(financeFields);
+
+      if (!validation.valid) {
+        return res.status(400).json({
+          success: false,
+          message: validation.message,
+        });
+      }
+
+      updateBody.financeRequired = financeFields.financeRequired;
+
+      if (financeFields.financeRequired === "Yes") {
+        updateBody.advanceAmount = financeFields.advanceAmount;
+        updateBody.estimatedAmount = financeFields.estimatedAmount;
+        updateBody.advancePurpose = financeFields.advancePurpose;
+      } else {
+        updateBody.advanceAmount = null;
+        updateBody.estimatedAmount = null;
+        updateBody.advancePurpose = "";
+      }
+    }
+
     const media = await IndividualMedia.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateBody,
       {
         new: true,
         runValidators: true,
@@ -492,6 +559,37 @@ exports.patchIndividualMedia = async (req, res) => {
         success: false,
         message: "Individual media not found",
       });
+    }
+
+    const financeFieldsPresent = [
+      "financeRequired",
+      "estimatedAmount",
+      "advanceAmount",
+      "advancePurpose",
+    ].some((key) => req.body.hasOwnProperty(key));
+
+    if (financeFieldsPresent) {
+      const financeFields = buildFinanceFields(req.body);
+      const validation = validateFinanceFields(financeFields);
+
+      if (!validation.valid) {
+        return res.status(400).json({
+          success: false,
+          message: validation.message,
+        });
+      }
+
+      media.financeRequired = financeFields.financeRequired;
+
+      if (financeFields.financeRequired === "Yes") {
+        media.advanceAmount = financeFields.advanceAmount;
+        media.estimatedAmount = financeFields.estimatedAmount;
+        media.advancePurpose = financeFields.advancePurpose;
+      } else {
+        media.advanceAmount = null;
+        media.estimatedAmount = null;
+        media.advancePurpose = "";
+      }
     }
 
     // UPDATE ONLY SENT FIELDS
