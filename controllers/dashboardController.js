@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Event = require("../models/Event");
 const Faculty = require("../models/Faculty");
+const { buildMediaHeadStatsPayload } = require("../utils/mediaHeadStats");
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -443,7 +444,6 @@ exports.getPosterHeadDashboard = async (req, res) => {
       return res.status(400).json({ success: false, message: "email is required" });
     }
 
-    // Find all non-draft events where this email appears in any poster.staff[]
     const events = await Event.find({
       status: { $ne: "Draft" },
       "mediaRequirementDetails.mediaRequirements.poster.staff.email": new RegExp(
@@ -459,7 +459,6 @@ exports.getPosterHeadDashboard = async (req, res) => {
       )
       .lean();
 
-    // For each event, keep only the media requirement days where this email is in poster.staff[]
     const result = events.map((event) => {
       const filteredMedia = (
         event.mediaRequirementDetails?.mediaRequirements || []
@@ -506,8 +505,8 @@ exports.getPosterHeadDashboard = async (req, res) => {
       email,
       totalEvents: result.length,
       stats: getMediaRequirementStats(result, "posterRequirements"),
-      // departmentStats: getMediaDepartmentStats(result, "posterRequirements"),
-      // events: result,
+      departmentStats: getMediaDepartmentStats(result, "posterRequirements"),
+      events: result,
     });
   } catch (error) {
     console.error("Poster head dashboard error:", error);
@@ -515,6 +514,51 @@ exports.getPosterHeadDashboard = async (req, res) => {
       success: false,
       message: "Server error",
     });
+  }
+};
+
+exports.getPosterHeadStats = async (req, res) => {
+  try {
+    const email = String(req.query.email || "").trim();
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "email is required" });
+    }
+
+    const events = await Event.find({
+      status: { $ne: "Draft" },
+      "mediaRequirementDetails.mediaRequirements.poster.staff.email": new RegExp(
+        `^${escapeRegex(email)}$`,
+        "i",
+      ),
+    })
+      .select(
+        "_id iqacNumber status requestDetails.eventDetails.eventName " +
+          "requestDetails.organizerDetails.organizingDepartment " +
+          "requestDetails.eventDetails.eventSchedule " +
+          "mediaRequirementDetails.mediaRequirements"
+      )
+      .lean();
+
+    const result = events.map((event) => ({
+      _id: event._id,
+      organizingDepartment: event.requestDetails?.organizerDetails?.organizingDepartment,
+      posterRequirements: (event.mediaRequirementDetails?.mediaRequirements || [])
+        .filter((m) =>
+          (m.poster?.staff || []).some(
+            (s) => String(s.email || "").toLowerCase() === email.toLowerCase(),
+          )
+        )
+        .map((m) => ({
+          ...m,
+          status: m.poster?.status,
+        })),
+    }));
+
+    return res.status(200).json(buildMediaHeadStatsPayload(email, result, "posterRequirements"));
+  } catch (error) {
+    console.error("Poster head stats error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -527,7 +571,6 @@ exports.getVideoHeadDashboard = async (req, res) => {
       return res.status(400).json({ success: false, message: "email is required" });
     }
 
-    // Find all non-draft events where this email appears in any video.staff[]
     const events = await Event.find({
       status: { $ne: "Draft" },
       "mediaRequirementDetails.mediaRequirements.video.staff.email": new RegExp(
@@ -543,7 +586,6 @@ exports.getVideoHeadDashboard = async (req, res) => {
       )
       .lean();
 
-    // For each event, keep only the media requirement days where this email is in video.staff[]
     const result = events.map((event) => {
       const filteredMedia = (
         event.mediaRequirementDetails?.mediaRequirements || []
@@ -594,9 +636,51 @@ exports.getVideoHeadDashboard = async (req, res) => {
     });
   } catch (error) {
     console.error("Video head dashboard error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.getVideoHeadStats = async (req, res) => {
+  try {
+    const email = String(req.query.email || "").trim();
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "email is required" });
+    }
+
+    const events = await Event.find({
+      status: { $ne: "Draft" },
+      "mediaRequirementDetails.mediaRequirements.video.staff.email": new RegExp(
+        `^${escapeRegex(email)}$`,
+        "i",
+      ),
+    })
+      .select(
+        "_id iqacNumber status requestDetails.eventDetails.eventName " +
+          "requestDetails.organizerDetails.organizingDepartment " +
+          "requestDetails.eventDetails.eventSchedule " +
+          "mediaRequirementDetails.mediaRequirements"
+      )
+      .lean();
+
+    const result = events.map((event) => ({
+      _id: event._id,
+      organizingDepartment: event.requestDetails?.organizerDetails?.organizingDepartment,
+      videoRequirements: (event.mediaRequirementDetails?.mediaRequirements || [])
+        .filter((m) =>
+          (m.video?.staff || []).some(
+            (s) => String(s.email || "").toLowerCase() === email.toLowerCase(),
+          )
+        )
+        .map((m) => ({
+          ...m,
+          status: m.video?.status,
+        })),
+    }));
+
+    return res.status(200).json(buildMediaHeadStatsPayload(email, result, "videoRequirements"));
+  } catch (error) {
+    console.error("Video head stats error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
