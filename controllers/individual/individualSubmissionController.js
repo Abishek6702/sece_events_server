@@ -747,6 +747,7 @@ const getVideoHeadList = async (req, res) => {
       totalTeamCount: teamStats.totalTeamCount,
       heads: teamStats.heads,
     });
+    
   } catch (error) {
     console.error(error);
     return res.status(500).json({
