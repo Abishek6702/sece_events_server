@@ -108,15 +108,15 @@ const makeArray = (value) => {
 // ==============================
 exports.createIndividualMedia = async (req, res) => {
   try {
-    console.log(
-      "BODY =>",
-      JSON.stringify(req.body, null, 2)
-    );
+    // console.log(
+    //   "BODY =>",
+    //   JSON.stringify(req.body, null, 2)
+    // );
 
-    console.log(
-      "FILES =>",
-      req.files
-    );
+    // console.log(
+    //   "FILES =>",
+    //   req.files
+    // );
 
     const body = {
       employee: req.user?.facultyId || req.body.employee || req.user?._id,
@@ -538,7 +538,7 @@ exports.deleteIndividualMedia = async (req, res) => {
 // ==============================
 exports.patchIndividualMedia = async (req, res) => {
   try {
-    console.log("BODY =>", req.body);
+    // console.log("BODY =>", req.body);
 
     if (
       !req.body ||

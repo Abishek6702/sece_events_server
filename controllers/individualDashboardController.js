@@ -2,6 +2,7 @@ const IndividualFood = require("../models/individual/IndividualFood");
 const IndividualPurchase = require("../models/individual/IndividualPurchase");
 const IndividualMedia = require("../models/individual/IndividualMedia");
 const IndividualTransport = require("../models/individual/IndividualTransport");
+const { buildIndividualDashboardBreakdowns } = require("../utils/individualDashboardStats");
 
 const INDIVIDUAL_MODULE_CONFIG = {
   food: { model: IndividualFood, label: "FOOD" },
@@ -17,6 +18,12 @@ const normalizeDashboardRole = (role = "") =>
     .trim()
     .toLowerCase()
     .replace(/[_\s-]+/g, "");
+
+const isDepartmentHeadRole = (role = "") => {
+  const normalizedRole = normalizeDashboardRole(role);
+
+  return ["hod", "departmenthead", "department_head", "head"].includes(normalizedRole);
+};
 
 const isAdminLikeRole = (role = "") => {
   const normalizedRole = normalizeDashboardRole(role);
@@ -53,9 +60,13 @@ exports.isAllowedIndividualDashboardRole = (role = "", moduleName = "") => {
     return true;
   }
 
-  if (normalizedRole === "head") {
+  if (isDepartmentHeadRole(normalizedRole)) {
     const department = String(moduleName || "").trim().toLowerCase();
-    return ["food", "purchase", "media", "transport"].includes(department);
+    return ["food", "purchase", "media", "transport"].includes(department) || !department;
+  }
+
+  if (normalizedRole === "faculty") {
+    return true;
   }
 
   return false;
@@ -87,48 +98,184 @@ const getIndividualModuleStats = async (Model) => {
   };
 };
 
-exports.getIndividualDashboardStats = async (req, res) => {
+const getIndividualModuleBreakdowns = async (Model) => {
+  const records = await Model.find()
+    .populate({ path: "employee", select: "name department email" })
+    .populate({ path: "superAdminApproval.approvedBy", select: "name email" })
+    .lean();
+
+  return buildIndividualDashboardBreakdowns(records);
+};
+
+const getValidatedIndividualModule = (req) => {
+  const moduleName = normalizeIndividualModule(req.query.module);
+
+  if (!moduleName) {
+    return null;
+  }
+
+  const moduleConfig = INDIVIDUAL_MODULE_CONFIG[moduleName];
+
+  if (!moduleConfig) {
+    throw Object.assign(new Error("Invalid module"), {
+      statusCode: 400,
+    });
+  }
+
+  return moduleConfig;
+};
+
+const validateIndividualDashboardAccess = (req, moduleName) => {
+  const role = String(req.user?.role || "");
+
+  if (!exports.isAllowedIndividualDashboardRole(role, moduleName)) {
+    throw Object.assign(new Error("Access denied"), {
+      statusCode: 403,
+    });
+  }
+};
+
+const sendIndividualDashboardError = (res, error) => {
+  const statusCode = error?.statusCode || 500;
+  const message = error?.message || "Server error";
+
+  return res.status(statusCode).json({
+    success: false,
+    message,
+  });
+};
+
+const buildModuleSummary = async (key, config, breakdownKey) => {
+  const [stats, breakdowns] = await Promise.all([
+    getIndividualModuleStats(config.model),
+    getIndividualModuleBreakdowns(config.model),
+  ]);
+
+  const summary = {
+    label: config.label,
+    stats,
+  };
+
+  if (breakdownKey) {
+    summary[breakdownKey] = breakdowns[breakdownKey];
+  } else {
+    summary.breakdowns = breakdowns;
+  }
+
+  return { key, summary };
+};
+
+const getIndividualBreakdownPayload = async (req, res, breakdownKey) => {
   try {
     const moduleName = normalizeIndividualModule(req.query.module);
+    const moduleConfig = getValidatedIndividualModule(req);
 
-    if (!moduleName) {
-      return res.status(400).json({
-        success: false,
-        message: "module query parameter is required",
-      });
-    }
+    if (moduleConfig) {
+      validateIndividualDashboardAccess(req, moduleName);
 
-    const moduleConfig = INDIVIDUAL_MODULE_CONFIG[moduleName];
+      const stats = await getIndividualModuleStats(moduleConfig.model);
+      const breakdowns = await getIndividualModuleBreakdowns(moduleConfig.model);
 
-    if (!moduleConfig) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid module",
-      });
+      const payload = {
+        success: true,
+        module: moduleConfig.label,
+        stats,
+      };
+
+      if (breakdownKey) {
+        payload[breakdownKey] = breakdowns[breakdownKey];
+      }
+
+      return res.status(200).json(payload);
     }
 
     const role = String(req.user?.role || "");
+    if (!exports.isAllowedIndividualDashboardRole(role, "")) {
+      throw Object.assign(new Error("Access denied"), { statusCode: 403 });
+    }
 
-    if (!exports.isAllowedIndividualDashboardRole(role, moduleName)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied",
+    const moduleEntries = await Promise.all(
+      Object.entries(INDIVIDUAL_MODULE_CONFIG).map(([key, config]) => buildModuleSummary(key, config, breakdownKey)),
+    );
+
+    const modules = Object.fromEntries(
+      moduleEntries.map(({ key, summary }) => [key, summary]),
+    );
+
+    const overall = Object.values(modules).reduce(
+      (acc, moduleData) => {
+        acc.total += moduleData.stats?.total || 0;
+        acc.pending += moduleData.stats?.pending || 0;
+        acc.approved += moduleData.stats?.approved || 0;
+        acc.rejected += moduleData.stats?.rejected || 0;
+        acc.completed += moduleData.stats?.completed || 0;
+        return acc;
+      },
+      { total: 0, pending: 0, approved: 0, rejected: 0, completed: 0 },
+    );
+
+    return res.status(200).json({
+      success: true,
+      overall,
+      modules,
+    });
+  } catch (error) {
+    console.error("Individual dashboard breakdown error:", error);
+    return sendIndividualDashboardError(res, error);
+  }
+};
+
+exports.getIndividualDashboardStats = async (req, res) => {
+  try {
+    const moduleConfig = getValidatedIndividualModule(req);
+
+    if (!moduleConfig) {
+      const role = String(req.user?.role || "");
+      if (!exports.isAllowedIndividualDashboardRole(role, "")) {
+        throw Object.assign(new Error("Access denied"), { statusCode: 403 });
+      }
+
+      const moduleEntries = await Promise.all(
+        Object.entries(INDIVIDUAL_MODULE_CONFIG).map(([key, config]) => buildModuleSummary(key, config)),
+      );
+
+      const modules = Object.fromEntries(
+        moduleEntries.map(({ key, summary }) => [key, summary]),
+      );
+
+      return res.status(200).json({
+        success: true,
+        modules,
       });
     }
 
-    const stats = await getIndividualModuleStats(moduleConfig.model);
+    validateIndividualDashboardAccess(req, moduleConfig.label.toLowerCase());
+
+    const [stats, breakdowns] = await Promise.all([
+      getIndividualModuleStats(moduleConfig.model),
+      getIndividualModuleBreakdowns(moduleConfig.model),
+    ]);
 
     return res.status(200).json({
       success: true,
       module: moduleConfig.label,
       stats,
+      breakdowns,
     });
   } catch (error) {
     console.error("Individual dashboard stats error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return sendIndividualDashboardError(res, error);
   }
+};
+
+exports.getIndividualFacultyWiseStats = async (req, res) => {
+  return getIndividualBreakdownPayload(req, res, "facultyWise");
+};
+
+exports.getIndividualDepartmentWiseStats = async (req, res) => {
+  return getIndividualBreakdownPayload(req, res, "departmentWise");
+};
+
+exports.getIndividualSuperAdminWiseStats = async (req, res) => {
+  return getIndividualBreakdownPayload(req, res, "superadminWise");
 };

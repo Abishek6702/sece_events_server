@@ -8,10 +8,17 @@ const {
   getFacultyDashboardEventsCount,
   getPosterHeadDashboard,
   getVideoHeadDashboard,
+  getPosterHeadStats,
+  getVideoHeadStats,
   getPosterDepartmentStats,
   getVideoDepartmentStats,
 } = require("../controllers/dashboardController");
-const { getIndividualDashboardStats } = require("../controllers/individualDashboardController");
+const {
+  getIndividualDashboardStats,
+  getIndividualFacultyWiseStats,
+  getIndividualDepartmentWiseStats,
+  getIndividualSuperAdminWiseStats,
+} = require("../controllers/individualDashboardController");
 
 
 
@@ -25,10 +32,15 @@ router.get("/faculty-dashboard-events-count", protect, getFacultyDashboardEvents
 
 // media head dashboards (poster & video)
 router.get("/poster-dashboard",protect, getPosterHeadDashboard);
+router.get("/poster-head-stats", protect, getPosterHeadStats);
 router.get("/video-dashboard",protect, getVideoHeadDashboard);
+router.get("/video-head-stats", protect, getVideoHeadStats);
 router.get("/poster-dashboard/department-stats",protect, getPosterDepartmentStats);
 router.get("/video-dashboard/department-stats",protect, getVideoDepartmentStats);
 
 router.get("/individual-stats", protect, getIndividualDashboardStats);
+router.get("/individual-faculty-wise-stats", protect, getIndividualFacultyWiseStats);
+router.get("/individual-department-wise-stats", protect, getIndividualDepartmentWiseStats);
+router.get("/individual-superadmin-wise-stats", protect, getIndividualSuperAdminWiseStats);
 
 module.exports = router;
