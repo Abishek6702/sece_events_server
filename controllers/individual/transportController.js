@@ -3,6 +3,7 @@
 const Transport = require("../../models/individual/IndividualTransport");
 const Faculty = require("../../models/Faculty");
 const generateIndividualRequestNumber = require("../../utils/generateIndividualRequestNumber");
+const { notifyIndividualRequest } = require("../../utils/individualNotifications");
 
 const normalizeFinanceValue = (financeRequired) => {
   if (typeof financeRequired === "string") {
@@ -219,7 +220,33 @@ exports.createTransport = async (req, res) => {
 
     const transport =
       await Transport.create(body);
-    const facultyDoc = await Faculty.findById(body.employee).select("empId").lean();
+    const facultyDoc = await Faculty.findById(body.employee)
+      .select("empId name email")
+      .lean();
+
+    const requesterEmail = req.user?.email || req.body.employeeEmail || req.body.email || null;
+    const employeeDetail = facultyDoc
+      ? {
+          name: facultyDoc.name || req.user?.name || req.body?.employeeName || "The requester",
+          email: facultyDoc.email || requesterEmail,
+        }
+      : {
+          name: req.user?.name || req.body?.employeeName || "The requester",
+          email: requesterEmail,
+        };
+
+    await notifyIndividualRequest({
+      request: {
+        ...transport.toObject(),
+        employeeDetail,
+        employeeEmail: requesterEmail,
+        email: requesterEmail,
+      },
+      moduleName: "transport",
+      action: "submitted",
+      actorName: req.user?.name || req.body?.employeeName || "The requester",
+      roleHint: body.financeRequired === "Yes" ? "super-admin2" : "super-admin1",
+    });
 
     res.status(201).json({
       success: true,

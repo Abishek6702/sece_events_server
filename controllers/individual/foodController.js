@@ -3,6 +3,7 @@
 const Food = require("../../models/individual/IndividualFood");
 const Faculty = require("../../models/Faculty");
 const generateIndividualRequestNumber = require("../../utils/generateIndividualRequestNumber");
+const { notifyIndividualRequest } = require("../../utils/individualNotifications");
 
 const normalizeFinanceValue = (financeRequired) => {
   if (typeof financeRequired === "string") {
@@ -183,7 +184,33 @@ exports.createFood = async (req, res) => {
     ];
 
     const food = await Food.create(foodData);
-    const facultyDoc = await Faculty.findById(foodData.employee).select("empId").lean();
+    const facultyDoc = await Faculty.findById(foodData.employee)
+      .select("empId name email")
+      .lean();
+
+    const requesterEmail = req.user?.email || req.body.employeeEmail || req.body.email || null;
+    const employeeDetail = facultyDoc
+      ? {
+          name: facultyDoc.name || req.user?.name || req.body?.employeeName || "The requester",
+          email: facultyDoc.email || requesterEmail,
+        }
+      : {
+          name: req.user?.name || req.body?.employeeName || "The requester",
+          email: requesterEmail,
+        };
+
+    await notifyIndividualRequest({
+      request: {
+        ...food.toObject(),
+        employeeDetail,
+        employeeEmail: requesterEmail,
+        email: requesterEmail,
+      },
+      moduleName: "food",
+      action: "submitted",
+      actorName: req.user?.name || req.body?.employeeName || "The requester",
+      roleHint: foodData.financeRequired === "Yes" ? "super-admin2" : "super-admin1",
+    });
 
     res.status(201).json({
       success: true,
