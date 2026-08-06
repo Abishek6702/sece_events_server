@@ -10,6 +10,7 @@ const {
   isValidMediaAssignmentTargetDepartment,
   buildMediaRequestVisibilityFilter,
 } = require("../../utils/mediaAssignment");
+const { notifyIndividualRequest } = require("../../utils/individualNotifications");
 
 const resolveEmployee = async (employeeRef) => {
   if (!employeeRef) {
@@ -747,7 +748,7 @@ const getVideoHeadList = async (req, res) => {
       totalTeamCount: teamStats.totalTeamCount,
       heads: teamStats.heads,
     });
-    
+
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -1102,6 +1103,15 @@ const hodApproval = async (req, res) => {
 
     await item.save();
 
+    await notifyIndividualRequest({
+      request: item,
+      moduleName: getModuleKeyFromModel(submission.Model),
+      action: action === "approve" ? "hod-approved" : "hod-rejected",
+      actorName: currentUser?.name || "HOD",
+      reason,
+      roleHint: action === "approve" ? "" : "",
+    });
+
     return res.status(200).json({ success: true, data: item });
   } catch (error) {
     console.error(error);
@@ -1215,6 +1225,15 @@ const superAdminApproval = async (req, res) => {
 
     await item.save();
 
+    await notifyIndividualRequest({
+      request: item,
+      moduleName: getModuleKeyFromModel(submission.Model),
+      action: action === "approve" ? "super-admin-approved" : "super-admin-rejected",
+      actorName: currentUser?.name || role,
+      reason,
+      roleHint: "super-admin",
+    });
+
     return res.status(200).json({
       success: true,
       data: item,
@@ -1283,10 +1302,10 @@ const headApproval = async (req, res) => {
       });
     }
 
-    if (!["acknowledge", "complete"].includes(action)) {
+    if (!["acknowledge", "complete", "reject"].includes(action)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid action. Allowed values: acknowledge, complete",
+        message: "Invalid action. Allowed values: acknowledge, complete, reject",
       });
     }
 
@@ -1325,9 +1344,70 @@ const headApproval = async (req, res) => {
 
       await item.save();
 
+      await notifyIndividualRequest({
+        request: item,
+        moduleName: moduleKey,
+        action: "module-head-acknowledged",
+        actorName: currentUser?.name || role,
+        reason,
+      });
+
       return res.status(200).json({
         success: true,
         message: "Request acknowledged successfully",
+        data: item,
+      });
+    }
+
+    // ---------------- REJECT ----------------
+    if (action === "reject") {
+      if (item.headApproval.status === "Rejected") {
+        return res.status(400).json({
+          success: false,
+          message: "Request is already rejected",
+        });
+      }
+
+      if (item.headApproval.status === "Completed") {
+        return res.status(400).json({
+          success: false,
+          message: "Completed requests cannot be rejected",
+        });
+      }
+
+      item.headApproval.status = "Rejected";
+      item.headApproval.approvedBy = currentUser._id;
+      item.headApproval.approvedAt = new Date();
+      item.headApproval.updatedAt = new Date();
+
+      item.workflowStage = "Rejected";
+      item.finalStatus = "Rejected";
+      setSubmissionStatus(item, "Rejected");
+
+      upsertApprovalHistoryEntry(
+        item,
+        buildApprovalHistoryEntry({
+          role: expectedHeadRole,
+          approvedBy: currentUser._id,
+          action: "Rejected",
+          remarks: reason || "Request rejected",
+          actionDate: new Date(),
+        })
+      );
+
+      await item.save();
+
+      await notifyIndividualRequest({
+        request: item,
+        moduleName: moduleKey,
+        action: "module-head-rejected",
+        actorName: currentUser?.name || role,
+        reason,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Request rejected successfully",
         data: item,
       });
     }
@@ -1364,6 +1444,14 @@ const headApproval = async (req, res) => {
       );
 
       await item.save();
+
+      await notifyIndividualRequest({
+        request: item,
+        moduleName: moduleKey,
+        action: "module-head-completed",
+        actorName: currentUser?.name || role,
+        reason,
+      });
 
       return res.status(200).json({
         success: true,
@@ -1500,6 +1588,14 @@ const closeIndividualSubmission = async (req, res) => {
     item.workflowStage = "Completed";
 
     await item.save();
+
+    await notifyIndividualRequest({
+      request: item,
+      moduleName: getModuleKeyFromModel(submission.Model),
+      action: "closed",
+      actorName: req.user?.name || "System",
+      reason: "",
+    });
 
     return res.status(200).json({
       success: true,
