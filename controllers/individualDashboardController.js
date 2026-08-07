@@ -19,6 +19,28 @@ const normalizeDashboardRole = (role = "") =>
     .toLowerCase()
     .replace(/[_\s-]+/g, "");
 
+const getIndividualScopeQuery = (req = {}) => {
+  const role = normalizeDashboardRole(String(req?.user?.role || ""));
+
+  if (role !== "faculty") {
+    return {};
+  }
+
+  const employeeIds = [req?.user?.facultyId, req?.user?._id]
+    .filter(Boolean)
+    .map((value) => String(value));
+
+  if (!employeeIds.length) {
+    return {};
+  }
+
+  return {
+    $or: employeeIds.map((employeeId) => ({ employee: employeeId })),
+  };
+};
+
+exports.getIndividualScopeQuery = getIndividualScopeQuery;
+
 const isDepartmentHeadRole = (role = "") => {
   const normalizedRole = normalizeDashboardRole(role);
 
@@ -72,22 +94,44 @@ exports.isAllowedIndividualDashboardRole = (role = "", moduleName = "") => {
   return false;
 };
 
-const getIndividualModuleStats = async (Model) => {
-  const total = await Model.countDocuments();
+const buildScopedQuery = (req, extraQuery = {}) => {
+  const scopeQuery = getIndividualScopeQuery(req);
 
-  const pending = await Model.countDocuments({
-    $or: [
-      { finalStatus: "Pending" },
-      { finalStatus: { $exists: false } },
-      { finalStatus: null },
-    ],
-  });
+  if (!Object.keys(scopeQuery).length) {
+    return extraQuery;
+  }
 
-  const approved = await Model.countDocuments({ finalStatus: "Approved" });
-  const rejected = await Model.countDocuments({ finalStatus: "Rejected" });
-  const completed = await Model.countDocuments({
-    $or: [{ finalStatus: "Completed" }, { finalStatus: "Closed" }],
-  });
+  if (!Object.keys(extraQuery).length) {
+    return scopeQuery;
+  }
+
+  return {
+    $and: [scopeQuery, extraQuery],
+  };
+};
+
+const getIndividualModuleStats = async (Model, req) => {
+  const baseQuery = buildScopedQuery(req);
+
+  const total = await Model.countDocuments(baseQuery);
+
+  const pending = await Model.countDocuments(
+    buildScopedQuery(req, {
+      $or: [
+        { finalStatus: "Pending" },
+        { finalStatus: { $exists: false } },
+        { finalStatus: null },
+      ],
+    }),
+  );
+
+  const approved = await Model.countDocuments(buildScopedQuery(req, { finalStatus: "Approved" }));
+  const rejected = await Model.countDocuments(buildScopedQuery(req, { finalStatus: "Rejected" }));
+  const completed = await Model.countDocuments(
+    buildScopedQuery(req, {
+      $or: [{ finalStatus: "Completed" }, { finalStatus: "Closed" }],
+    }),
+  );
 
   return {
     total,
@@ -98,8 +142,8 @@ const getIndividualModuleStats = async (Model) => {
   };
 };
 
-const getIndividualModuleBreakdowns = async (Model) => {
-  const records = await Model.find()
+const getIndividualModuleBreakdowns = async (Model, req) => {
+  const records = await Model.find(buildScopedQuery(req))
     .populate({ path: "employee", select: "name department email" })
     .populate({ path: "superAdminApproval.approvedBy", select: "name email" })
     .lean();
@@ -145,10 +189,10 @@ const sendIndividualDashboardError = (res, error) => {
   });
 };
 
-const buildModuleSummary = async (key, config, breakdownKey) => {
+const buildModuleSummary = async (key, config, breakdownKey, req) => {
   const [stats, breakdowns] = await Promise.all([
-    getIndividualModuleStats(config.model),
-    getIndividualModuleBreakdowns(config.model),
+    getIndividualModuleStats(config.model, req),
+    getIndividualModuleBreakdowns(config.model, req),
   ]);
 
   const summary = {
@@ -173,8 +217,8 @@ const getIndividualBreakdownPayload = async (req, res, breakdownKey) => {
     if (moduleConfig) {
       validateIndividualDashboardAccess(req, moduleName);
 
-      const stats = await getIndividualModuleStats(moduleConfig.model);
-      const breakdowns = await getIndividualModuleBreakdowns(moduleConfig.model);
+      const stats = await getIndividualModuleStats(moduleConfig.model, req);
+      const breakdowns = await getIndividualModuleBreakdowns(moduleConfig.model, req);
 
       const payload = {
         success: true,
@@ -195,7 +239,7 @@ const getIndividualBreakdownPayload = async (req, res, breakdownKey) => {
     }
 
     const moduleEntries = await Promise.all(
-      Object.entries(INDIVIDUAL_MODULE_CONFIG).map(([key, config]) => buildModuleSummary(key, config, breakdownKey)),
+      Object.entries(INDIVIDUAL_MODULE_CONFIG).map(([key, config]) => buildModuleSummary(key, config, breakdownKey, req)),
     );
 
     const modules = Object.fromEntries(
@@ -236,7 +280,7 @@ exports.getIndividualDashboardStats = async (req, res) => {
       }
 
       const moduleEntries = await Promise.all(
-        Object.entries(INDIVIDUAL_MODULE_CONFIG).map(([key, config]) => buildModuleSummary(key, config)),
+        Object.entries(INDIVIDUAL_MODULE_CONFIG).map(([key, config]) => buildModuleSummary(key, config, null, req)),
       );
 
       const modules = Object.fromEntries(
@@ -252,8 +296,8 @@ exports.getIndividualDashboardStats = async (req, res) => {
     validateIndividualDashboardAccess(req, moduleConfig.label.toLowerCase());
 
     const [stats, breakdowns] = await Promise.all([
-      getIndividualModuleStats(moduleConfig.model),
-      getIndividualModuleBreakdowns(moduleConfig.model),
+      getIndividualModuleStats(moduleConfig.model, req),
+      getIndividualModuleBreakdowns(moduleConfig.model, req),
     ]);
 
     return res.status(200).json({
