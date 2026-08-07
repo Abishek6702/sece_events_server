@@ -30,7 +30,7 @@ exports.buildIndividualDashboardBreakdowns = (records = [], departmentHodMap = {
   const superadminMap = new Map();
 
   for (const record of records) {
-    const facultyName = normalizeName(record?.employee?.name || record?.employee?.email || "Unknown");
+    const facultyName = normalizeName(record?.employee?.name || record?.employee?.email || "");
     const departmentName = normalizeName(record?.employee?.department || "Unknown");
     const superadminName = normalizeName(
       record?.superAdminApproval?.approvedBy?.name ||
@@ -39,22 +39,24 @@ exports.buildIndividualDashboardBreakdowns = (records = [], departmentHodMap = {
     );
     const hodInfo = departmentHodMap[departmentName] || {};
 
-    const facultyEntry = facultyMap.get(facultyName) || {
-      label: facultyName,
-      department: departmentName,
-      total: 0,
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-      completed: 0,
-    };
+    if (facultyName) {
+      const facultyEntry = facultyMap.get(facultyName) || {
+        label: facultyName,
+        department: departmentName,
+        total: 0,
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+        completed: 0,
+      };
 
-    facultyEntry.total += 1;
-    facultyEntry.pending += getStatusCount(record, "pending");
-    facultyEntry.approved += getStatusCount(record, "approved");
-    facultyEntry.rejected += getStatusCount(record, "rejected");
-    facultyEntry.completed += getStatusCount(record, "completed");
-    facultyMap.set(facultyName, facultyEntry);
+      facultyEntry.total += 1;
+      facultyEntry.pending += getStatusCount(record, "pending");
+      facultyEntry.approved += getStatusCount(record, "approved");
+      facultyEntry.rejected += getStatusCount(record, "rejected");
+      facultyEntry.completed += getStatusCount(record, "completed");
+      facultyMap.set(facultyName, facultyEntry);
+    }
 
     const departmentEntry = departmentMap.get(departmentName) || {
       department: departmentName,
