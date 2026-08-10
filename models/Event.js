@@ -40,6 +40,9 @@ const organizerSchema = new mongoose.Schema(
     
     advanceAmount: { type: Number },
     purposeOfAdvance: { type: String },
+    advanceToBeReceviedWithin: { type: Number },
+
+    ExpectedEventOutcome: { type: String },
 
     organizingDepartment: { type: String },
     organizerCount: { type: Number },
