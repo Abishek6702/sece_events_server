@@ -341,6 +341,7 @@ const getVenueAvailabilitySchedule = async (req, res) => {
       { $unwind: "$venueDetails.venues" },
       {
         $match: {
+          status: { $ne: "Draft" },
           "venueDetails.venues.venueName": venue,
         },
       },
