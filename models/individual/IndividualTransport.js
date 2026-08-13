@@ -56,6 +56,10 @@ const transportSchema = new mongoose.Schema(
       default: 0,
     },
 
+    advanceToBeReceviedWithin: {
+      type: Number,
+    },
+
     principalApprovalForm: {
       url: {
         type: String,

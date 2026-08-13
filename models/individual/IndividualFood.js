@@ -101,6 +101,10 @@ const foodSchema = new mongoose.Schema(
       default: 0,
     },
 
+    advanceToBeReceviedWithin: {
+      type: Number,
+    },
+
     date: {
       type: Date,
       required: true,

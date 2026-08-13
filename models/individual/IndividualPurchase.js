@@ -189,6 +189,10 @@ const purchaseSchema = new mongoose.Schema(
       default: 0,
     },
 
+    advanceToBeReceviedWithin: {
+      type: Number,
+    },
+
     purchases: [purchaseItemSchema],
 
     referenceFiles: [fileReferenceSchema],

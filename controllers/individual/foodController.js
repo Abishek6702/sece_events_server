@@ -87,6 +87,9 @@ exports.createFood = async (req, res) => {
     const foodData = {
       ...req.body,
       employee: req.user?.facultyId || req.body.employee || req.user?._id,
+      advanceToBeReceviedWithin: parseNumberField(
+        req.body.advanceToBeReceviedWithin
+      ),
 
       resourcePersonType: req.body.resourcePersonType
         ? JSON.parse(req.body.resourcePersonType)

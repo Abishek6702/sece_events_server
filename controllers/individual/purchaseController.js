@@ -92,6 +92,9 @@ exports.createPurchase = async (req, res) => {
     const body = {
       ...req.body,
       employee: req.user?.facultyId || req.body.employee || req.user?._id,
+      advanceToBeReceviedWithin: parseNumberField(
+        req.body.advanceToBeReceviedWithin
+      ),
 
       purchases: req.body.purchases
         ? JSON.parse(req.body.purchases)
