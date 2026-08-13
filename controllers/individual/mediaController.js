@@ -121,6 +121,9 @@ exports.createIndividualMedia = async (req, res) => {
 
     const body = {
       employee: req.user?.facultyId || req.body.employee || req.user?._id,
+      advanceToBeReceviedWithin: parseNumberField(
+        req.body.advanceToBeReceviedWithin
+      ),
 
       dayIndex: Number(
         req.body.dayIndex

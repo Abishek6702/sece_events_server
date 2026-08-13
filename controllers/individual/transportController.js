@@ -93,6 +93,9 @@ exports.createTransport = async (req, res) => {
     const body = {
       ...req.body,
       employee: req.user?.facultyId || req.body.employee || req.user?._id,
+      advanceToBeReceviedWithin: parseNumberField(
+        req.body.advanceToBeReceviedWithin
+      ),
 
       financeRequired: normalizeFinanceValue(
         req.body.financeRequired,

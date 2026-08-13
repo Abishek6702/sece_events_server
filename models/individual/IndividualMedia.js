@@ -88,6 +88,10 @@ const individualMediaSchema = new mongoose.Schema(
       default: 0,
     },
 
+    advanceToBeReceviedWithin: {
+      type: Number,
+    },
+
     dayIndex: {
       type: Number,
       default: 1,
