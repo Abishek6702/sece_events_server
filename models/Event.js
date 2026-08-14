@@ -37,7 +37,7 @@ const organizerSchema = new mongoose.Schema(
     isBudgetApproved: { type: Boolean, default: false },
     financeRequired: { type: Boolean, default: false },
     estimatedBudget: { type: Number },
-    
+
     advanceAmount: { type: Number },
     purposeOfAdvance: { type: String },
     advanceToBeReceviedWithin: { type: Number },
@@ -525,7 +525,7 @@ const mediaRequirementSchema = new mongoose.Schema(
               email: String,
             },
           ],
-          
+
           staffHistory: [
             {
               previousStaff: [
@@ -534,21 +534,21 @@ const mediaRequirementSchema = new mongoose.Schema(
                   email: String,
                 },
               ],
-          
+
               newStaff: [
                 {
                   name: String,
                   email: String,
                 },
               ],
-          
+
               reason: String,
-          
+
               changedBy: {
                 name: String,
                 email: String,
               },
-          
+
               changedAt: {
                 type: Date,
                 default: Date.now,
@@ -667,10 +667,11 @@ const eventSchema = new mongoose.Schema(
     isHodApproved: { type: Boolean, default: false },
     adminApproval: { type: Boolean, default: false },
 
-    transportInventoryRestored: {
-      type: Boolean,
-      default: false,
-    },
+    isDocumentsCompleted: { type: Boolean, default: false },
+    isExpenditureCompleted: { type: Boolean, default: false },
+    isFeedbackCompleted: { type: Boolean, default: false },
+    isClosed: { type: Boolean, default: false },
+    transportInventoryRestored: { type: Boolean, default: false },
 
     // status
     status: {
