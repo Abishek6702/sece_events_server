@@ -1035,6 +1035,30 @@ exports.updateEventStatus = async (req, res) => {
         break;
 
       case "close":
+        // Validate all required conditions before closing
+        const missingConditions = [];
+        
+        if (!event.adminApproval) {
+          missingConditions.push("Admin approval is required");
+        }
+        if (!event.isDocumentsCompleted) {
+          missingConditions.push("Event documents must be completed");
+        }
+        if (!event.isExpenditureCompleted) {
+          missingConditions.push("Event expenditure must be completed");
+        }
+        if (!event.isFeedbackCompleted) {
+          missingConditions.push("Event feedback must be completed");
+        }
+
+        if (missingConditions.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: "Cannot close event. The following conditions must be met:",
+            conditions: missingConditions,
+          });
+        }
+
         event.status = "Closed";
         if (!event.timeline) {
           event.timeline = {
@@ -1042,6 +1066,7 @@ exports.updateEventStatus = async (req, res) => {
           };
         }
         event.timeline.closedAt = new Date();
+        event.isClosed = true;
         if (
           event.isSubmitted &&
           !event.transportInventoryRestored &&
