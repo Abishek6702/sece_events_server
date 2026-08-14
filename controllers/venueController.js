@@ -3,6 +3,8 @@ const Event = require('../models/Event');
 
 const xlsx = require('xlsx');
 
+const escapeRegExp = (value = "") => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const importVenuesFromExcel = async (req, res) => {
   try {
     if (!req.file) {
@@ -24,6 +26,7 @@ const importVenuesFromExcel = async (req, res) => {
         block: r.Block || "",
         floor: r.Floor || "",   // safe fallback
         venue: r.Venue || "",
+        category: r.Category || r.category || r.CATEGORY || "",
         capacity: Number(r.Capacity || 0),
     
         audio: {
@@ -84,8 +87,32 @@ const createVenue = async (req, res) => {
 // ➤ Get all venues
 const getAllVenues = async (req, res) => {
   try {
-    const venues = await Venue.find().sort({ createdAt: -1 });
+    const { category } = req.query;
+    const query = category ? { category: new RegExp(`^${escapeRegExp(category.trim())}$`, "i") } : {};
+    const venues = await Venue.find(query).sort({ createdAt: -1 });
     res.json(venues);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const getVenuesByCategory = async (req, res) => {
+  try {
+    const { category } = req.params;
+
+    if (!category || !category.trim()) {
+      return res.status(400).json({ message: "Category is required" });
+    }
+
+    const venues = await Venue.find({
+      category: new RegExp(`^${escapeRegExp(category.trim())}$`, "i")
+    }).sort({ createdAt: -1 });
+
+    res.json({
+      category: category.trim(),
+      count: venues.length,
+      data: venues,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -146,9 +173,13 @@ const deleteVenue = async (req, res) => {
 
 const getVenueOptions = async (req, res) => {
   try {
-    const { type, minCapacity } = req.query;
+    const { type, minCapacity, category } = req.query;
 
     let query = {};
+
+    if (category) {
+      query.category = new RegExp(`^${escapeRegExp(category.trim())}$`, "i");
+    }
 
     // ✅ Capacity filter (common for all)
     if (minCapacity) {
@@ -431,6 +462,7 @@ module.exports = {
   importVenuesFromExcel,
   createVenue,
   getAllVenues,
+  getVenuesByCategory,
   getVenueById,
   updateVenue,
   deleteVenue,

@@ -17,6 +17,12 @@ const venueSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    category: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true,
+    },
     capacity: {
       type: Number,
       required: true,

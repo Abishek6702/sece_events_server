@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   createVenue,
   getAllVenues,
+  getVenuesByCategory,
   getVenueById,
   updateVenue,
   deleteVenue,
@@ -27,6 +28,7 @@ router.post('/',protect, createVenue);
 
 // ➤ Get all
 router.get('/',protect, getAllVenues);
+router.get('/category/:category', getVenuesByCategory);
 
 // ➤ Get venue options
 router.get('/options',protect, getVenueOptions);
