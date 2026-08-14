@@ -35,6 +35,12 @@ const EventClosingDocumentSchema = new mongoose.Schema(
         },
       },
     ],
+    editRemark: {
+      type: String,
+    },
+    editedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

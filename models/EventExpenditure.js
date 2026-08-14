@@ -191,6 +191,12 @@ const EventExpenditureSchema = new mongoose.Schema(
         },
       },
     },
+    editRemark: {
+      type: String,
+    },
+    editedAt: {
+      type: Date,
+    },
   },
 
   {
