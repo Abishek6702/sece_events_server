@@ -670,6 +670,7 @@ const eventSchema = new mongoose.Schema(
     isDocumentsCompleted: { type: Boolean, default: false },
     isExpenditureCompleted: { type: Boolean, default: false },
     isFeedbackCompleted: { type: Boolean, default: false },
+    documentExpenditureApproved: { type: Boolean, default: true },
     isClosed: { type: Boolean, default: false },
     transportInventoryRestored: { type: Boolean, default: false },
 

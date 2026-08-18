@@ -1604,19 +1604,62 @@ exports.checkVenueAvailability = async (req, res) => {
       success: true,
       status,
       message,
-      allAvailable: unavailableVenues.length === 0,
-      availableCount: availableVenues.length,
-      unavailableCount: unavailableVenues.length,
-      availableVenues,
-      unavailableVenues,
+      data: {
+        available: availableVenues,
+        unavailable: unavailableVenues,
+      },
     });
   } catch (error) {
-    console.error("Venue Availability Error:", error);
+    console.error("Venue Availability Check Error:", error);
 
     return res.status(500).json({
       success: false,
       message: "Server Error",
-      error: error.message,
+    });
+  }
+};
+
+exports.updateDocumentExpenditureApproval = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approved } = req.body;
+
+    if (req.user.role !== "admin" && req.user.isadmin !== true && req.user.role !== "superadmin") {
+      return res.status(403).json({
+        success: false,
+        message: "Only admin can perform this action",
+      });
+    }
+
+    const event = await Event.findById(id);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    if (!event.isDocumentsCompleted || !event.isExpenditureCompleted || !event.isFeedbackCompleted) {
+      return res.status(400).json({
+        success: false,
+        message: "isDocumentsCompleted, isExpenditureCompleted, and isFeedbackCompleted must all be true before changing this status",
+      });
+    }
+
+    event.documentExpenditureApproved = !!approved;
+    await event.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "documentExpenditureApproved updated successfully",
+      data: event,
+    });
+  } catch (error) {
+    console.error("updateDocumentExpenditureApproval Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
     });
   }
 };

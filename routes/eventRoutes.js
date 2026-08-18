@@ -13,7 +13,8 @@ const {
   updateEventStatus,
   getRequirementDetails,
   getUserDraftEvents,
-  checkVenueAvailability
+  checkVenueAvailability,
+  updateDocumentExpenditureApproval
 } = require("../controllers/eventController.js");
 const protect = require("../middleware/protect");
 
@@ -31,6 +32,7 @@ router.get("/filter", protect, getFilteredEvents);
 router.post( "/check-venue-availability",protect,checkVenueAvailability,);
 router.get("/requirements/:id", protect, getRequirementDetails);
 router.get("/draft/:organizerId", protect, getUserDraftEvents);
+router.patch("/:id/document-expenditure-approval", protect, updateDocumentExpenditureApproval);
 router.patch("/:id/status", protect, updateEventStatus);
 router.put("/:id", protect, uploadFields, updateEvent);
 router.patch("/:id/submit", protect, uploadFields, submitEvent);
