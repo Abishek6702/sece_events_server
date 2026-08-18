@@ -19,7 +19,7 @@ router.post("/verify-login-otp", verifyLoginOtp);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 router.post("/change-password",protect, changePassword);
-router.post("/add-admin", createAdmin);
+router.post("/add-admin",protect, createAdmin);
 router.get("/me", protect, getProfile);
 
 module.exports = router;
