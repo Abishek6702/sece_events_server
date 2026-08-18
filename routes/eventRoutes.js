@@ -13,7 +13,9 @@ const {
   updateEventStatus,
   getRequirementDetails,
   getUserDraftEvents,
-  checkVenueAvailability
+  checkVenueAvailability,
+  getBasicEvents,
+  getEventRequiredDocuments,
 } = require("../controllers/eventController.js");
 const protect = require("../middleware/protect");
 
@@ -27,9 +29,11 @@ const uploadFields = upload.fields([
 
 router.post("/", protect, uploadFields, createEvent);
 router.get("/", protect, getAllEvents);
+router.get("/basic/:id",protect, getBasicEvents);
 router.get("/filter", protect, getFilteredEvents);
 router.post( "/check-venue-availability",protect,checkVenueAvailability,);
 router.get("/requirements/:id", protect, getRequirementDetails);
+router.get("/documents/:id",protect, getEventRequiredDocuments);
 router.get("/draft/:organizerId", protect, getUserDraftEvents);
 router.patch("/:id/status", protect, updateEventStatus);
 router.put("/:id", protect, uploadFields, updateEvent);
