@@ -41,6 +41,6 @@ router.get("/individual-faculty-wise-stats", protect, getIndividualFacultyWiseSt
 router.get("/individual-department-wise-stats", protect, getIndividualDepartmentWiseStats);
 router.get("/individual-superadmin-wise-stats", protect, getIndividualSuperAdminWiseStats);
 
-router.get("/hod-stats", getHodDashboardStats);
+router.get("/hod-stats", protect, getHodDashboardStats);
 
 module.exports = router;

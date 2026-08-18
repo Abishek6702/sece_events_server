@@ -725,7 +725,6 @@ exports.getHodDashboardStats = async (req, res) => {
       // Submitted and waiting for HOD approval
       Event.countDocuments({
         ...baseFilter,
-        status: "Submitted",
         isHodApproved: false,
       }),
     ]);

@@ -16,6 +16,6 @@ router.get("/dashboard-table", protect, getDashboardTable);
 router.get("/faculty-dashboard-table", protect, getFacultyDashboardTable);
 
 // hod dashboard table
-router.get("/hod-dashboard-table", getHodDashboardTable);
+router.get("/hod-dashboard-table",protect, getHodDashboardTable);
 
 module.exports = router;
