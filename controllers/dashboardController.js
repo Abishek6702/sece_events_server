@@ -684,3 +684,66 @@ exports.getVideoHeadStats = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+exports.getHodDashboardStats = async (req, res) => {
+  try {
+    const { department } = req.query;
+
+    if (!department) {
+      return res.status(400).json({
+        success: false,
+        message: "department is required",
+      });
+    }
+
+    const baseFilter = {
+      "requestDetails.organizerDetails.organizingDepartment": department,
+      status: { $ne: "Draft" },
+    };
+
+    const [
+      totalEvents,
+      hodApprovedEvents,
+      closedEvents,
+      pendingEvents,
+    ] = await Promise.all([
+      // Total (excluding drafts)
+      Event.countDocuments(baseFilter),
+
+      // HOD approved
+      Event.countDocuments({
+        ...baseFilter,
+        isHodApproved: true,
+      }),
+
+      // Completed (Closed)
+      Event.countDocuments({
+        ...baseFilter,
+        status: "Closed",
+      }),
+
+      // Submitted and waiting for HOD approval
+      Event.countDocuments({
+        ...baseFilter,
+        status: "Submitted",
+        isHodApproved: false,
+      }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalEvents,
+        hodApprovedEvents,
+        closedEvents,
+        pendingEvents,
+      },
+    });
+  } catch (error) {
+    console.error("HOD dashboard stats error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
