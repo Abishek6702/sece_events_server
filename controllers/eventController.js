@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Event = require("../models/Event.js");
+const EventRequirement = require("../models/EventType.js");
 const {
   notifyEventCreation,
   notifyHODApproval,
@@ -1615,6 +1616,157 @@ exports.checkVenueAvailability = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server Error",
+    });
+  }
+};
+
+// Get basic event details for a specific event
+exports.getBasicEvents = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID",
+      });
+    }
+
+    const event = await Event.findById(id)
+      .select(
+        "iqacNumber requestDetails.eventDetails.eventName requestDetails.eventDetails.eventSchedule requestDetails.organizerDetails.organizingDepartment requestDetails.organizerDetails.advanceAmount requestDetails.organizerDetails.purposeOfAdvance requestDetails.organizerDetails.organizers organizerId createdAt timeline.submittedAt",
+      )
+      .populate("organizerId", "salutation firstName lastName empId designation department email phone")
+      .lean();
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    const eventSchedule =
+      event.requestDetails?.eventDetails?.eventSchedule || [];
+    const firstEventDate = eventSchedule[0]?.eventDate;
+
+    // Guests are recorded against each event day in the event schedule.
+    const allGuests = eventSchedule.flatMap((day) =>
+      Array.isArray(day.guests)
+        ? day.guests.map((guest) => guest.name).filter(Boolean)
+        : [],
+    );
+
+    const organizerDetails = event.requestDetails?.organizerDetails || {};
+
+    const basicEventData = {
+      eventId: event._id,
+      iqacNumber: event.iqacNumber || "Not Assigned",
+      eventName: event.requestDetails?.eventDetails?.eventName || "N/A",
+      eventDate: firstEventDate || null,
+      guestNames: allGuests.length > 0 ? allGuests : [],
+      organizingDepartment: organizerDetails.organizingDepartment || "N/A",
+      advanceAmount: organizerDetails.advanceAmount || 0,
+      purposeOfAdvance: organizerDetails.purposeOfAdvance || "N/A",
+      dateAdvanceTaken: event.createdAt || null,
+      submissionDate: event.timeline?.submittedAt || null,
+      organizerDetails: event.organizerId
+        ? {
+            facultyId: event.organizerId._id,
+            salutation: event.organizerId.salutation || "N/A",
+            firstName: event.organizerId.firstName || "N/A",
+            lastName: event.organizerId.lastName || "N/A",
+            empId: event.organizerId.empId || "N/A",
+            designation: event.organizerId.designation || "N/A",
+            department: event.organizerId.department || "N/A",
+            email: event.organizerId.email || "N/A",
+            mobile: event.organizerId.phone || "N/A",
+          }
+        : null,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: basicEventData,
+    });
+  } catch (error) {
+    console.error("Get Basic Events Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// Get required documents for an event based on event type
+exports.getEventRequiredDocuments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID",
+      });
+    }
+
+    const event = await Event.findById(id)
+      .select(
+        "requestDetails.eventDetails.eventType requestDetails.eventDetails.eventName status",
+      )
+      .lean();
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    const eventType = event.requestDetails?.eventDetails?.eventType;
+
+    if (!eventType) {
+      return res.status(404).json({
+        success: false,
+        message: "Event type not found",
+      });
+    }
+
+    const eventRequirements = await EventRequirement.findOne({
+      eventType: eventType,
+    }).lean();
+
+    if (!eventRequirements) {
+      return res.status(404).json({
+        success: false,
+        message: "No document requirements found for this event type",
+      });
+    }
+
+    const activeDocuments = eventRequirements.documents
+      .filter((doc) => doc.isActive)
+      .sort((a, b) => a.order - b.order);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        eventId: event._id,
+        eventName: event.requestDetails?.eventDetails?.eventName,
+        eventType: eventType,
+        requiredDocuments: activeDocuments.map((doc) => ({
+          name: doc.name,
+          order: doc.order,
+        })),
+        totalRequired: activeDocuments.length,
+      },
+    });
+  } catch (error) {
+    console.error("Get Event Required Documents Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
     });
   }
 };
