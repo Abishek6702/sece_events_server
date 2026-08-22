@@ -376,18 +376,26 @@ const accommodationSchema = new mongoose.Schema(
           },
         ],
 
-        roomOccupancy: [
+        roomSelections: [
           {
-            type: { type: String },
-            count: Number,
-          },
-        ],
-
-        roomCategory: [
-          {
-            type: { type: String },
-            count: Number,
-          },
+            roomId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "AccommodationRoom",
+              required: true
+            },
+            roomNumber: String,
+            venue: String,
+            occupantCount: Number,
+            adminContacted: {
+              type: Boolean,
+              default: false
+            },
+        
+            requiresAdminConfirmation: {
+              type: Boolean,
+              default: false
+            }
+          }
         ],
 
         dineInRequired: Boolean,

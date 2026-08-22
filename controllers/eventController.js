@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Event = require("../models/Event.js");
+const { getAvailableRooms } = require("../utils/accommodationAvailabilityService");
 const EventRequirement = require("../models/EventType.js");
 const {
   notifyEventCreation,
@@ -323,6 +324,62 @@ function resetDepartment(event, module, adminRemark) {
   };
 }
 
+async function validateAccommodationAvailability(eventData, excludeEventId = null) {
+  if (!eventData.accommodationDetails || !eventData.accommodationDetails.accommodations) return;
+  for (const acc of eventData.accommodationDetails.accommodations) {
+    if (acc.roomSelections && acc.roomSelections.length > 0) {
+      if (!acc.checkInDateTime || !acc.checkOutDateTime) {
+        const error = new Error("checkInDateTime and checkOutDateTime are required when rooms are selected");
+        error.name = "ValidationError";
+        throw error;
+      }
+      
+      const availability = await getAvailableRooms({
+        startDateTime: acc.checkInDateTime,
+        endDateTime: acc.checkOutDateTime,
+        excludeEventId:excludeEventId
+      });
+
+      for (const sel of acc.roomSelections) {
+        if (sel.roomId) {
+           const roomAvail = availability.find(r => r.roomId.toString() === sel.roomId.toString());
+           if (!roomAvail) {
+              const error = new Error(`Room ${sel.roomNumber || sel.roomId} not found or inactive.`);
+              error.name = "ValidationError";
+              throw error;
+           }
+           if (!roomAvail.available) {
+            if (roomAvail.requiresAdminConfirmation) {
+              if (sel.adminContacted !== true) {
+                const error = new Error(
+                  `Room ${roomAvail.venue} ${roomAvail.roomNumber} requires admin confirmation. Please contact the admin before selecting this room.`
+                );
+          
+                error.name = "ValidationError";
+                throw error;
+              }
+          
+              // Admin contacted → allow
+            } else {
+              const error = new Error(
+                `Room ${roomAvail.venue} ${roomAvail.roomNumber} is no longer available for the selected date and time. Please select another room.`
+              );
+          
+              error.name = "ValidationError";
+              throw error;
+            }
+          }
+           if (sel.occupantCount > roomAvail.capacity) {
+              const error = new Error(`Room ${roomAvail.venue} ${roomAvail.roomNumber} can accommodate a maximum of ${roomAvail.capacity} people.`);
+              error.name = "ValidationError";
+              throw error;
+           }
+        }
+      }
+    }
+  }
+}
+
 exports.createEvent = async (req, res) => {
   try {
     const payload = {};
@@ -413,6 +470,8 @@ exports.createEvent = async (req, res) => {
         // Deduct Transport Inventory
         await handleTransportSubmission(eventData, session);
       }
+
+      await validateAccommodationAvailability(eventData, null);
 
       const createdEvents = await Event.create([eventData], { session });
 
@@ -618,6 +677,8 @@ exports.updateEvent = async (req, res) => {
     }
     event.timeline.updatedAt = new Date();
 
+    await validateAccommodationAvailability(event, event._id);
+
     const updatedEvent = await event.save();
     res
       .status(200)
@@ -747,6 +808,8 @@ exports.submitEvent = async (req, res) => {
     if (!wasSubmitted) {
       await handleTransportSubmission(event);
     }
+
+    await validateAccommodationAvailability(event, event._id);
 
     const updatedEvent = await event.save();
     res
