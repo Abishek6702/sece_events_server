@@ -78,13 +78,7 @@ const EventExpenditureSchema = new mongoose.Schema(
       },
 
       guestDetails: [
-        {
-          name: { type: String },
-          designation: { type: String },
-          organization: { type: String },
-          mobile: { type: Number },
-          gender: { type: String, enum: ["Male", "Female", "Other"] },
-        },
+        {type: String},
       ],
 
       organizerId: {
