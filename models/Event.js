@@ -234,6 +234,14 @@ const ictsSchema = new mongoose.Schema(
         otherRequirements: { type: String },
 
         specialRequirements: { type: String },
+
+        staff: {
+          name: String,
+          email: String,
+          phone: String,
+          empId:String,
+          designation:String,
+        },
       },
     ],
     status: departmentStatusSchema,
