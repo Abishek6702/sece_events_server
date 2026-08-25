@@ -36,6 +36,16 @@ const buildFinanceFields = (body) => ({
   advancePurpose: parseStringField(body.advancePurpose),
 });
 
+const parseJsonField = (value) => {
+  if (typeof value !== "string") return value;
+
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return value;
+  }
+};
+
 const validateFinanceFields = ({
   financeRequired,
   estimatedAmount,
@@ -212,7 +222,7 @@ exports.createFood = async (req, res) => {
       moduleName: "food",
       action: "submitted",
       actorName: req.user?.name || req.body?.employeeName || "The requester",
-      roleHint: foodData.financeRequired === "Yes" ? "super-admin2" : "super-admin1",
+      roleHint: "super-admin",
     });
 
     res.status(201).json({
@@ -303,59 +313,123 @@ exports.getFoodById = async (req, res) => {
 // ==========================================
 exports.updateFood = async (req, res) => {
   try {
-    const updateBody = { ...req.body };
-    const financeFieldsPresent = [
-      "financeRequired",
-      "estimatedAmount",
-      "advanceAmount",
-      "advancePurpose",
-    ].some((key) => req.body.hasOwnProperty(key));
+    // preserve existing non-admin update behavior
+    const role = String(req.user?.role || "").toLowerCase().replace(/\s+/g, " ");
+    const isSuperAdmin = ["super admin 1", "super admin 2"].includes(role);
+    const isAdminLike = [
+      "super admin 1",
+      "super admin 2",
+      "superadmin1",
+      "superadmin2",
+      "superadmin",
+      "admin",
+      "administrator",
+    ].includes(role);
 
-    if (financeFieldsPresent) {
+    if (!isAdminLike) {
+      const updateBody = { ...req.body };
+      ["resourcePersonType", "accompanyingStaff", "foodTypes"].forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(updateBody, key)) {
+          updateBody[key] = parseJsonField(updateBody[key]);
+        }
+      });
+      const financeFieldsPresent = ["financeRequired", "estimatedAmount", "advanceAmount", "advancePurpose"].some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key));
+
+      if (financeFieldsPresent) {
+        const financeFields = buildFinanceFields(req.body);
+        const validation = validateFinanceFields(financeFields);
+        if (!validation.valid) {
+          return res.status(400).json({ success: false, message: validation.message });
+        }
+
+        updateBody.financeRequired = financeFields.financeRequired;
+        if (financeFields.financeRequired === "Yes") {
+          updateBody.advanceAmount = financeFields.advanceAmount;
+          updateBody.estimatedAmount = financeFields.estimatedAmount;
+          updateBody.advancePurpose = financeFields.advancePurpose;
+        } else {
+          updateBody.advanceAmount = null;
+          updateBody.estimatedAmount = null;
+          updateBody.advancePurpose = "";
+        }
+      }
+
+      const food = await Food.findByIdAndUpdate(req.params.id, updateBody, { new: true, runValidators: true });
+      if (!food) return res.status(404).json({ success: false, message: "Food request not found" });
+      return res.status(200).json({ success: true, message: "Food request updated successfully", data: food });
+    }
+
+    // Admin edit flow - update only allowed fields and reset acknowledgement when needed
+    const food = await Food.findById(req.params.id);
+    if (!food) return res.status(404).json({ success: false, message: "Food request not found" });
+
+    const allowed = new Set(["date","advanceToBeReceviedWithin","resourcePersonType","numberOfResourcePersons","numberOfInternalAccompanyingStaff","accompanyingStaff","foodTypes","specialRequirements","financeRequired","advanceAmount","estimatedAmount","advancePurpose","uploadedFile"]);
+
+    const financeFieldsPresent2 = ["financeRequired","estimatedAmount","advanceAmount","advancePurpose"].some((k) => Object.prototype.hasOwnProperty.call(req.body || {}, k));
+    if (financeFieldsPresent2) {
       const financeFields = buildFinanceFields(req.body);
       const validation = validateFinanceFields(financeFields);
-
-      if (!validation.valid) {
-        return res.status(400).json({
-          success: false,
-          message: validation.message,
-        });
-      }
-
-      updateBody.financeRequired = financeFields.financeRequired;
-
+      if (!validation.valid) return res.status(400).json({ success: false, message: validation.message });
+      food.financeRequired = financeFields.financeRequired;
       if (financeFields.financeRequired === "Yes") {
-        updateBody.advanceAmount = financeFields.advanceAmount;
-        updateBody.estimatedAmount = financeFields.estimatedAmount;
-        updateBody.advancePurpose = financeFields.advancePurpose;
+        food.advanceAmount = financeFields.advanceAmount;
+        food.estimatedAmount = financeFields.estimatedAmount;
+        food.advancePurpose = financeFields.advancePurpose;
       } else {
-        updateBody.advanceAmount = null;
-        updateBody.estimatedAmount = null;
-        updateBody.advancePurpose = "";
+        food.advanceAmount = null;
+        food.estimatedAmount = null;
+        food.advancePurpose = "";
       }
     }
 
-    const food = await Food.findByIdAndUpdate(
-      req.params.id,
-      updateBody,
-      {
-        new: true,
-        runValidators: true,
+    Object.keys(req.body).forEach((key) => {
+      if (!allowed.has(key)) return;
+      if (["resourcePersonType","accompanyingStaff","foodTypes"].includes(key)) {
+        try {
+          food[key] = typeof req.body[key] === "string" ? JSON.parse(req.body[key]) : req.body[key];
+        } catch (e) {
+          food[key] = req.body[key];
+        }
+        return;
       }
-    );
-
-    if (!food) {
-      return res.status(404).json({
-        success: false,
-        message: "Food request not found",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Food request updated successfully",
-      data: food,
+      food[key] = req.body[key];
     });
+
+    const file = req.files?.principalApprovalForm?.[0] || req.files?.uploadedFile?.[0];
+    if (file) food.uploadedFile = { url: file.path, publicId: file.filename, fileName: file.originalname };
+
+    const headApprovalWasCompleted =
+      isSuperAdmin && String(food.headApproval?.status || "").trim() === "Completed";
+
+    if (headApprovalWasCompleted) {
+      food.headApproval.status = "Pending";
+      food.headApproval.approvedBy = null;
+      food.headApproval.approvedAt = null;
+    // Preserve the existing acknowledgement reset behavior.
+    } else if (food.headApproval && String(food.headApproval.status || "").trim() === "Acknowledged") {
+      food.headApproval.status = "Pending";
+      if (Object.prototype.hasOwnProperty.call(food.headApproval, "approvedBy")) food.headApproval.approvedBy = null;
+      if (Object.prototype.hasOwnProperty.call(food.headApproval, "approvedAt")) food.headApproval.approvedAt = null;
+      if (Object.prototype.hasOwnProperty.call(food.headApproval, "updatedAt")) food.headApproval.updatedAt = null;
+      if (Object.prototype.hasOwnProperty.call(food, "acknowledgedBy")) food.acknowledgedBy = null;
+      if (Object.prototype.hasOwnProperty.call(food, "acknowledgedAt")) food.acknowledgedAt = null;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(food, "finalStatus")) food.finalStatus = "Pending";
+    if (Object.prototype.hasOwnProperty.call(food, "status")) food.status = "Pending";
+
+    if (Array.isArray(food.approvalHistory)) {
+      if (headApprovalWasCompleted) {
+        food.approvalHistory.push({ role: "food head", approvedBy: null, action: "Pending", remarks: "Waiting for Head approval", actionDate: null });
+      } else {
+        const idx = food.approvalHistory.findIndex((h) => String(h.role || "").toLowerCase().includes("food head"));
+        if (idx >= 0) food.approvalHistory[idx] = { ...food.approvalHistory[idx], action: "Pending", approvedBy: null, actionDate: null };
+        else food.approvalHistory.push({ role: "food head", approvedBy: null, action: "Pending", remarks: "Waiting for Head approval", actionDate: null });
+      }
+    }
+
+    await food.save();
+    return res.status(200).json({ success: true, message: "Request updated successfully and sent back to Pending", data: food });
   } catch (error) {
     console.log(error);
 
@@ -429,7 +503,7 @@ exports.patchFood = async (req, res) => {
       "estimatedAmount",
       "advanceAmount",
       "advancePurpose",
-    ].some((key) => req.body.hasOwnProperty(key));
+    ].some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key));
 
     if (financeFieldsPresent) {
       const financeFields = buildFinanceFields(req.body);

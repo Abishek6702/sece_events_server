@@ -70,6 +70,14 @@ const getAllowedModuleRole = (moduleName = "") => {
   }[normalizedModule] || "";
 };
 
+const getHeadModule = (role = "") => {
+  const normalizedRole = normalizeDashboardRole(role);
+
+  return Object.keys(INDIVIDUAL_MODULE_CONFIG).find(
+    (moduleName) => normalizeDashboardRole(getAllowedModuleRole(moduleName)) === normalizedRole,
+  ) || "";
+};
+
 exports.isAllowedIndividualDashboardRole = (role = "", moduleName = "") => {
   const normalizedRole = normalizeDashboardRole(role);
   const allowedModuleRole = normalizeDashboardRole(getAllowedModuleRole(moduleName));
@@ -113,32 +121,88 @@ const buildScopedQuery = (req, extraQuery = {}) => {
 const getIndividualModuleStats = async (Model, req) => {
   const baseQuery = buildScopedQuery(req);
 
-  const total = await Model.countDocuments(baseQuery);
+  const records = await Model.find(baseQuery)
+    .select("finalStatus overallStatus status")
+    .lean();
 
-  const pending = await Model.countDocuments(
-    buildScopedQuery(req, {
-      $or: [
-        { finalStatus: "Pending" },
-        { finalStatus: { $exists: false } },
-        { finalStatus: null },
-      ],
-    }),
+  const stats = records.reduce(
+    (counts, record) => {
+      const currentStatus = String(
+        record.finalStatus || record.overallStatus || record.status || "Pending",
+      )
+        .trim()
+        .toLowerCase();
+
+      counts.total += 1;
+      if (currentStatus === "approved") counts.approved += 1;
+      else if (currentStatus === "rejected") counts.rejected += 1;
+      else if (["completed", "closed"].includes(currentStatus)) counts.completed += 1;
+      else counts.pending += 1;
+
+      return counts;
+    },
+    { total: 0, pending: 0, approved: 0, rejected: 0, completed: 0 },
   );
 
-  const approved = await Model.countDocuments(buildScopedQuery(req, { finalStatus: "Approved" }));
-  const rejected = await Model.countDocuments(buildScopedQuery(req, { finalStatus: "Rejected" }));
-  const completed = await Model.countDocuments(
-    buildScopedQuery(req, {
-      $or: [{ finalStatus: "Completed" }, { finalStatus: "Closed" }],
-    }),
+  return stats;
+};
+
+const getIndividualSuperAdminStats = async (Model, req) => {
+  const records = await Model.find(buildScopedQuery(req))
+    .select("superAdminApproval workflowStage")
+    .lean();
+
+  return records.reduce(
+    (counts, record) => {
+      const currentStatus = String(record.superAdminApproval?.status || "Pending")
+        .trim()
+        .toLowerCase();
+
+      counts.total += 1;
+      if (currentStatus === "approved") counts.approved += 1;
+      else if (currentStatus === "rejected") counts.rejected += 1;
+      else if (currentStatus === "completed") counts.completed += 1;
+      else counts.pending += 1;
+
+      return counts;
+    },
+    { total: 0, pending: 0, approved: 0, rejected: 0, completed: 0 },
   );
+};
+
+const getIndividualHeadStats = async (Model, req) => {
+  const query = {
+    $and: [
+      {
+        $or: [
+          { "superAdminApproval.status": "Approved" },
+          { "superAdmin1Approval.status": "Approved" },
+          { "superAdmin2Approval.status": "Approved" },
+        ],
+      },
+      { "superAdminApproval.status": { $ne: "Rejected" } },
+      { "superAdmin1Approval.status": { $ne: "Rejected" } },
+      { "superAdmin2Approval.status": { $ne: "Rejected" } },
+      {
+        "headApproval.status": {
+          $in: ["Pending", "Acknowledged", "Rejected", "Completed"],
+        },
+      },
+    ],
+  };
+
+  const [total, pending, acknowledged, completed] = await Promise.all([
+    Model.countDocuments(query),
+    Model.countDocuments({ $and: [query, { "headApproval.status": "Pending" }] }),
+    Model.countDocuments({ $and: [query, { "headApproval.status": "Acknowledged" }] }),
+    Model.countDocuments({ $and: [query, { "headApproval.status": "Completed" }] }),
+  ]);
 
   return {
-    total,
-    pending,
-    approved,
-    rejected,
+    totalRequests: total,
+    acknowledged,
     completed,
+    pending,
   };
 };
 
@@ -146,6 +210,7 @@ const getIndividualModuleBreakdowns = async (Model, req) => {
   const records = await Model.find(buildScopedQuery(req))
     .populate({ path: "employee", select: "name department email" })
     .populate({ path: "superAdminApproval.approvedBy", select: "name email" })
+    .populate({ path: "headApproval.approvedBy", select: "name email" })
     .lean();
 
   return buildIndividualDashboardBreakdowns(records);
@@ -209,7 +274,12 @@ const buildModuleSummary = async (key, config, breakdownKey, req) => {
   return { key, summary };
 };
 
-const getIndividualBreakdownPayload = async (req, res, breakdownKey) => {
+const getIndividualBreakdownPayload = async (
+  req,
+  res,
+  breakdownKey,
+  statsBuilder = getIndividualModuleStats,
+) => {
   try {
     const moduleName = normalizeIndividualModule(req.query.module);
     const moduleConfig = getValidatedIndividualModule(req);
@@ -217,7 +287,7 @@ const getIndividualBreakdownPayload = async (req, res, breakdownKey) => {
     if (moduleConfig) {
       validateIndividualDashboardAccess(req, moduleName);
 
-      const stats = await getIndividualModuleStats(moduleConfig.model, req);
+      const stats = await statsBuilder(moduleConfig.model, req);
       const breakdowns = await getIndividualModuleBreakdowns(moduleConfig.model, req);
 
       const payload = {
@@ -239,7 +309,21 @@ const getIndividualBreakdownPayload = async (req, res, breakdownKey) => {
     }
 
     const moduleEntries = await Promise.all(
-      Object.entries(INDIVIDUAL_MODULE_CONFIG).map(([key, config]) => buildModuleSummary(key, config, breakdownKey, req)),
+      Object.entries(INDIVIDUAL_MODULE_CONFIG).map(async ([key, config]) => {
+        const [stats, breakdowns] = await Promise.all([
+          statsBuilder(config.model, req),
+          getIndividualModuleBreakdowns(config.model, req),
+        ]);
+
+        return {
+          key,
+          summary: {
+            label: config.label,
+            stats,
+            [breakdownKey]: breakdowns[breakdownKey],
+          },
+        };
+      }),
     );
 
     const modules = Object.fromEntries(
@@ -321,5 +405,34 @@ exports.getIndividualDepartmentWiseStats = async (req, res) => {
 };
 
 exports.getIndividualSuperAdminWiseStats = async (req, res) => {
-  return getIndividualBreakdownPayload(req, res, "superadminWise");
+  return getIndividualBreakdownPayload(
+    req,
+    res,
+    "superadminWise",
+    getIndividualSuperAdminStats,
+  );
+};
+
+exports.getIndividualHeadWiseStats = async (req, res) => {
+  try {
+    const requestedModule = normalizeIndividualModule(req.query.module);
+    const loggedInHeadModule = getHeadModule(req.user?.role);
+    const moduleName = requestedModule || loggedInHeadModule;
+    const moduleConfig = getValidatedIndividualModule({ query: { module: moduleName } });
+
+    if (!moduleConfig || (loggedInHeadModule && moduleName !== loggedInHeadModule)) {
+      throw Object.assign(new Error("Access denied"), { statusCode: 403 });
+    }
+
+    validateIndividualDashboardAccess(req, moduleName);
+
+    return res.status(200).json({
+      success: true,
+      module: moduleConfig.label,
+      stats: await getIndividualHeadStats(moduleConfig.model, req),
+    });
+  } catch (error) {
+    console.error("Individual head dashboard stats error:", error);
+    return sendIndividualDashboardError(res, error);
+  }
 };

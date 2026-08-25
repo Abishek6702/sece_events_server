@@ -205,6 +205,56 @@ const foodSchema = new mongoose.Schema(
       },
     },
 
+    superAdmin1Approval: {
+      status: {
+        type: String,
+        enum: ["Pending", "Approved", "Rejected"],
+        default: "Pending",
+      },
+      reason: {
+        type: String,
+        default: "",
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      approvedAt: {
+        type: Date,
+        default: null,
+      },
+      updatedAt: {
+        type: Date,
+        default: null,
+      },
+    },
+
+    superAdmin2Approval: {
+      status: {
+        type: String,
+        enum: ["Pending", "Approved", "Rejected"],
+        default: "Pending",
+      },
+      reason: {
+        type: String,
+        default: "",
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      approvedAt: {
+        type: Date,
+        default: null,
+      },
+      updatedAt: {
+        type: Date,
+        default: null,
+      },
+    },
+
     superAdminApproval: {
       status: {
         type: String,

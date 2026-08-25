@@ -27,6 +27,7 @@ const individualSubmissionRoutes = require("./routes/individual/individualSubmis
 const testRoutes = require("./routes/testRoutes");
 const calendarRoutes = require("./routes/calendarRoutes");
 const roomRoutes = require("./routes/roomRoutes");
+const expenditureRoutes = require("./routes/individual/expenditureRoutes");
 
 dotenv.config();
 const app = express();
@@ -94,6 +95,7 @@ app.use("/api/transport-inventory", transportInventoryRoutes);
 app.use("/api/table", tableRoutes);
 app.use("/api/eventTypes", eventTypeRoutes);
 app.use("/api/individual-submissions", individualSubmissionRoutes);
+app.use("/api/individual/expenditure", expenditureRoutes);
 app.use("/api/calendar",calendarRoutes)
 app.use("/api/rooms", roomRoutes);
 

@@ -75,7 +75,7 @@ const voucherSchema = new mongoose.Schema(
   {
     voucherWorth: {
       type: String,
-      enum: ["500", "1000", "2000", "5000"],
+    enum: ["500", "1000", "2000", "5000","10000"],
     },
 
     quantity: Number,
@@ -90,7 +90,7 @@ const giftItemSchema = new mongoose.Schema(
   {
     giftType: {
       type: String,
-      enum: ["Trophy", "Glass Cup", "Voucher"],
+      enum: ["Trophy", "Glass Cup", "Voucher", "Cash Prize"],
     },
 
     trophy: [trophySchema],
@@ -226,6 +226,56 @@ const purchaseSchema = new mongoose.Schema(
     },
 
     hodApproval: {
+      status: {
+        type: String,
+        enum: ["Pending", "Approved", "Rejected"],
+        default: "Pending",
+      },
+      reason: {
+        type: String,
+        default: "",
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      approvedAt: {
+        type: Date,
+        default: null,
+      },
+      updatedAt: {
+        type: Date,
+        default: null,
+      },
+    },
+
+    superAdmin1Approval: {
+      status: {
+        type: String,
+        enum: ["Pending", "Approved", "Rejected"],
+        default: "Pending",
+      },
+      reason: {
+        type: String,
+        default: "",
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      approvedAt: {
+        type: Date,
+        default: null,
+      },
+      updatedAt: {
+        type: Date,
+        default: null,
+      },
+    },
+
+    superAdmin2Approval: {
       status: {
         type: String,
         enum: ["Pending", "Approved", "Rejected"],

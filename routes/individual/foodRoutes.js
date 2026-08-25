@@ -34,6 +34,9 @@ router.get(
 // UPDATE
 router.put(
   "/:id",
+  upload.fields([
+    { name: "principalApprovalForm", maxCount: 1 },
+  ]),
   foodController.updateFood
 );
 

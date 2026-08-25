@@ -34,7 +34,15 @@ router.get("/", getAllPurchase);
 router.get("/:id", getSinglePurchase);
 
 // UPDATE
-router.put("/:id", updatePurchase);
+router.put(
+  "/:id",
+  upload.fields([
+    { name: "principalApprovalForm", maxCount: 1 },
+    { name: "files", maxCount: 10 },
+    { name: "attachments", maxCount: 10 },
+  ]),
+  updatePurchase
+);
 
 // DELETE
 router.delete("/:id", deletePurchase);
