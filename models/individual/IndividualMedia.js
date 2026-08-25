@@ -40,7 +40,7 @@ const sizeSchema = new mongoose.Schema(
     },
 
     value: {
-      type: Number,
+      type: String,
     },
   },
   { _id: false },
@@ -175,6 +175,56 @@ const individualMediaSchema = new mongoose.Schema(
       reason: {
         type: String,
         default: "",
+      },
+      updatedAt: {
+        type: Date,
+        default: null,
+      },
+    },
+
+    superAdmin1Approval: {
+      status: {
+        type: String,
+        enum: ["Pending", "Approved", "Rejected"],
+        default: "Pending",
+      },
+      reason: {
+        type: String,
+        default: "",
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      approvedAt: {
+        type: Date,
+        default: null,
+      },
+      updatedAt: {
+        type: Date,
+        default: null,
+      },
+    },
+
+    superAdmin2Approval: {
+      status: {
+        type: String,
+        enum: ["Pending", "Approved", "Rejected"],
+        default: "Pending",
+      },
+      reason: {
+        type: String,
+        default: "",
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      approvedAt: {
+        type: Date,
+        default: null,
       },
       updatedAt: {
         type: Date,

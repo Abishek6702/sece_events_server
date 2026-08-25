@@ -11,6 +11,7 @@ const {
   getVideoHeadList,
   interchangeMediaAssignment,
   hodApproval,
+  hodReject,
   superAdminApproval,
   headApproval,
   closeIndividualSubmission,
@@ -52,6 +53,7 @@ router.put("/:id/interchange", interchangeMediaAssignment);
 
 // Approval workflow endpoints
 router.put("/:id/hod-approval", hodApproval);
+router.put("/:id/hod-reject", hodReject);
 router.put("/:id/super-admin-approval", superAdminApproval);
 router.put("/:id/head-approval", headApproval);
 

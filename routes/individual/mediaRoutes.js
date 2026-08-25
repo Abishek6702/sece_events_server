@@ -49,7 +49,17 @@ router.get("/video", getVideoDashboard);
 router.get("/:id", getSingleIndividualMedia);
 
 // UPDATE
-router.put("/:id", updateIndividualMedia);
+router.put(
+  "/:id",
+  upload.fields([
+    { name: "principalApprovalForm", maxCount: 1 },
+    { name: "files", maxCount: 10 },
+    { name: "referencePosterFiles", maxCount: 10 },
+    { name: "referenceCertificateFiles", maxCount: 10 },
+    { name: "referenceFiles", maxCount: 10 },
+  ]),
+  updateIndividualMedia
+);
 
 // DELETE
 router.delete("/:id", deleteIndividualMedia);

@@ -19,6 +19,7 @@ const {
   getIndividualFacultyWiseStats,
   getIndividualDepartmentWiseStats,
   getIndividualSuperAdminWiseStats,
+  getIndividualHeadWiseStats,
 } = require("../controllers/individualDashboardController");
 
 router.get("/stats",protect, getDashboardStats);
@@ -40,6 +41,7 @@ router.get("/individual-stats", protect, getIndividualDashboardStats);
 router.get("/individual-faculty-wise-stats", protect, getIndividualFacultyWiseStats);
 router.get("/individual-department-wise-stats", protect, getIndividualDepartmentWiseStats);
 router.get("/individual-superadmin-wise-stats", protect, getIndividualSuperAdminWiseStats);
+router.get("/individual-head-wise-stats", protect, getIndividualHeadWiseStats);
 
 router.get("/hod-stats", protect, getHodDashboardStats);
 
