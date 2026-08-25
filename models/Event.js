@@ -40,6 +40,9 @@ const organizerSchema = new mongoose.Schema(
     
     advanceAmount: { type: Number },
     purposeOfAdvance: { type: String },
+    advanceToBeReceviedWithin: { type: Number },
+
+    ExpectedEventOutcome: { type: String },
 
     organizingDepartment: { type: String },
     organizerCount: { type: Number },
@@ -744,6 +747,8 @@ const eventSchema = new mongoose.Schema(
         },
       },
     },
+    rejectReason: { type: String, default: "" },
+
     feedbacks: [
       {
         type: mongoose.Schema.Types.ObjectId,

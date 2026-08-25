@@ -12,6 +12,7 @@ const {
   getVideoHeadStats,
   getPosterDepartmentStats,
   getVideoDepartmentStats,
+  getHodDashboardStats,
 } = require("../controllers/dashboardController");
 const {
   getIndividualDashboardStats,
@@ -20,9 +21,6 @@ const {
   getIndividualSuperAdminWiseStats,
   getIndividualHeadWiseStats,
 } = require("../controllers/individualDashboardController");
-
-
-
 
 router.get("/stats",protect, getDashboardStats);
 router.get("/department-wise",protect, getDepartmentWiseStats);
@@ -44,5 +42,7 @@ router.get("/individual-faculty-wise-stats", protect, getIndividualFacultyWiseSt
 router.get("/individual-department-wise-stats", protect, getIndividualDepartmentWiseStats);
 router.get("/individual-superadmin-wise-stats", protect, getIndividualSuperAdminWiseStats);
 router.get("/individual-head-wise-stats", protect, getIndividualHeadWiseStats);
+
+router.get("/hod-stats", protect, getHodDashboardStats);
 
 module.exports = router;

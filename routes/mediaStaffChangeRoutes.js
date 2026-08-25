@@ -6,7 +6,7 @@ const {
 } = require("../controllers/mediaStaffChangeController");
 const protect = require("../middleware/protect");
 
-router.put("/:id/change-media-staff", changeMediaStaff);
+router.put("/:id/change-media-staff",protect, changeMediaStaff);
 
 
 module.exports = router;
