@@ -354,6 +354,10 @@ const refreshmentSchema = new mongoose.Schema(
               vegCount: Number,
               nonVegCount: Number,
             },
+            trainer: {
+              vegCount: Number,
+              nonVegCount: Number,
+            },
           },
         ],
 
