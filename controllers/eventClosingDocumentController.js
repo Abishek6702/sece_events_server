@@ -118,7 +118,7 @@ exports.getEventClosingDocumentById = async (req, res) => {
 
 exports.getEventClosingDocumentByEventId = async (req, res) => {
   try {
-    const document = await EventClosingDocument.findOne({ eventId: req.params.eventId }).populate("eventId", "requestDetails.eventDetails.eventName iqacNumber status");
+    const document = await EventClosingDocument.findOne({ eventId: req.params.eventId }).populate("eventId");
     if (!document) {
       return res.status(404).json({ success: false, message: "No closing document found for this event" });
     }

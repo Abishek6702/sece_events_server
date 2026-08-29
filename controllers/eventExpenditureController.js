@@ -21,11 +21,22 @@ const findFilesByFieldname = (files, fieldnamePattern) => {
 // Calculate total expenditure amount
 const calculateTotalAmount = (expenditureData) => {
   let total = 0;
-  const sections = ["food", "accommodation", "transport", "remuneration", "gifts", "kits", "miscellaneous"];
-  
+  const sections = [
+    "food",
+    "accommodation",
+    "transport",
+    "remuneration",
+    "gifts",
+    "kits",
+    "miscellaneous",
+  ];
+
   for (const section of sections) {
     if (Array.isArray(expenditureData[section])) {
-      total += expenditureData[section].reduce((sum, item) => sum + (Number(item.billAmount) || 0), 0);
+      total += expenditureData[section].reduce(
+        (sum, item) => sum + (Number(item.billAmount) || 0),
+        0,
+      );
     }
   }
   return total;
@@ -44,10 +55,7 @@ const processExpenditureSection = (sectionData, files) => {
     if (Array.isArray(item.supportingDocuments)) {
       item.supportingDocuments.forEach((doc) => {
         if (doc.fileRef) {
-          const uploadedFiles = findFilesByFieldname(
-            files,
-            doc.fileRef
-          );
+          const uploadedFiles = findFilesByFieldname(files, doc.fileRef);
 
           uploadedFiles.forEach((file) => {
             supportingDocuments.push({
@@ -76,13 +84,23 @@ const processExpenditureSection = (sectionData, files) => {
 // Get all publicIds from a nested expenditure object
 const extractAllPublicIds = (expenditureObj) => {
   let ids = [];
-  const sections = ["food", "accommodation", "transport", "remuneration", "gifts", "kits", "miscellaneous"];
-  
+  const sections = [
+    "food",
+    "accommodation",
+    "transport",
+    "remuneration",
+    "gifts",
+    "kits",
+    "miscellaneous",
+  ];
+
   for (const section of sections) {
     if (Array.isArray(expenditureObj[section])) {
       for (const item of expenditureObj[section]) {
         if (Array.isArray(item.supportingDocuments)) {
-          ids = ids.concat(item.supportingDocuments.map(doc => doc.publicId).filter(Boolean));
+          ids = ids.concat(
+            item.supportingDocuments.map((doc) => doc.publicId).filter(Boolean),
+          );
         }
       }
     }
@@ -94,45 +112,75 @@ exports.createEventExpenditure = async (req, res) => {
   try {
     const { data } = req.body;
     if (!data) {
-      return res.status(400).json({ success: false, message: "Missing data field in request" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing data field in request" });
     }
 
     const parsedData = parseData(data);
     const { eventId } = parsedData;
 
     if (!eventId) {
-      return res.status(400).json({ success: false, message: "eventId is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "eventId is required" });
     }
 
     // Verify event exists
     const event = await Event.findById(eventId);
     if (!event) {
-      return res.status(404).json({ success: false, message: "Event not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Event not found" });
     }
 
     if (event.status !== "Approved") {
-      return res.status(403).json({ success: false, message: "Only approved events can have expenditures" });
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Only approved events can have expenditures",
+        });
     }
 
     // Check for duplicate
     const existingExp = await EventExpenditure.findOne({ eventId });
     if (existingExp) {
-      return res.status(409).json({ success: false, message: "Expenditure record already exists for this event" });
+      return res
+        .status(409)
+        .json({
+          success: false,
+          message: "Expenditure record already exists for this event",
+        });
     }
 
-    const sections = ["food", "accommodation", "transport", "remuneration", "gifts", "kits", "miscellaneous"];
-    
+    const sections = [
+      "food",
+      "accommodation",
+      "transport",
+      "remuneration",
+      "gifts",
+      "kits",
+      "miscellaneous",
+    ];
+
     if (!parsedData.expenditure) {
       parsedData.expenditure = {};
     }
 
     for (const section of sections) {
       if (parsedData.expenditure[section]) {
-        parsedData.expenditure[section] = processExpenditureSection(parsedData.expenditure[section], req.files, section);
+        parsedData.expenditure[section] = processExpenditureSection(
+          parsedData.expenditure[section],
+          req.files,
+          section,
+        );
       }
     }
 
-    parsedData.expenditure.totalAmount = calculateTotalAmount(parsedData.expenditure);
+    parsedData.expenditure.totalAmount = calculateTotalAmount(
+      parsedData.expenditure,
+    );
 
     const newExpenditure = new EventExpenditure(parsedData);
     await newExpenditure.save();
@@ -148,13 +196,18 @@ exports.createEventExpenditure = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating expenditure:", error);
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
 exports.getEventExpenditures = async (req, res) => {
   try {
-    const expenditures = await EventExpenditure.find().populate("eventId", "requestDetails.eventDetails.eventName iqacNumber status");
+    const expenditures = await EventExpenditure.find().populate(
+      "eventId",
+      "requestDetails.eventDetails.eventName requestDetails.eventDetails.eventSchedule  requestDetails.eventDetails.eventType iqacNumber status documentExpenditureApproved",
+    );
     res.status(200).json({
       success: true,
       count: expenditures.length,
@@ -168,9 +221,14 @@ exports.getEventExpenditures = async (req, res) => {
 
 exports.getEventExpenditureById = async (req, res) => {
   try {
-    const expenditure = await EventExpenditure.findById(req.params.id).populate("eventId", "requestDetails.eventDetails.eventName iqacNumber status");
+    const expenditure = await EventExpenditure.findById(req.params.id).populate(
+      "eventId",
+      "requestDetails.eventDetails.eventName iqacNumber status",
+    );
     if (!expenditure) {
-      return res.status(404).json({ success: false, message: "Expenditure not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Expenditure not found" });
     }
     res.status(200).json({ success: true, data: expenditure });
   } catch (error) {
@@ -181,9 +239,16 @@ exports.getEventExpenditureById = async (req, res) => {
 
 exports.getEventExpenditureByEventId = async (req, res) => {
   try {
-    const expenditure = await EventExpenditure.findOne({ eventId: req.params.eventId }).populate("eventId", "requestDetails.eventDetails.eventName iqacNumber status");
+    const expenditure = await EventExpenditure.findOne({
+      eventId: req.params.eventId,
+    }).populate("eventId");
     if (!expenditure) {
-      return res.status(404).json({ success: false, message: "No expenditure found for this event" });
+      return res
+        .status(404)
+        .json({
+          success: false,
+          message: "No expenditure found for this event",
+        });
     }
     res.status(200).json({ success: true, data: expenditure });
   } catch (error) {
@@ -198,46 +263,79 @@ exports.updateEventExpenditure = async (req, res) => {
     const { data } = req.body;
 
     if (!data) {
-      return res.status(400).json({ success: false, message: "Missing data field in request" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing data field in request" });
     }
 
     const parsedData = parseData(data);
-    const existingExpRecord = await EventExpenditure.findById(id).populate("eventId", "status");
-    
+    const existingExpRecord = await EventExpenditure.findById(id).populate(
+      "eventId",
+      "status",
+    );
+
     if (!existingExpRecord) {
-      return res.status(404).json({ success: false, message: "Expenditure record not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Expenditure record not found" });
     }
 
-    if (existingExpRecord.eventId && existingExpRecord.eventId.status !== "Approved") {
-      return res.status(403).json({ success: false, message: "Cannot update expenditures for a non-approved event" });
+    if (
+      existingExpRecord.eventId &&
+      existingExpRecord.eventId.status !== "Approved"
+    ) {
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Cannot update expenditures for a non-approved event",
+        });
     }
 
-    const oldPublicIds = extractAllPublicIds(existingExpRecord.expenditure || {});
-    
+    const oldPublicIds = extractAllPublicIds(
+      existingExpRecord.expenditure || {},
+    );
+
     if (!parsedData.expenditure) {
       parsedData.expenditure = {};
     }
 
-    const sections = ["food", "accommodation", "transport", "remuneration", "gifts", "kits", "miscellaneous"];
-    
+    const sections = [
+      "food",
+      "accommodation",
+      "transport",
+      "remuneration",
+      "gifts",
+      "kits",
+      "miscellaneous",
+    ];
+
     for (const section of sections) {
       if (parsedData.expenditure[section]) {
-        parsedData.expenditure[section] = processExpenditureSection(parsedData.expenditure[section], req.files, section);
+        parsedData.expenditure[section] = processExpenditureSection(
+          parsedData.expenditure[section],
+          req.files,
+          section,
+        );
       } else {
-         // Keep existing if not provided, or clear if explicitly sent as empty array. Assuming full replace of sections provided.
-         // If a section is missing from payload, it's safer to retain existing or overwrite based on frontend design.
-         // Given standard PUT behavior, we replace. So we should set to empty if not provided.
-         parsedData.expenditure[section] = [];
+        // Keep existing if not provided, or clear if explicitly sent as empty array. Assuming full replace of sections provided.
+        // If a section is missing from payload, it's safer to retain existing or overwrite based on frontend design.
+        // Given standard PUT behavior, we replace. So we should set to empty if not provided.
+        parsedData.expenditure[section] = [];
       }
     }
 
-    parsedData.expenditure.totalAmount = calculateTotalAmount(parsedData.expenditure);
-    
+    parsedData.expenditure.totalAmount = calculateTotalAmount(
+      parsedData.expenditure,
+    );
+
     // Determine new public IDs
     const newPublicIdsToKeep = extractAllPublicIds(parsedData.expenditure);
 
     // Identify and delete orphaned Cloudinary files
-    const publicIdsToDelete = oldPublicIds.filter((id) => !newPublicIdsToKeep.includes(id));
+    const publicIdsToDelete = oldPublicIds.filter(
+      (id) => !newPublicIdsToKeep.includes(id),
+    );
     for (const publicId of publicIdsToDelete) {
       if (publicId) {
         try {
@@ -250,11 +348,11 @@ exports.updateEventExpenditure = async (req, res) => {
 
     // Merge non-expenditure fields
     const updatedFields = {
-        ...parsedData,
-        expenditure: {
-           ...existingExpRecord.expenditure.toObject(),
-           ...parsedData.expenditure
-        }
+      ...parsedData,
+      expenditure: {
+        ...existingExpRecord.expenditure.toObject(),
+        ...parsedData.expenditure,
+      },
     };
 
     if (parsedData.editRemark !== undefined) {
@@ -263,9 +361,9 @@ exports.updateEventExpenditure = async (req, res) => {
     }
 
     const updatedExp = await EventExpenditure.findByIdAndUpdate(
-        id, 
-        updatedFields, 
-        { new: true, runValidators: true }
+      id,
+      updatedFields,
+      { new: true, runValidators: true },
     );
 
     res.status(200).json({
@@ -275,6 +373,8 @@ exports.updateEventExpenditure = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating expenditure:", error);
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
