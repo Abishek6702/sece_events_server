@@ -485,7 +485,7 @@ const purchaseSchema = new mongoose.Schema(
                 },
               ],
 
-              giftQty: Number,
+              giftsQty: Number,
 
               voucher: [
                 {
