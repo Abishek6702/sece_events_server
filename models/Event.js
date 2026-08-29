@@ -202,7 +202,7 @@ const ictsSchema = new mongoose.Schema(
 
         venueName: { type: String, trim: true },
 
-        desktopLaptop: [
+        laptopSpec: [
           {
             type: { type: String },
             count: Number,
@@ -239,8 +239,8 @@ const ictsSchema = new mongoose.Schema(
           name: String,
           email: String,
           phone: String,
-          empId:String,
-          designation:String,
+          empId: String,
+          designation: String,
         },
       },
     ],
@@ -393,21 +393,21 @@ const accommodationSchema = new mongoose.Schema(
             roomId: {
               type: mongoose.Schema.Types.ObjectId,
               ref: "AccommodationRoom",
-              required: true
+              required: true,
             },
             roomNumber: String,
             venue: String,
             occupantCount: Number,
             adminContacted: {
               type: Boolean,
-              default: false
+              default: false,
             },
-        
+
             requiresAdminConfirmation: {
               type: Boolean,
-              default: false
-            }
-          }
+              default: false,
+            },
+          },
         ],
 
         dineInRequired: Boolean,
