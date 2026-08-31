@@ -7,6 +7,7 @@ const path = require("path");
 const connectDB = require("./config/db");
 const { apiLimiter } = require("./middleware/rateLimiter.js");
 const auditLogger = require("./middleware/auditLogger.js");
+// const { initCronJobs } = require("./utils/cronJobs");
 
 const authRoutes = require("./routes/authRoutes");
 const facultyRoutes = require("./routes/facultyRoutes");
@@ -63,6 +64,8 @@ app.use(
 );
 
 connectDB();
+// initCronJobs();
+
 app.use(
   express.json({
     limit: "5mb",
