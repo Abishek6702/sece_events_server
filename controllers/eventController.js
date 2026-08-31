@@ -116,6 +116,15 @@ const fixArrays = (data) => {
     });
   }
 
+  // externalTransport
+  if (data.externalTransportDetails?.externalTransports) {
+    data.externalTransportDetails.externalTransports.forEach((t) => {
+      if (typeof t.passengers === "string") {
+        t.passengers = JSON.parse(t.passengers);
+      }
+    });
+  }
+
   return data;
 };
 
@@ -273,6 +282,7 @@ function resetDepartment(event, module, adminRemark) {
     refreshment: "refreshmentDetails",
     accommodation: "accommodationDetails",
     purchase: "purchaseDetails",
+    externalTransport: "externalTransportDetails",
   };
 
   if (module === "media") {
@@ -522,6 +532,7 @@ exports.updateEvent = async (req, res) => {
       accommodation: !!payload.accommodationDetails,
       purchase: !!payload.purchaseDetails,
       media: !!payload.mediaRequirementDetails,
+      externalTransport: !!payload.externalTransportDetails,
     };
     const event = await Event.findById(req.params.id);
 
@@ -609,6 +620,14 @@ exports.updateEvent = async (req, res) => {
         ensureMediaRequirement(event.mediaRequirementDetails),
         ensureMediaRequirement(payload.mediaRequirementDetails),
       );
+    }
+
+    if (payload.externalTransportDetails) {
+      event.externalTransportDetails = mergeObjects(
+        event.externalTransportDetails || {},
+        ensureObject(payload.externalTransportDetails),
+      );
+      initializeDepartmentStatus(event.externalTransportDetails);
     }
 
     const wasSubmitted = event.isSubmitted;
@@ -778,6 +797,14 @@ exports.submitEvent = async (req, res) => {
       );
     }
 
+    if (payload.externalTransportDetails) {
+      event.externalTransportDetails = mergeObjects(
+        event.externalTransportDetails || {},
+        ensureObject(payload.externalTransportDetails),
+      );
+      initializeDepartmentStatus(event.externalTransportDetails);
+    }
+
     const wasSubmitted = event.isSubmitted;
 
     const normalizedStatus = normalizeStatus({
@@ -884,6 +911,10 @@ exports.getEventById = async (req, res) => {
 
         case "media":
           projection["mediaRequirementDetails"] = 1;
+          break;
+
+        case "externalTransport":
+          projection["externalTransportDetails"] = 1;
           break;
       }
     }

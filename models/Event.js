@@ -142,6 +142,7 @@ const requirementSchema = new mongoose.Schema(
     refreshmentRequired: { type: Boolean, default: false },
     accommodationRequired: { type: Boolean, default: false },
     mediaRequired: { type: Boolean, default: false },
+    externalTransportRequired: { type: Boolean, default: false },
   },
   { _id: false },
 );
@@ -282,6 +283,54 @@ const audioSchema = new mongoose.Schema(
   },
   { _id: false },
 );
+
+// externalTransportDetails
+const externalPassengerSchema = new mongoose.Schema(
+  {
+    name: { type: String, trim: true },
+    phone: { type: String, trim: true },
+    email: { type: String, trim: true },
+    age: { type: Number },
+    gender: { type: String },
+    designation: { type: String, trim: true },
+    organization: { type: String, trim: true },
+  },
+  { _id: false },
+);
+
+const externalTransportEntrySchema = new mongoose.Schema(
+  {
+    travelOption: { type: String, trim: true }, // flight / train / bus / etc. — no enum
+
+    travelDate: { type: Date },
+
+    from: { type: String, trim: true },
+    to: { type: String, trim: true },
+
+    totalPassengers: { type: Number, default: 0 },
+
+    passengers: [externalPassengerSchema],
+
+    // Class — for flight: Business / Economy etc.; for train: 2A / 3A / SL etc.
+    classOrBerth: { type: String, trim: true },
+
+    // Special references — flight number or train number
+    flightNumber: { type: String, trim: true },
+    trainNumber: { type: String, trim: true },
+
+    specialRequirements: { type: String, trim: true },
+  },
+  { _id: true },
+);
+
+const externalTransportSchema = new mongoose.Schema(
+  {
+    externalTransports: [externalTransportEntrySchema],
+    status: departmentStatusSchema,
+  },
+  { _id: false },
+);
+
 
 // transportDetails (finalized)
 const transportSchema = new mongoose.Schema(
@@ -680,6 +729,7 @@ const eventSchema = new mongoose.Schema(
     accommodationDetails: accommodationSchema,
     purchaseDetails: purchaseSchema,
     mediaRequirementDetails: mediaRequirementSchema,
+    externalTransportDetails: externalTransportSchema,
 
     isSubmitted: { type: Boolean, default: false },
 
@@ -764,6 +814,11 @@ const eventSchema = new mongoose.Schema(
         },
 
         video: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+
+        externalTransport: {
           acknowledgedAt: Date,
           completedAt: Date,
         },
