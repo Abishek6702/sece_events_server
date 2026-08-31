@@ -257,6 +257,47 @@ exports.getEventExpenditureByEventId = async (req, res) => {
   }
 };
 
+exports.getEventExpendituresByFacultyId = async (req, res) => {
+  try {
+    const { facultyId } = req.params;
+
+    // Find all events where the faculty is the organizer
+    const events = await Event.find(
+      { organizerId: facultyId },
+      "_id",
+    );
+
+    if (!events.length) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: [],
+        message: "No events found for this faculty",
+      });
+    }
+
+    const eventIds = events.map((e) => e._id);
+
+    const expenditures = await EventExpenditure.find({
+      eventId: { $in: eventIds },
+    }).populate(
+      "eventId",
+      "requestDetails.eventDetails.eventName requestDetails.eventDetails.eventSchedule requestDetails.eventDetails.eventType iqacNumber status documentExpenditureApproved",
+    );
+
+    res.status(200).json({
+      success: true,
+      count: expenditures.length,
+      data: expenditures,
+    });
+  } catch (error) {
+    console.error("Error fetching expenditures by faculty ID:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
 exports.updateEventExpenditure = async (req, res) => {
   try {
     const { id } = req.params;

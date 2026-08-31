@@ -129,6 +129,45 @@ exports.getEventClosingDocumentByEventId = async (req, res) => {
   }
 };
 
+exports.getEventClosingDocumentsByFacultyId = async (req, res) => {
+  try {
+    const { facultyId } = req.params;
+
+    // Find all events where the faculty is the organizer
+    const events = await Event.find(
+      { organizerId: facultyId },
+      "_id",
+    );
+
+    if (!events.length) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: [],
+        message: "No events found for this faculty",
+      });
+    }
+
+    const eventIds = events.map((e) => e._id);
+
+    const documents = await EventClosingDocument.find({
+      eventId: { $in: eventIds },
+    }).populate(
+      "eventId",
+      "requestDetails.eventDetails.eventName iqacNumber status",
+    );
+
+    res.status(200).json({
+      success: true,
+      count: documents.length,
+      data: documents,
+    });
+  } catch (error) {
+    console.error("Error fetching closing documents by faculty ID:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
 exports.updateEventClosingDocument = async (req, res) => {
   try {
     const { id } = req.params;

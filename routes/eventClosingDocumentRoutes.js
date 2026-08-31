@@ -8,12 +8,14 @@ const {
   getEventClosingDocuments,
   getEventClosingDocumentById,
   getEventClosingDocumentByEventId,
+  getEventClosingDocumentsByFacultyId,
   updateEventClosingDocument,
 } = require("../controllers/eventClosingDocumentController");
 
 // Use upload.any() to handle dynamically named files in the payload
 router.post("/", protect, upload.any(), createEventClosingDocument);
 router.get("/", protect, getEventClosingDocuments);
+router.get("/faculty/:facultyId", getEventClosingDocumentsByFacultyId);
 router.get("/event/:eventId", protect, getEventClosingDocumentByEventId);
 router.get("/:id", protect, getEventClosingDocumentById);
 router.put("/:id", protect, upload.any(), updateEventClosingDocument);
