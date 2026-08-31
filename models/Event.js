@@ -407,6 +407,8 @@ const refreshmentSchema = new mongoose.Schema(
               vegCount: Number,
               nonVegCount: Number,
             },
+            refreshmentCount:Number,
+            
           },
         ],
 
