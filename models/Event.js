@@ -312,7 +312,7 @@ const externalTransportEntrySchema = new mongoose.Schema(
     passengers: [externalPassengerSchema],
 
     // Class — for flight: Business / Economy etc.; for train: 2A / 3A / SL etc.
-    classOrBerth: { type: String, trim: true },
+    classOrBerth: [{ type: String, trim: true }],
 
     // Special references — flight number or train number
     flightNumber: { type: String, trim: true },
