@@ -744,7 +744,7 @@ const eventSchema = new mongoose.Schema(
     isFeedbackCompleted: { type: Boolean, default: false },
     documentExpenditureApproved: { type: Boolean, default: true },
     isClosed: { type: Boolean, default: false },
-    transportInventoryRestored: { type: Boolean, default: false },
+    // transportInventoryRestored: { type: Boolean, default: false },
 
     // status
     status: {

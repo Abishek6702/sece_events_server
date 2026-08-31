@@ -10,12 +10,12 @@ const {
   notifyEventRejection,
   notifyEventClosure,
 } = require("../utils/eventNotifications.js");
-const { restoreTransportInventory } = require("../utils/transport.js");
+// const { restoreTransportInventory } = require("../utils/transport.js");
 require("dotenv").config();
 const { allocateDefaultMediaStaff } = require("../utils/mediaStaffAllocation");
-const {
-  handleTransportSubmission,
-} = require("../utils/transportSubmissionHandler.js");
+// const {
+//   handleTransportSubmission,
+// } = require("../utils/transportSubmissionHandler.js");
 
 const assignIQACNumber = require("../utils/assignIQACNumber");
 
@@ -478,7 +478,7 @@ exports.createEvent = async (req, res) => {
         await assignIQACNumber(eventData, session);
 
         // Deduct Transport Inventory
-        await handleTransportSubmission(eventData, session);
+        // await handleTransportSubmission(eventData, session);
       }
 
       await validateAccommodationAvailability(eventData, null);
@@ -665,28 +665,28 @@ exports.updateEvent = async (req, res) => {
       // Generate IQAC Number
       await assignIQACNumber(event);
 
-      await handleTransportSubmission(event);
+      // await handleTransportSubmission(event);
     }
 
     // =====================================
     // TRANSPORT UPDATED AFTER SUBMISSION
     // =====================================
-    else if (
-      wasSubmitted &&
-      event.isSubmitted &&
-      transportChanged &&
-      !event.transportInventoryRestored
-    ) {
-      // RESTORE OLD VEHICLES
-
-      for (const transport of oldTransports) {
-        await restoreTransportInventory(transport.vehicles);
-      }
-
-      // DEDUCT NEW VEHICLES
-
-      await handleTransportSubmission(event);
-    }
+    // else if (
+    //   wasSubmitted &&
+    //   event.isSubmitted &&
+    //   transportChanged &&
+    //   !event.transportInventoryRestored
+    // ) {
+    //   // RESTORE OLD VEHICLES
+    //
+    //   for (const transport of oldTransports) {
+    //     await restoreTransportInventory(transport.vehicles);
+    //   }
+    //
+    //   // DEDUCT NEW VEHICLES
+    //
+    //   await handleTransportSubmission(event);
+    // }
     if (event.adminApproval) {
       Object.entries(changedModules).forEach(([module, changed]) => {
         if (changed) {
@@ -832,9 +832,9 @@ exports.submitEvent = async (req, res) => {
     // TRANSPORT INVENTORY DEDUCTION
     // =====================================
 
-    if (!wasSubmitted) {
-      await handleTransportSubmission(event);
-    }
+    // if (!wasSubmitted) {
+    //   await handleTransportSubmission(event);
+    // }
 
     await validateAccommodationAvailability(event, event._id);
 
@@ -1108,17 +1108,17 @@ exports.updateEventStatus = async (req, res) => {
 
       case "reject":
         event.status = "Rejected";
-        if (
-          event.isSubmitted &&
-          !event.transportInventoryRestored &&
-          event.transportDetails?.transports?.length
-        ) {
-          for (const transport of event.transportDetails.transports) {
-            await restoreTransportInventory(transport.vehicles);
-          }
-
-          event.transportInventoryRestored = true;
-        }
+        // if (
+        //   event.isSubmitted &&
+        //   !event.transportInventoryRestored &&
+        //   event.transportDetails?.transports?.length
+        // ) {
+        //   for (const transport of event.transportDetails.transports) {
+        //     await restoreTransportInventory(transport.vehicles);
+        //   }
+        //
+        //   event.transportInventoryRestored = true;
+        // }
         if (!event.timeline) {
           event.timeline = {
             departments: {},
@@ -1162,17 +1162,17 @@ exports.updateEventStatus = async (req, res) => {
         }
         event.timeline.closedAt = new Date();
         event.isClosed = true;
-        if (
-          event.isSubmitted &&
-          !event.transportInventoryRestored &&
-          event.transportDetails?.transports?.length
-        ) {
-          for (const transport of event.transportDetails.transports) {
-            await restoreTransportInventory(transport.vehicles);
-          }
-
-          event.transportInventoryRestored = true;
-        }
+        // if (
+        //   event.isSubmitted &&
+        //   !event.transportInventoryRestored &&
+        //   event.transportDetails?.transports?.length
+        // ) {
+        //   for (const transport of event.transportDetails.transports) {
+        //     await restoreTransportInventory(transport.vehicles);
+        //   }
+        //
+        //   event.transportInventoryRestored = true;
+        // }
         // 📧 Send notification for event closure
         await notifyEventClosure(event, reason || "");
         break;
