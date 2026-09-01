@@ -20,15 +20,18 @@ const purchaseRoutes = require("./routes/individual/purchaseRoutes");
 const feedbackRoutes = require("./routes/feedackRoutes");
 const individualFeedbackRoutes = require("./routes/individualFeedbackRoutes");
 const mediaStaffChangeRoutes = require("./routes/mediaStaffChangeRoutes");
-const transportInventoryRoutes = require("./routes/transportInventoryRoutes");
+// const transportInventoryRoutes = require("./routes/transportInventoryRoutes");
 const tableRoutes = require("./routes/tableRoutes");
 const eventTypeRoutes = require("./routes/eventTypeRoutes");
+const accommodationRoomRoutes = require("./routes/accommodationRoomRoutes");
 const individualSubmissionRoutes = require("./routes/individual/individualSubmissionRoutes");
 const testRoutes = require("./routes/testRoutes");
 const calendarRoutes = require("./routes/calendarRoutes");
 const roomRoutes = require("./routes/roomRoutes");
 const expenditureRoutes = require("./routes/individual/expenditureRoutes");
 const documentNameRoutes = require("./routes/documentNameRoutes");
+const eventClosingDocumentRoutes = require("./routes/eventClosingDocumentRoutes");
+const eventExpenditureRoutes = require("./routes/eventExpenditureRoutes");
 
 dotenv.config();
 const app = express();
@@ -79,6 +82,8 @@ app.use(hpp());
 app.use(auditLogger);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api", apiLimiter);
+const ictsStaffAllocationRoutes = require("./routes/ictsStaffAllocationRoutes");
+
 app.use("/api/test", testRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/faculty", facultyRoutes);
@@ -92,14 +97,17 @@ app.use("/api/purchase", purchaseRoutes);
 app.use("/api/feedback", individualFeedbackRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/media-staff-change", mediaStaffChangeRoutes);
-app.use("/api/transport-inventory", transportInventoryRoutes);
+app.use("/api/icts-staff-allocation", ictsStaffAllocationRoutes);
+// app.use("/api/transport-inventory", transportInventoryRoutes);
 app.use("/api/table", tableRoutes);
 app.use("/api/eventTypes", eventTypeRoutes);
+app.use("/api/accommodation/rooms", accommodationRoomRoutes);
 app.use("/api/individual-submissions", individualSubmissionRoutes);
 app.use("/api/individual/expenditure", expenditureRoutes);
 app.use("/api/calendar",calendarRoutes)
-app.use("/api/rooms", roomRoutes);
 app.use("/api/document-names", documentNameRoutes);
+app.use("/api/event-closing-documents", eventClosingDocumentRoutes);
+app.use("/api/event-expenditures", eventExpenditureRoutes);
 
 const PORT = process.env.PORT || 5000;
 

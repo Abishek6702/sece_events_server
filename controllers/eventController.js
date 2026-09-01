@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Event = require("../models/Event.js");
+const { getAvailableRooms } = require("../utils/accommodationAvailabilityService");
 const EventRequirement = require("../models/EventType.js");
 const {
   notifyEventCreation,
@@ -9,12 +10,12 @@ const {
   notifyEventRejection,
   notifyEventClosure,
 } = require("../utils/eventNotifications.js");
-const { restoreTransportInventory } = require("../utils/transport.js");
+// const { restoreTransportInventory } = require("../utils/transport.js");
 require("dotenv").config();
 const { allocateDefaultMediaStaff } = require("../utils/mediaStaffAllocation");
-const {
-  handleTransportSubmission,
-} = require("../utils/transportSubmissionHandler.js");
+// const {
+//   handleTransportSubmission,
+// } = require("../utils/transportSubmissionHandler.js");
 
 const assignIQACNumber = require("../utils/assignIQACNumber");
 
@@ -111,6 +112,15 @@ const fixArrays = (data) => {
     data.mediaRequirementDetails.mediaRequirements.forEach((m) => {
       if (typeof m.poster?.sizes === "string") {
         m.poster.sizes = JSON.parse(m.poster.sizes);
+      }
+    });
+  }
+
+  // externalTransport
+  if (data.externalTransportDetails?.externalTransports) {
+    data.externalTransportDetails.externalTransports.forEach((t) => {
+      if (typeof t.passengers === "string") {
+        t.passengers = JSON.parse(t.passengers);
       }
     });
   }
@@ -272,6 +282,7 @@ function resetDepartment(event, module, adminRemark) {
     refreshment: "refreshmentDetails",
     accommodation: "accommodationDetails",
     purchase: "purchaseDetails",
+    externalTransport: "externalTransportDetails",
   };
 
   if (module === "media") {
@@ -321,6 +332,62 @@ function resetDepartment(event, module, adminRemark) {
     acknowledgedAt: null,
     completedAt: null,
   };
+}
+
+async function validateAccommodationAvailability(eventData, excludeEventId = null) {
+  if (!eventData.accommodationDetails || !eventData.accommodationDetails.accommodations) return;
+  for (const acc of eventData.accommodationDetails.accommodations) {
+    if (acc.roomSelections && acc.roomSelections.length > 0) {
+      if (!acc.checkInDateTime || !acc.checkOutDateTime) {
+        const error = new Error("checkInDateTime and checkOutDateTime are required when rooms are selected");
+        error.name = "ValidationError";
+        throw error;
+      }
+      
+      const availability = await getAvailableRooms({
+        startDateTime: acc.checkInDateTime,
+        endDateTime: acc.checkOutDateTime,
+        excludeEventId:excludeEventId
+      });
+
+      for (const sel of acc.roomSelections) {
+        if (sel.roomId) {
+           const roomAvail = availability.find(r => r.roomId.toString() === sel.roomId.toString());
+           if (!roomAvail) {
+              const error = new Error(`Room ${sel.roomNumber || sel.roomId} not found or inactive.`);
+              error.name = "ValidationError";
+              throw error;
+           }
+           if (!roomAvail.available) {
+            if (roomAvail.requiresAdminConfirmation) {
+              if (sel.adminContacted !== true) {
+                const error = new Error(
+                  `Room ${roomAvail.venue} ${roomAvail.roomNumber} requires admin confirmation. Please contact the admin before selecting this room.`
+                );
+          
+                error.name = "ValidationError";
+                throw error;
+              }
+          
+              // Admin contacted → allow
+            } else {
+              const error = new Error(
+                `Room ${roomAvail.venue} ${roomAvail.roomNumber} is no longer available for the selected date and time. Please select another room.`
+              );
+          
+              error.name = "ValidationError";
+              throw error;
+            }
+          }
+           if (sel.occupantCount > roomAvail.capacity) {
+              const error = new Error(`Room ${roomAvail.venue} ${roomAvail.roomNumber} can accommodate a maximum of ${roomAvail.capacity} people.`);
+              error.name = "ValidationError";
+              throw error;
+           }
+        }
+      }
+    }
+  }
 }
 
 exports.createEvent = async (req, res) => {
@@ -411,8 +478,10 @@ exports.createEvent = async (req, res) => {
         await assignIQACNumber(eventData, session);
 
         // Deduct Transport Inventory
-        await handleTransportSubmission(eventData, session);
+        // await handleTransportSubmission(eventData, session);
       }
+
+      await validateAccommodationAvailability(eventData, null);
 
       const createdEvents = await Event.create([eventData], { session });
 
@@ -463,6 +532,7 @@ exports.updateEvent = async (req, res) => {
       accommodation: !!payload.accommodationDetails,
       purchase: !!payload.purchaseDetails,
       media: !!payload.mediaRequirementDetails,
+      externalTransport: !!payload.externalTransportDetails,
     };
     const event = await Event.findById(req.params.id);
 
@@ -552,6 +622,14 @@ exports.updateEvent = async (req, res) => {
       );
     }
 
+    if (payload.externalTransportDetails) {
+      event.externalTransportDetails = mergeObjects(
+        event.externalTransportDetails || {},
+        ensureObject(payload.externalTransportDetails),
+      );
+      initializeDepartmentStatus(event.externalTransportDetails);
+    }
+
     const wasSubmitted = event.isSubmitted;
 
     const normalizedStatus = normalizeStatus(payload);
@@ -587,28 +665,28 @@ exports.updateEvent = async (req, res) => {
       // Generate IQAC Number
       await assignIQACNumber(event);
 
-      await handleTransportSubmission(event);
+      // await handleTransportSubmission(event);
     }
 
     // =====================================
     // TRANSPORT UPDATED AFTER SUBMISSION
     // =====================================
-    else if (
-      wasSubmitted &&
-      event.isSubmitted &&
-      transportChanged &&
-      !event.transportInventoryRestored
-    ) {
-      // RESTORE OLD VEHICLES
-
-      for (const transport of oldTransports) {
-        await restoreTransportInventory(transport.vehicles);
-      }
-
-      // DEDUCT NEW VEHICLES
-
-      await handleTransportSubmission(event);
-    }
+    // else if (
+    //   wasSubmitted &&
+    //   event.isSubmitted &&
+    //   transportChanged &&
+    //   !event.transportInventoryRestored
+    // ) {
+    //   // RESTORE OLD VEHICLES
+    //
+    //   for (const transport of oldTransports) {
+    //     await restoreTransportInventory(transport.vehicles);
+    //   }
+    //
+    //   // DEDUCT NEW VEHICLES
+    //
+    //   await handleTransportSubmission(event);
+    // }
     if (event.adminApproval) {
       Object.entries(changedModules).forEach(([module, changed]) => {
         if (changed) {
@@ -617,6 +695,8 @@ exports.updateEvent = async (req, res) => {
       });
     }
     event.timeline.updatedAt = new Date();
+
+    await validateAccommodationAvailability(event, event._id);
 
     const updatedEvent = await event.save();
     res
@@ -717,6 +797,14 @@ exports.submitEvent = async (req, res) => {
       );
     }
 
+    if (payload.externalTransportDetails) {
+      event.externalTransportDetails = mergeObjects(
+        event.externalTransportDetails || {},
+        ensureObject(payload.externalTransportDetails),
+      );
+      initializeDepartmentStatus(event.externalTransportDetails);
+    }
+
     const wasSubmitted = event.isSubmitted;
 
     const normalizedStatus = normalizeStatus({
@@ -744,9 +832,11 @@ exports.submitEvent = async (req, res) => {
     // TRANSPORT INVENTORY DEDUCTION
     // =====================================
 
-    if (!wasSubmitted) {
-      await handleTransportSubmission(event);
-    }
+    // if (!wasSubmitted) {
+    //   await handleTransportSubmission(event);
+    // }
+
+    await validateAccommodationAvailability(event, event._id);
 
     const updatedEvent = await event.save();
     res
@@ -821,6 +911,10 @@ exports.getEventById = async (req, res) => {
 
         case "media":
           projection["mediaRequirementDetails"] = 1;
+          break;
+
+        case "externalTransport":
+          projection["externalTransportDetails"] = 1;
           break;
       }
     }
@@ -964,6 +1058,7 @@ exports.updateEventStatus = async (req, res) => {
       icts: "ictsDetails",
       audio: "audioDetails",
       transport: "transportDetails",
+      externalTransport: "externalTransportDetails",
       refreshment: "refreshmentDetails",
       accommodation: "accommodationDetails",
       purchase: "purchaseDetails",
@@ -1014,17 +1109,17 @@ exports.updateEventStatus = async (req, res) => {
 
       case "reject":
         event.status = "Rejected";
-        if (
-          event.isSubmitted &&
-          !event.transportInventoryRestored &&
-          event.transportDetails?.transports?.length
-        ) {
-          for (const transport of event.transportDetails.transports) {
-            await restoreTransportInventory(transport.vehicles);
-          }
-
-          event.transportInventoryRestored = true;
-        }
+        // if (
+        //   event.isSubmitted &&
+        //   !event.transportInventoryRestored &&
+        //   event.transportDetails?.transports?.length
+        // ) {
+        //   for (const transport of event.transportDetails.transports) {
+        //     await restoreTransportInventory(transport.vehicles);
+        //   }
+        //
+        //   event.transportInventoryRestored = true;
+        // }
         if (!event.timeline) {
           event.timeline = {
             departments: {},
@@ -1037,6 +1132,30 @@ exports.updateEventStatus = async (req, res) => {
         break;
 
       case "close":
+        // Validate all required conditions before closing
+        const missingConditions = [];
+        
+        if (!event.adminApproval) {
+          missingConditions.push("Admin approval is required");
+        }
+        if (!event.isDocumentsCompleted) {
+          missingConditions.push("Event documents must be completed");
+        }
+        if (!event.isExpenditureCompleted) {
+          missingConditions.push("Event expenditure must be completed");
+        }
+        if (!event.isFeedbackCompleted) {
+          missingConditions.push("Event feedback must be completed");
+        }
+
+        if (missingConditions.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: "Cannot close event. The following conditions must be met:",
+            conditions: missingConditions,
+          });
+        }
+
         event.status = "Closed";
         if (!event.timeline) {
           event.timeline = {
@@ -1044,17 +1163,18 @@ exports.updateEventStatus = async (req, res) => {
           };
         }
         event.timeline.closedAt = new Date();
-        if (
-          event.isSubmitted &&
-          !event.transportInventoryRestored &&
-          event.transportDetails?.transports?.length
-        ) {
-          for (const transport of event.transportDetails.transports) {
-            await restoreTransportInventory(transport.vehicles);
-          }
-
-          event.transportInventoryRestored = true;
-        }
+        event.isClosed = true;
+        // if (
+        //   event.isSubmitted &&
+        //   !event.transportInventoryRestored &&
+        //   event.transportDetails?.transports?.length
+        // ) {
+        //   for (const transport of event.transportDetails.transports) {
+        //     await restoreTransportInventory(transport.vehicles);
+        //   }
+        //
+        //   event.transportInventoryRestored = true;
+        // }
         // 📧 Send notification for event closure
         await notifyEventClosure(event, reason || "");
         break;
@@ -1236,6 +1356,7 @@ exports.getRequirementDetails = async (req, res) => {
       ictsDetails.status
       audioDetails.status
       transportDetails.status
+      externalTransportDetails.status
       refreshmentDetails.status
       accommodationDetails.status
       purchaseDetails.status
@@ -1276,6 +1397,11 @@ exports.getRequirementDetails = async (req, res) => {
       transport: {
         required: requirementDetails.transportRequired,
         status: event.transportDetails?.status || null,
+      },
+
+      externalTransport: {
+        required: requirementDetails.externalTransportRequired,
+        status: event.externalTransportDetails?.status || null,
       },
 
       refreshment: {
@@ -1571,15 +1697,92 @@ exports.checkVenueAvailability = async (req, res) => {
       success: true,
       status,
       message,
-      allAvailable: unavailableVenues.length === 0,
-      availableCount: availableVenues.length,
-      unavailableCount: unavailableVenues.length,
-      availableVenues,
-      unavailableVenues,
+      data: {
+        available: availableVenues,
+        unavailable: unavailableVenues,
+      },
     });
   } catch (error) {
-    console.error("Venue Availability Error:", error);
+    console.error("Venue Availability Check Error:", error);
 
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+// Get basic event details for a specific event
+exports.getBasicEvents = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID",
+      });
+    }
+
+    const event = await Event.findById(id)
+      .select(
+        "iqacNumber requestDetails.eventDetails.eventName requestDetails.eventDetails.eventSchedule requestDetails.organizerDetails.organizingDepartment requestDetails.organizerDetails.advanceAmount requestDetails.organizerDetails.purposeOfAdvance requestDetails.organizerDetails.organizers organizerId createdAt timeline.submittedAt",
+      )
+      .populate("organizerId", "salutation firstName lastName empId designation department email phone")
+      .lean();
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    const eventSchedule =
+      event.requestDetails?.eventDetails?.eventSchedule || [];
+    const firstEventDate = eventSchedule[0]?.eventDate;
+
+    // Guests are recorded against each event day in the event schedule.
+    const allGuests = eventSchedule.flatMap((day) =>
+      Array.isArray(day.guests)
+        ? day.guests.map((guest) => guest.name).filter(Boolean)
+        : [],
+    );
+
+    const organizerDetails = event.requestDetails?.organizerDetails || {};
+
+    const basicEventData = {
+      eventId: event._id,
+      iqacNumber: event.iqacNumber || "Not Assigned",
+      eventName: event.requestDetails?.eventDetails?.eventName || "N/A",
+      eventDate: firstEventDate || null,
+      guestNames: allGuests.length > 0 ? allGuests : [],
+      organizingDepartment: organizerDetails.organizingDepartment || "N/A",
+      advanceAmount: organizerDetails.advanceAmount || 0,
+      purposeOfAdvance: organizerDetails.purposeOfAdvance || "N/A",
+      dateAdvanceTaken: event.createdAt || null,
+      submissionDate: event.timeline?.submittedAt || null,
+      organizerDetails: event.organizerId
+        ? {
+            facultyId: event.organizerId._id,
+            salutation: event.organizerId.salutation || "N/A",
+            firstName: event.organizerId.firstName || "N/A",
+            lastName: event.organizerId.lastName || "N/A",
+            empId: event.organizerId.empId || "N/A",
+            designation: event.organizerId.designation || "N/A",
+            department: event.organizerId.department || "N/A",
+            email: event.organizerId.email || "N/A",
+            mobile: event.organizerId.phone || "N/A",
+          }
+        : null,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: basicEventData,
+    });
+  } catch (error) {
+    console.error("Get Basic Events Error:", error);
     return res.status(500).json({
       success: false,
       message: "Server Error",
@@ -1588,6 +1791,91 @@ exports.checkVenueAvailability = async (req, res) => {
   }
 };
 
+// Get required documents for an event based on event type
+exports.getEventRequiredDocuments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid event ID",
+      });
+    }
+
+    const event = await Event.findById(id)
+      .select(
+        "requestDetails.eventDetails.eventType requestDetails.eventDetails.eventName status",
+      )
+      .lean();
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    const eventType = event.requestDetails?.eventDetails?.eventType;
+
+    if (!eventType) {
+      return res.status(404).json({
+        success: false,
+        message: "Event type not found",
+      });
+    }
+
+    const eventRequirements = await EventRequirement.findOne({
+      eventType: eventType,
+    }).lean();
+
+    if (!eventRequirements) {
+      return res.status(404).json({
+        success: false,
+        message: "No document requirements found for this event type",
+      });
+    }
+
+    const activeDocuments = eventRequirements.documents
+      .filter((doc) => doc.isActive)
+      .sort((a, b) => a.order - b.order);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        eventId: event._id,
+        eventName: event.requestDetails?.eventDetails?.eventName,
+        eventType: eventType,
+        requiredDocuments: activeDocuments.map((doc) => ({
+          name: doc.name,
+          order: doc.order,
+        })),
+        totalRequired: activeDocuments.length,
+      },
+    });
+  } catch (error) {
+    console.error("Get Event Required Documents Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+exports.updateDocumentExpenditureApproval = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approved } = req.body;
+
+    if (req.user.role !== "admin" && req.user.isadmin !== true && req.user.role !== "superadmin") {
+      return res.status(403).json({
+        success: false,
+        message: "Only admin can perform this action",
+      });
+    }
+
+    const event = await Event.findById(id);
 // Get basic event details for a specific event
 exports.getBasicEvents = async (req, res) => {
   try {
@@ -1614,6 +1902,26 @@ exports.getBasicEvents = async (req, res) => {
       });
     }
 
+    if (!event.isDocumentsCompleted || !event.isExpenditureCompleted || !event.isFeedbackCompleted) {
+      return res.status(400).json({
+        success: false,
+        message: "isDocumentsCompleted, isExpenditureCompleted, and isFeedbackCompleted must all be true before changing this status",
+      });
+    }
+
+    event.documentExpenditureApproved = !!approved;
+    await event.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "documentExpenditureApproved updated successfully",
+      data: event,
+    });
+  } catch (error) {
+    console.error("updateDocumentExpenditureApproval Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
     const eventSchedule =
       event.requestDetails?.eventDetails?.eventSchedule || [];
     const firstEventDate = eventSchedule[0]?.eventDate;

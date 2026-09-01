@@ -302,6 +302,9 @@ const createFeedback = async (req, res) => {
     // store feedback id inside event
     event.feedbacks.push(feedback._id);
 
+    // mark feedback as completed
+    event.isFeedbackCompleted = true;
+
     await event.save();
 
     return res.status(201).json({

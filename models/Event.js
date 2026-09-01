@@ -37,7 +37,7 @@ const organizerSchema = new mongoose.Schema(
     isBudgetApproved: { type: Boolean, default: false },
     financeRequired: { type: Boolean, default: false },
     estimatedBudget: { type: Number },
-    
+
     advanceAmount: { type: Number },
     purposeOfAdvance: { type: String },
     advanceToBeReceviedWithin: { type: Number },
@@ -142,6 +142,7 @@ const requirementSchema = new mongoose.Schema(
     refreshmentRequired: { type: Boolean, default: false },
     accommodationRequired: { type: Boolean, default: false },
     mediaRequired: { type: Boolean, default: false },
+    externalTransportRequired: { type: Boolean, default: false },
   },
   { _id: false },
 );
@@ -202,7 +203,7 @@ const ictsSchema = new mongoose.Schema(
 
         venueName: { type: String, trim: true },
 
-        desktopLaptop: [
+        laptopSpec: [
           {
             type: { type: String },
             count: Number,
@@ -234,6 +235,14 @@ const ictsSchema = new mongoose.Schema(
         otherRequirements: { type: String },
 
         specialRequirements: { type: String },
+
+        staff: {
+          name: String,
+          email: String,
+          phone: String,
+          empId: String,
+          designation: String,
+        },
       },
     ],
     status: departmentStatusSchema,
@@ -274,6 +283,54 @@ const audioSchema = new mongoose.Schema(
   },
   { _id: false },
 );
+
+// externalTransportDetails
+const externalPassengerSchema = new mongoose.Schema(
+  {
+    name: { type: String, trim: true },
+    phone: { type: String, trim: true },
+    email: { type: String, trim: true },
+    age: { type: Number },
+    gender: { type: String },
+    designation: { type: String, trim: true },
+    organization: { type: String, trim: true },
+  },
+  { _id: false },
+);
+
+const externalTransportEntrySchema = new mongoose.Schema(
+  {
+    travelOption: { type: String, trim: true }, // flight / train / bus / etc. — no enum
+
+    travelDate: { type: Date },
+
+    from: { type: String, trim: true },
+    to: { type: String, trim: true },
+
+    totalPassengers: { type: Number, default: 0 },
+
+    passengers: [externalPassengerSchema],
+
+    // Class — for flight: Business / Economy etc.; for train: 2A / 3A / SL etc.
+    classOrBerth: [{ type: String, trim: true }],
+
+    // Special references — flight number or train number
+    flightNumber: { type: String, trim: true },
+    trainNumber: { type: String, trim: true },
+
+    specialRequirements: { type: String, trim: true },
+  },
+  { _id: true },
+);
+
+const externalTransportSchema = new mongoose.Schema(
+  {
+    externalTransports: [externalTransportEntrySchema],
+    status: departmentStatusSchema,
+  },
+  { _id: false },
+);
+
 
 // transportDetails (finalized)
 const transportSchema = new mongoose.Schema(
@@ -346,6 +403,12 @@ const refreshmentSchema = new mongoose.Schema(
               vegCount: Number,
               nonVegCount: Number,
             },
+            trainer: {
+              vegCount: Number,
+              nonVegCount: Number,
+            },
+            refreshmentCount:Number,
+            
           },
         ],
 
@@ -376,17 +439,25 @@ const accommodationSchema = new mongoose.Schema(
           },
         ],
 
-        roomOccupancy: [
+        roomSelections: [
           {
-            type: { type: String },
-            count: Number,
-          },
-        ],
+            roomId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "AccommodationRoom",
+              required: true,
+            },
+            roomNumber: String,
+            venue: String,
+            occupantCount: Number,
+            adminContacted: {
+              type: Boolean,
+              default: false,
+            },
 
-        roomCategory: [
-          {
-            type: { type: String },
-            count: Number,
+            requiresAdminConfirmation: {
+              type: Boolean,
+              default: false,
+            },
           },
         ],
 
@@ -465,7 +536,7 @@ const purchaseSchema = new mongoose.Schema(
                 },
               ],
 
-              glassCupQty: Number,
+              giftsQty: Number,
 
               voucher: [
                 {
@@ -525,7 +596,7 @@ const mediaRequirementSchema = new mongoose.Schema(
               email: String,
             },
           ],
-          
+
           staffHistory: [
             {
               previousStaff: [
@@ -534,21 +605,21 @@ const mediaRequirementSchema = new mongoose.Schema(
                   email: String,
                 },
               ],
-          
+
               newStaff: [
                 {
                   name: String,
                   email: String,
                 },
               ],
-          
+
               reason: String,
-          
+
               changedBy: {
                 name: String,
                 email: String,
               },
-          
+
               changedAt: {
                 type: Date,
                 default: Date.now,
@@ -660,6 +731,7 @@ const eventSchema = new mongoose.Schema(
     accommodationDetails: accommodationSchema,
     purchaseDetails: purchaseSchema,
     mediaRequirementDetails: mediaRequirementSchema,
+    externalTransportDetails: externalTransportSchema,
 
     isSubmitted: { type: Boolean, default: false },
 
@@ -667,10 +739,12 @@ const eventSchema = new mongoose.Schema(
     isHodApproved: { type: Boolean, default: false },
     adminApproval: { type: Boolean, default: false },
 
-    transportInventoryRestored: {
-      type: Boolean,
-      default: false,
-    },
+    isDocumentsCompleted: { type: Boolean, default: false },
+    isExpenditureCompleted: { type: Boolean, default: false },
+    isFeedbackCompleted: { type: Boolean, default: false },
+    documentExpenditureApproved: { type: Boolean, default: true },
+    isClosed: { type: Boolean, default: false },
+    // transportInventoryRestored: { type: Boolean, default: false },
 
     // status
     status: {
@@ -742,6 +816,11 @@ const eventSchema = new mongoose.Schema(
         },
 
         video: {
+          acknowledgedAt: Date,
+          completedAt: Date,
+        },
+
+        externalTransport: {
           acknowledgedAt: Date,
           completedAt: Date,
         },

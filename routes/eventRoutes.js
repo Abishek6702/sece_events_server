@@ -14,6 +14,7 @@ const {
   getRequirementDetails,
   getUserDraftEvents,
   checkVenueAvailability,
+  updateDocumentExpenditureApproval,
   getBasicEvents,
   getEventRequiredDocuments,
 } = require("../controllers/eventController.js");
@@ -35,10 +36,10 @@ router.post( "/check-venue-availability",protect,checkVenueAvailability,);
 router.get("/requirements/:id", protect, getRequirementDetails);
 router.get("/documents/:id",protect, getEventRequiredDocuments);
 router.get("/draft/:organizerId", protect, getUserDraftEvents);
+router.patch("/:id/document-expenditure-approval", protect, updateDocumentExpenditureApproval);
 router.patch("/:id/status", protect, updateEventStatus);
 router.put("/:id", protect, uploadFields, updateEvent);
 router.patch("/:id/submit", protect, uploadFields, submitEvent);
 router.delete("/:id", protect, deleteEvent);
 router.get("/:id", protect, getEventById);
-
 module.exports = router;
