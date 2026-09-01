@@ -35,9 +35,15 @@ exports.createEventType = async (req, res) => {
 // Get All Event Types (excluding "Other")
 exports.getAllEventTypes = async (req, res) => {
   try {
-    const events = await EventType.find({
-      eventType: { $ne: "Other" }
-    }).sort({ createdAt: -1 });
+    const role = req.user?.role;
+
+    const rolesWithOtherAccess = ["super admin 1", "super admin 2","super admin","admin"];
+
+    const filter = rolesWithOtherAccess.includes(role)
+      ? {}
+      : { eventType: { $ne: "Other" } };
+
+    const events = await EventType.find(filter).sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
