@@ -1058,6 +1058,7 @@ exports.updateEventStatus = async (req, res) => {
       icts: "ictsDetails",
       audio: "audioDetails",
       transport: "transportDetails",
+      externalTransport: "externalTransportDetails",
       refreshment: "refreshmentDetails",
       accommodation: "accommodationDetails",
       purchase: "purchaseDetails",
@@ -1354,6 +1355,7 @@ exports.getRequirementDetails = async (req, res) => {
       ictsDetails.status
       audioDetails.status
       transportDetails.status
+      externalTransportDetails.status
       refreshmentDetails.status
       accommodationDetails.status
       purchaseDetails.status
@@ -1394,6 +1396,11 @@ exports.getRequirementDetails = async (req, res) => {
       transport: {
         required: requirementDetails.transportRequired,
         status: event.transportDetails?.status || null,
+      },
+
+      externalTransport: {
+        required: requirementDetails.externalTransportRequired,
+        status: event.externalTransportDetails?.status || null,
       },
 
       refreshment: {
