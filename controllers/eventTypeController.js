@@ -32,10 +32,12 @@ exports.createEventType = async (req, res) => {
   }
 };
 
-// Get All Event Types
+// Get All Event Types (excluding "Other")
 exports.getAllEventTypes = async (req, res) => {
   try {
-    const events = await EventType.find().sort({ createdAt: -1 });
+    const events = await EventType.find({
+      eventType: { $ne: "Other" }
+    }).sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
