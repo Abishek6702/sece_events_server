@@ -71,6 +71,7 @@ exports.getDashboardTable = async (req, res) => {
         overallStatus: event.status,
 
         adminApproval: event.adminApproval,
+        isClosed: event.isClosed,
       };
 
       // ================= ADMIN =================
