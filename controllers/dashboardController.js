@@ -43,7 +43,7 @@ const getMediaDepartmentStats = (events, requirementKey) => {
 const getMediaTypeStats = async (mediaType) => {
   const statusPath = `$mediaRequirementDetails.mediaRequirements.${mediaType}.status`;
   const [stats] = await Event.aggregate([
-    { $match: { status: { $ne: "Draft" } } },
+    { $match: { status: "Approved" } },
     { $unwind: "$mediaRequirementDetails.mediaRequirements" },
     { $match: { "mediaRequirementDetails.mediaRequirements.typeOfMedia": mediaType } },
     {
@@ -140,9 +140,13 @@ exports.getDashboardStats = async (req, res) => {
       ? ""
       : moduleAliases[requestedModule] || requestedModule;
 
-    const filter = {
-      status: { $ne: "Draft" },
-    };
+    // Top-level event counts: admin sees all non-draft, module roles see only approved
+    const filter = module
+      ? { status: "Approved" }
+      : { status: { $ne: "Draft" } };
+
+    // Module stats always scoped to admin-approved events only
+    const moduleFilter = { status: "Approved" };
 
     const totalEvents = await Event.countDocuments(filter);
 
@@ -176,16 +180,25 @@ exports.getDashboardStats = async (req, res) => {
       video: "video",
     };
 
-    // Validate module
     if (module && !modules[module]) {
       return res.status(400).json({
         message: "Invalid module",
       });
     }
 
-    const moduleStats = {};
+    // Map each module to its requirementDetails flag field
+    const requirementFlags = {
+      venue: "requestDetails.requirementDetails.venueRequired",
+      icts: "requestDetails.requirementDetails.ictsRequired",
+      audio: "requestDetails.requirementDetails.audioRequired",
+      transport: "requestDetails.requirementDetails.transportRequired",
+      refreshment: "requestDetails.requirementDetails.refreshmentRequired",
+      accommodation: "requestDetails.requirementDetails.accommodationRequired",
+      purchase: "requestDetails.requirementDetails.purchaseRequired",
+      media: "requestDetails.requirementDetails.mediaRequired",
+    };
 
-    // If module is provided, calculate only that module
+    const moduleStats = {};
     const moduleKeys = module ? [module] : Object.keys(modules);
 
     for (const key of moduleKeys) {
@@ -195,37 +208,35 @@ exports.getDashboardStats = async (req, res) => {
       }
 
       const path = modules[key];
+      const reqFlag = requirementFlags[key];
 
-      const total = await Event.countDocuments({
-        ...filter,
-        [path]: { $exists: true },
-      });
+      // Base: approved events that actually requested this module
+      const moduleBase = {
+        ...moduleFilter,
+        ...(reqFlag ? { [reqFlag]: true } : {}),
+      };
 
-      const approved = await Event.countDocuments({
-        ...filter,
+      const total = await Event.countDocuments(moduleBase);
+
+      const acknowledged = await Event.countDocuments({
+        ...moduleBase,
         [`${path}.status.status`]: "Acknowledged",
       });
 
       const completed = await Event.countDocuments({
-        ...filter,
+        ...moduleBase,
         [`${path}.status.status`]: "Completed",
       });
 
       const pending = await Event.countDocuments({
-        ...filter,
-        $or: [
-          {
-            [`${path}.status.status`]: "Pending for Acknowledge",
-          },
-          {
-            [`${path}.status`]: { $exists: false },
-          },
-        ],
+        ...moduleBase,
+        [`${path}.status.status`]: { $nin: ["Acknowledged", "Completed"] },
       });
 
       moduleStats[key] = {
         total,
-        approved,
+        approved: acknowledged,
+        acknowledged,
         completed,
         pending,
       };
