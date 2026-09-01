@@ -360,3 +360,51 @@ exports.getFacultyDashboardTable = async (req, res) => {
     });
   }
 };
+
+exports.getHodDashboardTable = async (req, res) => {
+  try {
+    const { department } = req.query;
+
+    if (!department) {
+      return res.status(400).json({
+        success: false,
+        message: "department is required",
+      });
+    }
+
+    const events = await Event.find({
+      "requestDetails.organizerDetails.organizingDepartment": department,
+      status: { $ne: "Draft" },
+    })
+      .populate("organizerId", "name email")
+      .lean()
+      .sort({ createdAt: -1 });
+
+    const data = events.map((event) => ({
+      eventId: event._id,
+
+      eventName: event.requestDetails?.eventDetails?.eventName || "",
+      eventType: event.requestDetails?.eventDetails?.eventType || "",
+      venues: event.venueDetails?.venues?.map((v) => v.venueName) || [],
+      dates: event.requestDetails?.eventDetails?.eventSchedule?.map((d) => d.eventDate) || [],
+      organizingDepartment: event.requestDetails?.organizerDetails?.organizingDepartment || "",
+      adminApproval: event.adminApproval,
+      status: event.status,
+      hodApproval: event.isHodApproved,
+      createdAt: event.createdAt,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      count: data.length,
+      data,
+    });
+  } catch (error) {
+    console.error("HOD dashboard table error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+

@@ -36,6 +36,16 @@ const buildFinanceFields = (body) => ({
   advancePurpose: parseStringField(body.advancePurpose),
 });
 
+const parseJsonField = (value) => {
+  if (typeof value !== "string") return value;
+
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return value;
+  }
+};
+
 const validateFinanceFields = ({
   financeRequired,
   estimatedAmount,
@@ -248,7 +258,7 @@ exports.createTransport = async (req, res) => {
       moduleName: "transport",
       action: "submitted",
       actorName: req.user?.name || req.body?.employeeName || "The requester",
-      roleHint: body.financeRequired === "Yes" ? "super-admin2" : "super-admin1",
+      roleHint: "super-admin",
     });
 
     res.status(201).json({
@@ -330,61 +340,104 @@ exports.getSingleTransport = async (req, res) => {
 // ==============================
 exports.updateTransport = async (req, res) => {
   try {
-    const updateBody = { ...req.body };
-    const financeFieldsPresent = [
-      "financeRequired",
-      "estimatedAmount",
-      "advanceAmount",
-      "advancePurpose",
-    ].some((key) => req.body.hasOwnProperty(key));
+    const role = String(req.user?.role || "").toLowerCase().replace(/\s+/g, " ");
+    const isSuperAdmin = ["super admin 1", "super admin 2"].includes(role);
+    const isAdminLike = ["super admin 1","super admin 2","superadmin1","superadmin2","superadmin","admin","administrator"].includes(role);
 
-    if (financeFieldsPresent) {
+    if (!isAdminLike) {
+      const updateBody = { ...req.body };
+      ["checkpoints", "vehicles", "accompanyingStaff"].forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(updateBody, key)) {
+          updateBody[key] = parseJsonField(updateBody[key]);
+        }
+      });
+      const financeFieldsPresent = ["financeRequired","estimatedAmount","advanceAmount","advancePurpose"].some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key));
+      if (financeFieldsPresent) {
+        const financeFields = buildFinanceFields(req.body);
+        const validation = validateFinanceFields(financeFields);
+        if (!validation.valid) return res.status(400).json({ success: false, message: validation.message });
+        updateBody.financeRequired = financeFields.financeRequired;
+        if (financeFields.financeRequired === "Yes") {
+          updateBody.advanceAmount = financeFields.advanceAmount;
+          updateBody.estimatedAmount = financeFields.estimatedAmount;
+          updateBody.advancePurpose = financeFields.advancePurpose;
+        } else {
+          updateBody.advanceAmount = null;
+          updateBody.estimatedAmount = null;
+          updateBody.advancePurpose = "";
+        }
+      }
+      const transport = await Transport.findByIdAndUpdate(req.params.id, updateBody, { new: true, runValidators: true });
+      if (!transport) return res.status(404).json({ success: false, message: "Transport not found" });
+      return res.status(200).json({ success: true, message: "Transport updated successfully", data: transport });
+    }
+
+    // Admin flow
+    const transport = await Transport.findById(req.params.id);
+    if (!transport) return res.status(404).json({ success: false, message: "Transport not found" });
+
+    const allowed = new Set(["pickupDateTime","dropDateTime","pickupLocation","dropLocation","checkpoints","totalPassengers","vehicles","numberOfBusNeeded","numberOfAccompanyingStaff","accompanyingStaff","specialRequirements","referenceFiles","principalApprovalForm","financeRequired","advanceAmount","estimatedAmount","advancePurpose","advanceToBeReceviedWithin"]);
+
+    const financeFieldsPresent2 = ["financeRequired","estimatedAmount","advanceAmount","advancePurpose"].some((k) => Object.prototype.hasOwnProperty.call(req.body || {}, k));
+    if (financeFieldsPresent2) {
       const financeFields = buildFinanceFields(req.body);
       const validation = validateFinanceFields(financeFields);
-
-      if (!validation.valid) {
-        return res.status(400).json({
-          success: false,
-          message: validation.message,
-        });
-      }
-
-      updateBody.financeRequired = financeFields.financeRequired;
-
+      if (!validation.valid) return res.status(400).json({ success: false, message: validation.message });
+      transport.financeRequired = financeFields.financeRequired;
       if (financeFields.financeRequired === "Yes") {
-        updateBody.advanceAmount = financeFields.advanceAmount;
-        updateBody.estimatedAmount = financeFields.estimatedAmount;
-        updateBody.advancePurpose = financeFields.advancePurpose;
+        transport.advanceAmount = financeFields.advanceAmount;
+        transport.estimatedAmount = financeFields.estimatedAmount;
+        transport.advancePurpose = financeFields.advancePurpose;
       } else {
-        updateBody.advanceAmount = null;
-        updateBody.estimatedAmount = null;
-        updateBody.advancePurpose = "";
+        transport.advanceAmount = null;
+        transport.estimatedAmount = null;
+        transport.advancePurpose = "";
       }
     }
 
-    const transport =
-      await Transport.findByIdAndUpdate(
-        req.params.id,
-        updateBody,
-        {
-          new: true,
-          runValidators: true,
-        }
-      );
+    Object.keys(req.body).forEach((key) => {
+      if (!allowed.has(key)) return;
+      if (["checkpoints","vehicles","accompanyingStaff"].includes(key)) {
+        transport[key] = parseJsonField(req.body[key]);
+        return;
+      }
+      transport[key] = req.body[key];
+    });
 
-    if (!transport) {
-      return res.status(404).json({
-        success: false,
-        message: "Transport not found",
-      });
+    const file = req.files?.principalApprovalForm?.[0];
+    if (file) transport.principalApprovalForm = normalizeFileReference(file);
+
+    const headApprovalWasCompleted =
+      isSuperAdmin && String(transport.headApproval?.status || "").trim() === "Completed";
+
+    if (headApprovalWasCompleted) {
+      transport.headApproval.status = "Pending";
+      transport.headApproval.approvedBy = null;
+      transport.headApproval.approvedAt = null;
+    } else if (transport.headApproval && String(transport.headApproval.status || "").trim() === "Acknowledged") {
+      transport.headApproval.status = "Pending";
+      if (Object.prototype.hasOwnProperty.call(transport.headApproval, "approvedBy")) transport.headApproval.approvedBy = null;
+      if (Object.prototype.hasOwnProperty.call(transport.headApproval, "approvedAt")) transport.headApproval.approvedAt = null;
+      if (Object.prototype.hasOwnProperty.call(transport.headApproval, "updatedAt")) transport.headApproval.updatedAt = null;
+      if (Object.prototype.hasOwnProperty.call(transport, "acknowledgedBy")) transport.acknowledgedBy = null;
+      if (Object.prototype.hasOwnProperty.call(transport, "acknowledgedAt")) transport.acknowledgedAt = null;
     }
 
-    res.status(200).json({
-      success: true,
-      message:
-        "Transport updated successfully",
-      data: transport,
-    });
+    if (Object.prototype.hasOwnProperty.call(transport, "finalStatus")) transport.finalStatus = "Pending";
+    if (Object.prototype.hasOwnProperty.call(transport, "status")) transport.status = "Pending";
+
+    if (Array.isArray(transport.approvalHistory)) {
+      if (headApprovalWasCompleted) {
+        transport.approvalHistory.push({ role: "transport head", approvedBy: null, action: "Pending", remarks: "Waiting for Head approval", actionDate: null });
+      } else {
+        const idx = transport.approvalHistory.findIndex((h) => String(h.role || "").toLowerCase().includes("transport head"));
+        if (idx >= 0) transport.approvalHistory[idx] = { ...transport.approvalHistory[idx], action: "Pending", approvedBy: null, actionDate: null };
+        else transport.approvalHistory.push({ role: "transport head", approvedBy: null, action: "Pending", remarks: "Waiting for Head approval", actionDate: null });
+      }
+    }
+
+    await transport.save();
+    return res.status(200).json({ success: true, message: "Request updated successfully and sent back to Pending", data: transport });
   } catch (error) {
     console.log(error);
 
@@ -460,7 +513,7 @@ exports.patchTransport = async (req, res) => {
       "estimatedAmount",
       "advanceAmount",
       "advancePurpose",
-    ].some((key) => req.body.hasOwnProperty(key));
+    ].some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key));
 
     if (financeFieldsPresent) {
       const financeFields = buildFinanceFields(req.body);

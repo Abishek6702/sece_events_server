@@ -826,6 +826,8 @@ const eventSchema = new mongoose.Schema(
         },
       },
     },
+    rejectReason: { type: String, default: "" },
+
     feedbacks: [
       {
         type: mongoose.Schema.Types.ObjectId,

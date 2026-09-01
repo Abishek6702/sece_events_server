@@ -37,6 +37,16 @@ const buildFinanceFields = (body) => ({
   advancePurpose: parseStringField(body.advancePurpose),
 });
 
+const parseJsonField = (value) => {
+  if (typeof value !== "string") return value;
+
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return value;
+  }
+};
+
 const validateFinanceFields = ({
   financeRequired,
   estimatedAmount,
@@ -383,7 +393,7 @@ exports.createIndividualMedia = async (req, res) => {
       moduleName: "media",
       action: "submitted",
       actorName: req.user?.name || req.body?.employeeName || "The requester",
-      roleHint: body.financeRequired === "Yes" ? "super-admin2" : "super-admin1",
+      roleHint: "super-admin",
     });
 
     res.status(201).json({
@@ -467,60 +477,104 @@ exports.getSingleIndividualMedia = async (req, res) => {
 // ==============================
 exports.updateIndividualMedia = async (req, res) => {
   try {
-    const updateBody = { ...req.body };
-    const financeFieldsPresent = [
-      "financeRequired",
-      "estimatedAmount",
-      "advanceAmount",
-      "advancePurpose",
-    ].some((key) => req.body.hasOwnProperty(key));
+    const role = String(req.user?.role || "").toLowerCase().replace(/\s+/g, " ");
+    const isSuperAdmin = ["super admin 1", "super admin 2"].includes(role);
+    const isAdminLike = ["super admin 1","super admin 2","superadmin1","superadmin2","superadmin","admin","administrator"].includes(role);
 
-    if (financeFieldsPresent) {
+    if (!isAdminLike) {
+      const updateBody = { ...req.body };
+      ["typeOfMedia", "files", "poster", "video"].forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(updateBody, key)) {
+          updateBody[key] = parseJsonField(updateBody[key]);
+        }
+      });
+      const financeFieldsPresent = ["financeRequired","estimatedAmount","advanceAmount","advancePurpose"].some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key));
+      if (financeFieldsPresent) {
+        const financeFields = buildFinanceFields(req.body);
+        const validation = validateFinanceFields(financeFields);
+        if (!validation.valid) return res.status(400).json({ success: false, message: validation.message });
+        updateBody.financeRequired = financeFields.financeRequired;
+        if (financeFields.financeRequired === "Yes") {
+          updateBody.advanceAmount = financeFields.advanceAmount;
+          updateBody.estimatedAmount = financeFields.estimatedAmount;
+          updateBody.advancePurpose = financeFields.advancePurpose;
+        } else {
+          updateBody.advanceAmount = null;
+          updateBody.estimatedAmount = null;
+          updateBody.advancePurpose = "";
+        }
+      }
+      const media = await IndividualMedia.findByIdAndUpdate(req.params.id, updateBody, { new: true, runValidators: true });
+      if (!media) return res.status(404).json({ success: false, message: "Individual media not found" });
+      return res.status(200).json({ success: true, message: "Individual media updated successfully", data: media });
+    }
+
+    // Admin flow
+    const media = await IndividualMedia.findById(req.params.id);
+    if (!media) return res.status(404).json({ success: false, message: "Individual media not found" });
+
+    const allowed = new Set(["dayIndex","files","typeOfMedia","poster","video","principalApprovalForm","referenceFiles","financeRequired","advanceAmount","estimatedAmount","advancePurpose","advanceToBeReceviedWithin"]);
+
+    const financeFieldsPresent2 = ["financeRequired","estimatedAmount","advanceAmount","advancePurpose"].some((k) => Object.prototype.hasOwnProperty.call(req.body || {}, k));
+    if (financeFieldsPresent2) {
       const financeFields = buildFinanceFields(req.body);
       const validation = validateFinanceFields(financeFields);
-
-      if (!validation.valid) {
-        return res.status(400).json({
-          success: false,
-          message: validation.message,
-        });
-      }
-
-      updateBody.financeRequired = financeFields.financeRequired;
-
+      if (!validation.valid) return res.status(400).json({ success: false, message: validation.message });
+      media.financeRequired = financeFields.financeRequired;
       if (financeFields.financeRequired === "Yes") {
-        updateBody.advanceAmount = financeFields.advanceAmount;
-        updateBody.estimatedAmount = financeFields.estimatedAmount;
-        updateBody.advancePurpose = financeFields.advancePurpose;
+        media.advanceAmount = financeFields.advanceAmount;
+        media.estimatedAmount = financeFields.estimatedAmount;
+        media.advancePurpose = financeFields.advancePurpose;
       } else {
-        updateBody.advanceAmount = null;
-        updateBody.estimatedAmount = null;
-        updateBody.advancePurpose = "";
+        media.advanceAmount = null;
+        media.estimatedAmount = null;
+        media.advancePurpose = "";
       }
     }
 
-    const media = await IndividualMedia.findByIdAndUpdate(
-      req.params.id,
-      updateBody,
-      {
-        new: true,
-        runValidators: true,
+    Object.keys(req.body).forEach((key) => {
+      if (!allowed.has(key)) return;
+      if (["files","typeOfMedia","poster","video"].includes(key)) {
+        media[key] = parseJsonField(req.body[key]);
+        return;
       }
-    );
-
-    if (!media) {
-      return res.status(404).json({
-        success: false,
-        message: "Individual media not found",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message:
-        "Individual media updated successfully",
-      data: media,
+      media[key] = req.body[key];
     });
+
+    const file = req.files?.principalApprovalForm?.[0];
+    if (file) media.principalApprovalForm = normalizeFileReference(file);
+
+    const headApprovalWasCompleted =
+      isSuperAdmin && String(media.headApproval?.status || "").trim() === "Completed";
+
+    if (headApprovalWasCompleted) {
+      media.headApproval.status = "Pending";
+      media.headApproval.approvedBy = null;
+      media.headApproval.approvedAt = null;
+    } else if (media.headApproval && String(media.headApproval.status || "").trim() === "Acknowledged") {
+      media.headApproval.status = "Pending";
+      if (Object.prototype.hasOwnProperty.call(media.headApproval, "approvedBy")) media.headApproval.approvedBy = null;
+      if (Object.prototype.hasOwnProperty.call(media.headApproval, "approvedAt")) media.headApproval.approvedAt = null;
+      if (Object.prototype.hasOwnProperty.call(media.headApproval, "updatedAt")) media.headApproval.updatedAt = null;
+      if (Object.prototype.hasOwnProperty.call(media, "acknowledgedBy")) media.acknowledgedBy = null;
+      if (Object.prototype.hasOwnProperty.call(media, "acknowledgedAt")) media.acknowledgedAt = null;
+    } 
+
+    if (Object.prototype.hasOwnProperty.call(media, "finalStatus")) media.finalStatus = "Pending";
+    if (Object.prototype.hasOwnProperty.call(media, "status")) media.status = "Pending";
+
+    if (Array.isArray(media.approvalHistory)) {
+      if (headApprovalWasCompleted) {
+        media.approvalHistory.push({ role: "media head", approvedBy: null, action: "Pending", remarks: "Waiting for Head approval", actionDate: null });
+      } else {
+        const idx = media.approvalHistory.findIndex((h) => String(h.role || "").toLowerCase().includes("media head"));
+        if (idx >= 0) media.approvalHistory[idx] = { ...media.approvalHistory[idx], action: "Pending", approvedBy: null, actionDate: null };
+        else media.approvalHistory.push({ role: "media head", approvedBy: null, action: "Pending", remarks: "Waiting for Head approval", actionDate: null });
+      }
+    }
+
+    await media.save();
+    return res.status(200).json({ success: true, message: "Request updated successfully and sent back to Pending", data: media });
   } catch (error) {
     console.log(error);
 
@@ -596,7 +650,7 @@ exports.patchIndividualMedia = async (req, res) => {
       "estimatedAmount",
       "advanceAmount",
       "advancePurpose",
-    ].some((key) => req.body.hasOwnProperty(key));
+    ].some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key));
 
     if (financeFieldsPresent) {
       const financeFields = buildFinanceFields(req.body);

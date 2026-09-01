@@ -32,7 +32,15 @@ router.get("/", getAllTransports);
 router.get("/:id", getSingleTransport);
 
 // UPDATE
-router.put("/:id", updateTransport);
+router.put(
+  "/:id",
+  upload.fields([
+    { name: "principalApprovalForm", maxCount: 1 },
+    { name: "files", maxCount: 10 },
+    { name: "attachments", maxCount: 10 },
+  ]),
+  updateTransport
+);
 
 // DELETE
 router.delete("/:id", deleteTransport);

@@ -95,6 +95,9 @@ const buildSubmissionItem = (item, formType, resolvedEmployee) => {
     updatedAt: item.updatedAt,
     status: item.finalStatus || item.overallStatus || item.status,
     workflowStage: item.workflowStage || null,
+    superAdminApproval: item.superAdminApproval || null,
+    headApproval: item.headApproval || null,
+    finalStatus: item.finalStatus || null,
     // Submissions may store relevant dates in different fields per module.
     // Provide a best-effort top-level `date` by checking common locations.
     date:
@@ -112,7 +115,12 @@ const buildSubmissionItem = (item, formType, resolvedEmployee) => {
   };
 };
 
-const normalizeRole = (role = "") => String(role).toLowerCase().trim();
+const normalizeRole = (role = "") =>
+  String(role || "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const isReviewerRole = (role = "") => {
   const normalizedRole = normalizeRole(role);
@@ -247,11 +255,30 @@ const getModuleKeyFromModel = (model) => {
   return null;
 };
 
+const getModuleKeyFromHeadRole = (role = "") => {
+  const normalizedRole = normalizeRole(role);
+
+  return {
+    "food head": "food",
+    "purchase head": "purchase",
+    "transport head": "transport",
+    "media head": "media",
+  }[normalizedRole] || "";
+};
+
 const isModuleHeadRole = (role, model) => {
   const normalizedRole = normalizeRole(role);
   const expectedRole = getModuleHeadRole(model);
   return normalizedRole === expectedRole;
 };
+
+const isHeadReviewerRole = (role) => [
+  "head",
+  "food head",
+  "purchase head",
+  "transport head",
+  "media head",
+].includes(normalizeRole(role));
 
 const setSubmissionStatus = (item, statusValue) => {
   const normalizedValue = String(statusValue || "").trim();
@@ -326,6 +353,22 @@ const buildAdminApprovedFilter = (moduleKey = "") => {
   }
 };
 
+const buildHeadPendingFilter = () => ({
+  $and: [
+    {
+      $or: [
+        { "superAdminApproval.status": "Approved" },
+        { "superAdmin1Approval.status": "Approved" },
+        { "superAdmin2Approval.status": "Approved" },
+      ],
+    },
+    { "superAdminApproval.status": { $ne: "Rejected" } },
+    { "superAdmin1Approval.status": { $ne: "Rejected" } },
+    { "superAdmin2Approval.status": { $ne: "Rejected" } },
+    { "headApproval.status": { $in: ["Pending", "Completed"] } },
+  ],
+});
+
 const getDepartmentFacultyIds = async (department) => {
   if (!department) {
     return [];
@@ -386,6 +429,10 @@ const buildMediaHeadListFilter = async ({
     ],
   };
 
+  if (!includeAll) {
+    filter.$and = [buildHeadPendingFilter()];
+  }
+
   const role = normalizeRole(user?.role);
   const normalizedMediaType = String(mediaType || "")
     .trim()
@@ -397,17 +444,6 @@ const buildMediaHeadListFilter = async ({
     filter.typeOfMedia = { $in: ["Video"] };
   } else {
     filter.typeOfMedia = { $in: ["Poster", "Video"] };
-  }
-
-  if (!includeAll) {
-    filter.$and = filter.$and || [];
-    filter.$and.push({
-      $or: [
-        { "headApproval.status": "Pending" },
-        { "headApproval.status": "Acknowledged" },
-        { "headApproval.status": { $exists: false } },
-      ],
-    });
   }
 
   if (role === "poster head") {
@@ -495,49 +531,41 @@ const buildSubmissionFilter = async ({
   }
 
   if (applyReviewFilter) {
-    if (isModuleHead) {
-      // Module heads see submissions that have reached DepartmentReview.
-      filter.workflowStage = "DepartmentReview";
-
+    if (isModuleHead || isHeadReviewerRole(role)) {
       if (!includeAll) {
-        filter.$or = [
-          { "headApproval.status": "Pending" },
-          { "headApproval.status": "Acknowledged" },
-          { "headApproval.status": { $exists: false } },
-        ];
+        filter.$and = [buildHeadPendingFilter()];
       }
     } else if (isActualDepartmentHead) {
-      // Department heads (HOD) who are not module heads see submissions
-      // awaiting HOD approval (Submitted stage). Show items with pending hodApproval.
-      filter.workflowStage = "Submitted";
-
-      if (!includeAll) {
-        filter.$or = [
-          { "hodApproval.status": "Pending" },
-          { "hodApproval.status": { $exists: false } },
-        ];
-      }
+      // HODs can view the complete history for their department.
     } else if (isSuperAdminRole(role) && superStage) {
-      // Super Admins should see items that are either at their SuperAdmin
-      // workflow stage, items that are still "Submitted" (HOD optional),
-      // OR items that were admin-approved for the module
-      // (purchase uses different fields). Build a composite $or so all
-      // representations are covered.
-      filter.$or = [
-        { workflowStage: superStage },
-        { workflowStage: "Submitted" },
-        buildAdminApprovedFilter(normalizedModule),
-      ];
+      // Super admins retain requests across the complete workflow lifecycle.
+      const approvalField = role === "super admin 1"
+        ? "superAdmin1Approval.approvedBy"
+        : "superAdmin2Approval.approvedBy";
 
-      // Additionally restrict by `financeRequired` so Super Admin 1 doesn't
-      // receive submissions that require finance (those should go to Super Admin 2).
-      if (superStage === "SuperAdmin1") {
-        filter.$and = filter.$and || [];
-        filter.$and.push({ $or: [{ financeRequired: { $exists: false } }, { financeRequired: "No" }, { financeRequired: false }, { financeRequired: null }] });
-      } else if (superStage === "SuperAdmin2") {
-        filter.$and = filter.$and || [];
-        filter.$and.push({ $or: [{ financeRequired: "Yes" }, { financeRequired: true }] });
-      }
+      filter.$and = [
+        {
+          $or: [
+            {
+              workflowStage: {
+                $in: [
+                  "Submitted",
+                  "SuperAdmin1",
+                  "SuperAdmin2",
+                  "AdminApproved",
+                  "DepartmentReview",
+                  "Approved",
+                  "Rejected",
+                  "Completed",
+                ],
+              },
+            },
+            { finalStatus: { $in: ["Approved", "Rejected", "Completed", "Closed"] } },
+            { [approvalField]: user?._id || null },
+            { "superAdminApproval.approvedBy": user?._id || null },
+          ],
+        },
+      ];
     } else if (!includeAll && isReviewer && !isDepartmentHead) {
       // Regular reviewers only see admin-approved submissions for the requested module.
       Object.assign(filter, buildAdminApprovedFilter(normalizedModule));
@@ -764,7 +792,7 @@ const getAllIndividualSubmissions = async (req, res) => {
     const { facultyId, module, includeAll } = req.query;
     const currentUser = req.user || {};
 
-    const normalizedModule = String(module || "")
+    const normalizedModule = String(module || getModuleKeyFromHeadRole(currentUser.role))
       .toLowerCase()
       .trim();
 
@@ -890,7 +918,9 @@ const getRequestByFacultyModule = async (req, res) => {
       media: IndividualMedia,
     };
 
-    const moduleKeyFromQuery = String(module || "").toLowerCase().trim();
+    const moduleKeyFromQuery = String(module || getModuleKeyFromHeadRole(currentUser.role))
+      .toLowerCase()
+      .trim();
     const targetModules = moduleKeyFromQuery
       ? [moduleKeyFromQuery]
       : Object.keys(allowedModules);
@@ -909,9 +939,8 @@ const getRequestByFacultyModule = async (req, res) => {
         updatedAt: item.updatedAt,
         status: item.finalStatus || item.overallStatus || item.status || null,
         workflowStage: item.workflowStage || null,
-        adminApproval: item.adminApproval || null,
         hodApproval: item.hodApproval || null,
-        departmentApproval: item.departmentApproval || null,
+        // departmentApproval: item.departmentApproval || null,
         superAdminApproval: item.superAdminApproval || null,
         headApproval: item.headApproval || null,
         approvalHistory: item.approvalHistory || null,
@@ -1122,6 +1151,88 @@ const hodApproval = async (req, res) => {
   }
 };
 
+const hodReject = async (req, res) => {
+  try {
+    const currentUser = req.user || {};
+    const role = normalizeRole(currentUser.role);
+
+    if (!isHodRole(role)) {
+      return res.status(403).json({ success: false, message: "Only HOD/Head users can perform this action" });
+    }
+
+    const reason = req.body.reason || "";
+    if (!reason || String(reason).trim() === "") {
+      return res.status(400).json({ success: false, message: "Reject reason is required" });
+    }
+
+    const submission = await resolveSubmissionById(req.params.id);
+
+    if (!submission) {
+      return res.status(404).json({ success: false, message: "Individual submission not found" });
+    }
+
+    const { item } = submission;
+
+    // HOD can reject when submission is in Submitted or while SuperAdmin review is ongoing
+    if (!["Submitted", "SuperAdmin1", "SuperAdmin2"].includes(item.workflowStage)) {
+      return res.status(400).json({ success: false, message: "This submission is not awaiting HOD approval" });
+    }
+
+    if (item.finalStatus === "Rejected") {
+      return res.status(400).json({ success: false, message: "This submission is already rejected" });
+    }
+
+    // Update HOD approval with rejection
+    item.hodApproval = item.hodApproval || {};
+    item.hodApproval.status = "Rejected";
+    item.hodApproval.reason = reason;
+    item.hodApproval.approvedBy = currentUser._id;
+    item.hodApproval.approvedAt = new Date();
+    item.hodApproval.updatedAt = new Date();
+
+    // Set workflow to rejected
+    item.workflowStage = "Rejected";
+    item.finalStatus = "Rejected";
+    setSubmissionStatus(item, "Rejected");
+
+    // Add to approval history
+    upsertApprovalHistoryEntry(
+      item,
+      buildApprovalHistoryEntry({
+        role: "hod",
+        approvedBy: currentUser._id,
+        action: "Rejected",
+        remarks: reason,
+        actionDate: new Date(),
+      }),
+    );
+
+    await item.save();
+
+    // Send rejection notification
+    await notifyIndividualRequest({
+      request: item,
+      moduleName: getModuleKeyFromModel(submission.Model),
+      action: "hod-rejected",
+      actorName: currentUser?.name || "HOD",
+      reason,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Request rejected by HOD",
+      data: item,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to process HOD rejection",
+      error: error.message,
+    });
+  }
+};
+
 const superAdminApproval = async (req, res) => {
   try {
     const currentUser = req.user || {};
@@ -1147,25 +1258,13 @@ const superAdminApproval = async (req, res) => {
     }
 
     const { item } = submission;
-    const expectedStage = role === "super admin 1" ? "SuperAdmin1" : "SuperAdmin2";
 
-    // Enforce financeRequired constraint: Super Admin 1 handles non-finance,
-    // Super Admin 2 handles finance-required submissions.
-    const financeYes = item.financeRequired === "Yes" || item.financeRequired === true;
-    const financeNo = item.financeRequired === "No" || item.financeRequired === false || item.financeRequired === null || item.financeRequired === undefined;
-
-    if (role === "super admin 1" && financeYes) {
-      return res.status(403).json({ success: false, message: "Super Admin 1 cannot act on finance-required submissions" });
-    }
-
-    if (role === "super admin 2" && financeNo) {
-      return res.status(403).json({ success: false, message: "Super Admin 2 only handles finance-required submissions" });
-    }
-
-    // Accept approvals when the item is at the expected SuperAdmin stage
-    // or still at Submitted (HOD optional flow).
-    if (![expectedStage, "Submitted"].includes(item.workflowStage)) {
-      return res.status(400).json({ success: false, message: `This submission is not awaiting ${role} approval` });
+    // Accept approvals when the item is at a SuperAdmin stage or still at Submitted (HOD optional flow).
+    // Both Super Admin 1 and Super Admin 2 can now see and act on all requests regardless of which
+    // SuperAdmin stage the request is in or the financeRequired value.
+    // The financeRequired value only affects whether finance-related fields are mandatory.
+    if (!["SuperAdmin1", "SuperAdmin2", "Submitted"].includes(item.workflowStage)) {
+      return res.status(400).json({ success: false, message: "This submission is not awaiting Super Admin approval" });
     }
 
     if (item.finalStatus === "Approved" || item.finalStatus === "Rejected") {
@@ -1175,6 +1274,16 @@ const superAdminApproval = async (req, res) => {
       });
     }
 
+    // Update the role-specific approval field
+    const approvalField = role === "super admin 1" ? "superAdmin1Approval" : "superAdmin2Approval";
+    item[approvalField] = item[approvalField] || {};
+    item[approvalField].status = action === "approve" ? "Approved" : "Rejected";
+    item[approvalField].reason = reason;
+    item[approvalField].approvedBy = currentUser._id;
+    item[approvalField].approvedAt = new Date();
+    item[approvalField].updatedAt = new Date();
+
+    // Also update the legacy superAdminApproval field for backward compatibility
     item.superAdminApproval = item.superAdminApproval || {};
     item.superAdminApproval.status = action === "approve" ? "Approved" : "Rejected";
     item.superAdminApproval.reason = reason;
@@ -1278,7 +1387,7 @@ const headApproval = async (req, res) => {
 
     const { item } = submission;
 
-    if (item.workflowStage !== "DepartmentReview") {
+    if (!["DepartmentReview", "Pending"].includes(item.workflowStage)) {
       return res.status(400).json({
         success: false,
         message: "This submission is not awaiting module head action",
@@ -1628,6 +1737,7 @@ module.exports = {
   getVideoHeadList,
   interchangeMediaAssignment,
   hodApproval,
+  hodReject,
   superAdminApproval,
   headApproval,
   closeIndividualSubmission,

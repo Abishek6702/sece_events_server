@@ -36,6 +36,16 @@ const buildFinanceFields = (body) => ({
   advancePurpose: parseStringField(body.advancePurpose),
 });
 
+const parseJsonField = (value) => {
+  if (typeof value !== "string") return value;
+
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return value;
+  }
+};
+
 const validateFinanceFields = ({
   financeRequired,
   estimatedAmount,
@@ -229,7 +239,7 @@ exports.createPurchase = async (req, res) => {
       moduleName: "purchase",
       action: "submitted",
       actorName: req.user?.name || req.body?.employeeName || "The requester",
-      roleHint: body.financeRequired === "Yes" ? "super-admin2" : "super-admin1",
+      roleHint: "super-admin",
     });
 
     res.status(201).json({
@@ -311,59 +321,103 @@ exports.getSinglePurchase = async (req, res) => {
 // ==============================
 exports.updatePurchase = async (req, res) => {
   try {
-    const updateBody = { ...req.body };
-    const financeFieldsPresent = [
-      "financeRequired",
-      "estimatedAmount",
-      "advanceAmount",
-      "advancePurpose",
-    ].some((key) => req.body.hasOwnProperty(key));
+    const role = String(req.user?.role || "").toLowerCase().replace(/\s+/g, " ");
+    const isSuperAdmin = ["super admin 1", "super admin 2"].includes(role);
+    const isAdminLike = ["super admin 1","super admin 2","superadmin1","superadmin2","superadmin","admin","administrator"].includes(role);
 
-    if (financeFieldsPresent) {
+    if (!isAdminLike) {
+      const updateBody = { ...req.body };
+      if (Object.prototype.hasOwnProperty.call(updateBody, "purchases")) {
+        updateBody.purchases = parseJsonField(updateBody.purchases);
+      }
+      const financeFieldsPresent = ["financeRequired","estimatedAmount","advanceAmount","advancePurpose"].some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key));
+      if (financeFieldsPresent) {
+        const financeFields = buildFinanceFields(req.body);
+        const validation = validateFinanceFields(financeFields);
+        if (!validation.valid) return res.status(400).json({ success: false, message: validation.message });
+        updateBody.financeRequired = financeFields.financeRequired;
+        if (financeFields.financeRequired === "Yes") {
+          updateBody.advanceAmount = financeFields.advanceAmount;
+          updateBody.estimatedAmount = financeFields.estimatedAmount;
+          updateBody.advancePurpose = financeFields.advancePurpose;
+        } else {
+          updateBody.advanceAmount = null;
+          updateBody.estimatedAmount = null;
+          updateBody.advancePurpose = "";
+        }
+      }
+      const purchase = await Purchase.findByIdAndUpdate(req.params.id, updateBody, { new: true, runValidators: true });
+      if (!purchase) return res.status(404).json({ success: false, message: "Purchase not found" });
+      return res.status(200).json({ success: true, message: "Purchase updated successfully", data: purchase });
+    }
+
+    // Admin flow
+    const purchase = await Purchase.findById(req.params.id);
+    if (!purchase) return res.status(404).json({ success: false, message: "Purchase not found" });
+
+    const allowed = new Set(["purchases","referenceFiles","principalApprovalForm","financeRequired","advanceAmount","estimatedAmount","advancePurpose","advanceToBeReceviedWithin"]);
+
+    const financeFieldsPresent2 = ["financeRequired","estimatedAmount","advanceAmount","advancePurpose"].some((k) => Object.prototype.hasOwnProperty.call(req.body || {}, k));
+    if (financeFieldsPresent2) {
       const financeFields = buildFinanceFields(req.body);
       const validation = validateFinanceFields(financeFields);
-
-      if (!validation.valid) {
-        return res.status(400).json({
-          success: false,
-          message: validation.message,
-        });
-      }
-
-      updateBody.financeRequired = financeFields.financeRequired;
-
+      if (!validation.valid) return res.status(400).json({ success: false, message: validation.message });
+      purchase.financeRequired = financeFields.financeRequired;
       if (financeFields.financeRequired === "Yes") {
-        updateBody.advanceAmount = financeFields.advanceAmount;
-        updateBody.estimatedAmount = financeFields.estimatedAmount;
-        updateBody.advancePurpose = financeFields.advancePurpose;
+        purchase.advanceAmount = financeFields.advanceAmount;
+        purchase.estimatedAmount = financeFields.estimatedAmount;
+        purchase.advancePurpose = financeFields.advancePurpose;
       } else {
-        updateBody.advanceAmount = null;
-        updateBody.estimatedAmount = null;
-        updateBody.advancePurpose = "";
+        purchase.advanceAmount = null;
+        purchase.estimatedAmount = null;
+        purchase.advancePurpose = "";
       }
     }
 
-    const purchase = await Purchase.findByIdAndUpdate(
-      req.params.id,
-      updateBody,
-      {
-        new: true,
-        runValidators: true,
+    Object.keys(req.body).forEach((key) => {
+      if (!allowed.has(key)) return;
+      if (["purchases","referenceFiles"].includes(key)) {
+        purchase[key] = parseJsonField(req.body[key]);
+        return;
       }
-    );
-
-    if (!purchase) {
-      return res.status(404).json({
-        success: false,
-        message: "Purchase not found",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Purchase updated successfully",
-      data: purchase,
+      purchase[key] = req.body[key];
     });
+
+    const file = req.files?.principalApprovalForm?.[0];
+    if (file) purchase.principalApprovalForm = normalizeFileReference(file);
+
+    // Only reset acknowledgment if it was Acknowledged
+    const headApprovalWasCompleted =
+      isSuperAdmin && String(purchase.headApproval?.status || "").trim() === "Completed";
+
+    if (headApprovalWasCompleted) {
+      purchase.headApproval.status = "Pending";
+      purchase.headApproval.approvedBy = null;
+      purchase.headApproval.approvedAt = null;
+    } else if (purchase.headApproval && String(purchase.headApproval.status || "").trim() === "Acknowledged") {
+      purchase.headApproval.status = "Pending";
+      if (Object.prototype.hasOwnProperty.call(purchase.headApproval, "approvedBy")) purchase.headApproval.approvedBy = null;
+      if (Object.prototype.hasOwnProperty.call(purchase.headApproval, "approvedAt")) purchase.headApproval.approvedAt = null;
+      if (Object.prototype.hasOwnProperty.call(purchase.headApproval, "updatedAt")) purchase.headApproval.updatedAt = null;
+      if (Object.prototype.hasOwnProperty.call(purchase, "acknowledgedBy")) purchase.acknowledgedBy = null;
+      if (Object.prototype.hasOwnProperty.call(purchase, "acknowledgedAt")) purchase.acknowledgedAt = null;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(purchase, "finalStatus")) purchase.finalStatus = "Pending";
+    if (Object.prototype.hasOwnProperty.call(purchase, "status")) purchase.status = { admin: "Pending", accounts: "Pending", purchase: "Pending" };
+
+    if (Array.isArray(purchase.approvalHistory)) {
+      if (headApprovalWasCompleted) {
+        purchase.approvalHistory.push({ role: "purchase head", approvedBy: null, action: "Pending", remarks: "Waiting for Head approval", actionDate: null });
+      } else {
+        const idx = purchase.approvalHistory.findIndex((h) => String(h.role || "").toLowerCase().includes("purchase head"));
+        if (idx >= 0) purchase.approvalHistory[idx] = { ...purchase.approvalHistory[idx], action: "Pending", approvedBy: null, actionDate: null };
+        else purchase.approvalHistory.push({ role: "purchase head", approvedBy: null, action: "Pending", remarks: "Waiting for Head approval", actionDate: null });
+      }
+    }
+
+    await purchase.save();
+    return res.status(200).json({ success: true, message: "Request updated successfully and sent back to Pending", data: purchase });
   } catch (error) {
     console.log(error);
 
@@ -440,7 +494,7 @@ exports.patchPurchase = async (req, res) => {
       "estimatedAmount",
       "advanceAmount",
       "advancePurpose",
-    ].some((key) => req.body.hasOwnProperty(key));
+    ].some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key));
 
     if (financeFieldsPresent) {
       const financeFields = buildFinanceFields(req.body);

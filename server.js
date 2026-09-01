@@ -27,6 +27,8 @@ const accommodationRoomRoutes = require("./routes/accommodationRoomRoutes");
 const individualSubmissionRoutes = require("./routes/individual/individualSubmissionRoutes");
 const testRoutes = require("./routes/testRoutes");
 const calendarRoutes = require("./routes/calendarRoutes");
+const roomRoutes = require("./routes/roomRoutes");
+const expenditureRoutes = require("./routes/individual/expenditureRoutes");
 const documentNameRoutes = require("./routes/documentNameRoutes");
 const eventClosingDocumentRoutes = require("./routes/eventClosingDocumentRoutes");
 const eventExpenditureRoutes = require("./routes/eventExpenditureRoutes");
@@ -101,6 +103,7 @@ app.use("/api/table", tableRoutes);
 app.use("/api/eventTypes", eventTypeRoutes);
 app.use("/api/accommodation/rooms", accommodationRoomRoutes);
 app.use("/api/individual-submissions", individualSubmissionRoutes);
+app.use("/api/individual/expenditure", expenditureRoutes);
 app.use("/api/calendar",calendarRoutes)
 app.use("/api/document-names", documentNameRoutes);
 app.use("/api/event-closing-documents", eventClosingDocumentRoutes);
