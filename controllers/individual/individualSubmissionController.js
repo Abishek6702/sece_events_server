@@ -929,18 +929,29 @@ const getRequestByFacultyModule = async (req, res) => {
 
     const formatItem = async (item, formType) => {
       const resolvedEmployee = await resolveEmployee(item.employee);
+      const requestDate =
+        item.date ||
+        item.deliveryDate ||
+        item.pickupDateTime ||
+        item.dropDateTime ||
+        item.createdAt ||
+        null;
+
       return {
+        requestId: item._id,
         id: item._id,
         formType,
+        requestNo: item.requestNo || null,
+        requestDate,
+        module: String(item.module || formType || "").toLowerCase(),
         employee: resolvedEmployee?.name || null,
         employeeEmail: resolvedEmployee?.email || null,
         employeeDetail: resolvedEmployee || null,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
-        status: item.finalStatus || item.overallStatus || item.status || null,
+        status: item.status || item.finalStatus || item.overallStatus || null,
         workflowStage: item.workflowStage || null,
         hodApproval: item.hodApproval || null,
-        // departmentApproval: item.departmentApproval || null,
         superAdminApproval: item.superAdminApproval || null,
         headApproval: item.headApproval || null,
         approvalHistory: item.approvalHistory || null,
