@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Event = require("../models/Event.js");
-const { getAvailableRooms } = require("../utils/accommodationAvailabilityService");
+const {
+  getAvailableRooms,
+} = require("../utils/accommodationAvailabilityService");
 const EventRequirement = require("../models/EventType.js");
 const {
   notifyEventCreation,
@@ -334,56 +336,71 @@ function resetDepartment(event, module, adminRemark) {
   };
 }
 
-async function validateAccommodationAvailability(eventData, excludeEventId = null) {
-  if (!eventData.accommodationDetails || !eventData.accommodationDetails.accommodations) return;
+async function validateAccommodationAvailability(
+  eventData,
+  excludeEventId = null,
+) {
+  if (
+    !eventData.accommodationDetails ||
+    !eventData.accommodationDetails.accommodations
+  )
+    return;
   for (const acc of eventData.accommodationDetails.accommodations) {
     if (acc.roomSelections && acc.roomSelections.length > 0) {
       if (!acc.checkInDateTime || !acc.checkOutDateTime) {
-        const error = new Error("checkInDateTime and checkOutDateTime are required when rooms are selected");
+        const error = new Error(
+          "checkInDateTime and checkOutDateTime are required when rooms are selected",
+        );
         error.name = "ValidationError";
         throw error;
       }
-      
+
       const availability = await getAvailableRooms({
         startDateTime: acc.checkInDateTime,
         endDateTime: acc.checkOutDateTime,
-        excludeEventId:excludeEventId
+        excludeEventId: excludeEventId,
       });
 
       for (const sel of acc.roomSelections) {
         if (sel.roomId) {
-           const roomAvail = availability.find(r => r.roomId.toString() === sel.roomId.toString());
-           if (!roomAvail) {
-              const error = new Error(`Room ${sel.roomNumber || sel.roomId} not found or inactive.`);
-              error.name = "ValidationError";
-              throw error;
-           }
-           if (!roomAvail.available) {
+          const roomAvail = availability.find(
+            (r) => r.roomId.toString() === sel.roomId.toString(),
+          );
+          if (!roomAvail) {
+            const error = new Error(
+              `Room ${sel.roomNumber || sel.roomId} not found or inactive.`,
+            );
+            error.name = "ValidationError";
+            throw error;
+          }
+          if (!roomAvail.available) {
             if (roomAvail.requiresAdminConfirmation) {
               if (sel.adminContacted !== true) {
                 const error = new Error(
-                  `Room ${roomAvail.venue} ${roomAvail.roomNumber} requires admin confirmation. Please contact the admin before selecting this room.`
+                  `Room ${roomAvail.venue} ${roomAvail.roomNumber} requires admin confirmation. Please contact the admin before selecting this room.`,
                 );
-          
+
                 error.name = "ValidationError";
                 throw error;
               }
-          
+
               // Admin contacted → allow
             } else {
               const error = new Error(
-                `Room ${roomAvail.venue} ${roomAvail.roomNumber} is no longer available for the selected date and time. Please select another room.`
+                `Room ${roomAvail.venue} ${roomAvail.roomNumber} is no longer available for the selected date and time. Please select another room.`,
               );
-          
+
               error.name = "ValidationError";
               throw error;
             }
           }
-           if (sel.occupantCount > roomAvail.capacity) {
-              const error = new Error(`Room ${roomAvail.venue} ${roomAvail.roomNumber} can accommodate a maximum of ${roomAvail.capacity} people.`);
-              error.name = "ValidationError";
-              throw error;
-           }
+          if (sel.occupantCount > roomAvail.capacity) {
+            const error = new Error(
+              `Room ${roomAvail.venue} ${roomAvail.roomNumber} can accommodate a maximum of ${roomAvail.capacity} people.`,
+            );
+            error.name = "ValidationError";
+            throw error;
+          }
         }
       }
     }
@@ -1134,7 +1151,7 @@ exports.updateEventStatus = async (req, res) => {
       case "close":
         // Validate all required conditions before closing
         const missingConditions = [];
-        
+
         if (!event.adminApproval) {
           missingConditions.push("Admin approval is required");
         }
@@ -1151,7 +1168,8 @@ exports.updateEventStatus = async (req, res) => {
         if (missingConditions.length > 0) {
           return res.status(400).json({
             success: false,
-            message: "Cannot close event. The following conditions must be met:",
+            message:
+              "Cannot close event. The following conditions must be met:",
             conditions: missingConditions,
           });
         }
@@ -1728,7 +1746,10 @@ exports.getBasicEvents = async (req, res) => {
       .select(
         "iqacNumber requestDetails.eventDetails.eventName requestDetails.eventDetails.eventSchedule requestDetails.organizerDetails.organizingDepartment requestDetails.organizerDetails.advanceAmount requestDetails.organizerDetails.purposeOfAdvance requestDetails.organizerDetails.organizers organizerId createdAt timeline.submittedAt",
       )
-      .populate("organizerId", "salutation firstName lastName empId designation department email phone")
+      .populate(
+        "organizerId",
+        "salutation firstName lastName empId designation department email phone",
+      )
       .lean();
 
     if (!event) {
@@ -1868,7 +1889,11 @@ exports.updateDocumentExpenditureApproval = async (req, res) => {
     const { id } = req.params;
     const { approved } = req.body;
 
-    if (req.user.role !== "admin" && req.user.isadmin !== true && req.user.role !== "superadmin") {
+    if (
+      req.user.role !== "admin" &&
+      req.user.isadmin !== true &&
+      req.user.role !== "superadmin"
+    ) {
       return res.status(403).json({
         success: false,
         message: "Only admin can perform this action",
@@ -1876,24 +1901,6 @@ exports.updateDocumentExpenditureApproval = async (req, res) => {
     }
 
     const event = await Event.findById(id);
-// Get basic event details for a specific event
-exports.getBasicEvents = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid event ID",
-      });
-    }
-
-    const event = await Event.findById(id)
-      .select(
-        "iqacNumber requestDetails.eventDetails.eventName requestDetails.eventDetails.eventSchedule requestDetails.organizerDetails.organizingDepartment requestDetails.organizerDetails.advanceAmount requestDetails.organizerDetails.purposeOfAdvance requestDetails.organizerDetails.organizers venueDetails.venues.guests organizerId createdAt timeline.submittedAt",
-      )
-      .populate("organizerId", "salutation firstName lastName empId designation department email phone")
-      .lean();
 
     if (!event) {
       return res.status(404).json({
@@ -1902,10 +1909,15 @@ exports.getBasicEvents = async (req, res) => {
       });
     }
 
-    if (!event.isDocumentsCompleted || !event.isExpenditureCompleted || !event.isFeedbackCompleted) {
+    if (
+      !event.isDocumentsCompleted ||
+      !event.isExpenditureCompleted ||
+      !event.isFeedbackCompleted
+    ) {
       return res.status(400).json({
         success: false,
-        message: "isDocumentsCompleted, isExpenditureCompleted, and isFeedbackCompleted must all be true before changing this status",
+        message:
+          "isDocumentsCompleted, isExpenditureCompleted, and isFeedbackCompleted must all be true before changing this status",
       });
     }
 
@@ -1916,57 +1928,6 @@ exports.getBasicEvents = async (req, res) => {
       success: true,
       message: "documentExpenditureApproved updated successfully",
       data: event,
-    });
-  } catch (error) {
-    console.error("updateDocumentExpenditureApproval Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server Error",
-    const eventSchedule =
-      event.requestDetails?.eventDetails?.eventSchedule || [];
-    const firstEventDate = eventSchedule[0]?.eventDate;
-
-    // Collect all guest names from venues
-    const allGuests = [];
-    if (event.venueDetails?.venues) {
-      event.venueDetails.venues.forEach((venue) => {
-        if (venue.guests && Array.isArray(venue.guests)) {
-          allGuests.push(...venue.guests.map((g) => g.name));
-        }
-      });
-    }
-
-    const organizerDetails = event.requestDetails?.organizerDetails || {};
-
-    const basicEventData = {
-      eventId: event._id,
-      iqacNumber: event.iqacNumber || "Not Assigned",
-      eventName: event.requestDetails?.eventDetails?.eventName || "N/A",
-      eventDate: firstEventDate || null,
-      guestNames: allGuests.length > 0 ? allGuests : [],
-      organizingDepartment: organizerDetails.organizingDepartment || "N/A",
-      advanceAmount: organizerDetails.advanceAmount || 0,
-      purposeOfAdvance: organizerDetails.purposeOfAdvance || "N/A",
-      dateAdvanceTaken: event.createdAt || null,
-      submissionDate: event.timeline?.submittedAt || null,
-      organizerDetails: event.organizerId
-        ? {
-            facultyId: event.organizerId._id,
-            salutation: event.organizerId.salutation || "N/A",
-            firstName: event.organizerId.firstName || "N/A",
-            lastName: event.organizerId.lastName || "N/A",
-            empId: event.organizerId.empId || "N/A",
-            designation: event.organizerId.designation || "N/A",
-            department: event.organizerId.department || "N/A",
-            email: event.organizerId.email || "N/A",
-            mobile: event.organizerId.phone || "N/A",
-          }
-        : null,
-    };
-
-    res.status(200).json({
-      success: true,
-      data: basicEventData,
     });
   } catch (error) {
     console.error("Get Basic Events Error:", error);
