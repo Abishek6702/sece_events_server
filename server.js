@@ -27,7 +27,6 @@ const accommodationRoomRoutes = require("./routes/accommodationRoomRoutes");
 const individualSubmissionRoutes = require("./routes/individual/individualSubmissionRoutes");
 const testRoutes = require("./routes/testRoutes");
 const calendarRoutes = require("./routes/calendarRoutes");
-const roomRoutes = require("./routes/roomRoutes");
 const expenditureRoutes = require("./routes/individual/expenditureRoutes");
 const documentNameRoutes = require("./routes/documentNameRoutes");
 const eventClosingDocumentRoutes = require("./routes/eventClosingDocumentRoutes");
