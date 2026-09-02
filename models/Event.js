@@ -348,6 +348,19 @@ const transportSchema = new mongoose.Schema(
 
         totalPassengers: Number,
 
+        guests: [
+          {
+            guestId: {
+              type: mongoose.Types.ObjectId,
+            },
+            name: String,
+            mobile: Number,
+            organization: String,
+            designation: String,
+            gender: String,
+          },
+        ],
+
         vehicles: [
           {
             type: { type: String },

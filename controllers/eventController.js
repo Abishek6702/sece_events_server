@@ -53,6 +53,9 @@ const fixArrays = (data) => {
       if (typeof t.vehicles === "string") {
         t.vehicles = JSON.parse(t.vehicles);
       }
+      if (typeof t.guests === "string") {
+        t.guests = JSON.parse(t.guests);
+      }
     });
   }
 
@@ -68,6 +71,9 @@ const fixArrays = (data) => {
   // accommodation
   if (data.accommodationDetails?.accommodations) {
     data.accommodationDetails.accommodations.forEach((a) => {
+      if (typeof a.guests === "string") {
+        a.guests = JSON.parse(a.guests);
+      }
       if (typeof a.roomOccupancy === "string") {
         a.roomOccupancy = JSON.parse(a.roomOccupancy);
       }
