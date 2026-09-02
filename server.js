@@ -31,6 +31,7 @@ const expenditureRoutes = require("./routes/individual/expenditureRoutes");
 const documentNameRoutes = require("./routes/documentNameRoutes");
 const eventClosingDocumentRoutes = require("./routes/eventClosingDocumentRoutes");
 const eventExpenditureRoutes = require("./routes/eventExpenditureRoutes");
+const individualTicketingRoutes = require("./routes/individualTicketingRoutes");
 
 dotenv.config();
 const app = express();
@@ -107,6 +108,7 @@ app.use("/api/calendar",calendarRoutes)
 app.use("/api/document-names", documentNameRoutes);
 app.use("/api/event-closing-documents", eventClosingDocumentRoutes);
 app.use("/api/event-expenditures", eventExpenditureRoutes);
+app.use("/api/individual-ticketing", individualTicketingRoutes);
 
 const PORT = process.env.PORT || 5000;
 
