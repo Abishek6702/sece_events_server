@@ -5,7 +5,7 @@ const helmet = require("helmet");
 const hpp = require("hpp");
 const path = require("path");
 const connectDB = require("./config/db");
-const { apiLimiter } = require("./middleware/rateLimiter.js");
+// const { apiLimiter } = require("./middleware/rateLimiter.js");
 const auditLogger = require("./middleware/auditLogger.js");
 
 const authRoutes = require("./routes/authRoutes");
@@ -80,7 +80,7 @@ app.use(
 app.use(hpp());
 app.use(auditLogger);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/api", apiLimiter);
+// app.use("/api", apiLimiter);
 const ictsStaffAllocationRoutes = require("./routes/ictsStaffAllocationRoutes");
 
 app.use("/api/test", testRoutes);
