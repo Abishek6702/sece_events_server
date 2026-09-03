@@ -100,6 +100,25 @@ exports.createTransport = async (req, res) => {
     // console.log("BODY =>", req.body);
     // console.log("FILES =>", req.files);
 
+    let guests = [];
+    if (req.body.guests) {
+      try {
+        guests = JSON.parse(req.body.guests);
+      } catch (error) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid guests JSON.",
+        });
+      }
+
+      if (!Array.isArray(guests)) {
+        return res.status(400).json({
+          success: false,
+          message: "Guests must be a JSON array.",
+        });
+      }
+    }
+
     const body = {
       ...req.body,
       employee: req.user?.facultyId || req.body.employee || req.user?._id,
@@ -139,6 +158,10 @@ exports.createTransport = async (req, res) => {
       numberOfAccompanyingStaff: Number(
         req.body.numberOfAccompanyingStaff
       ),
+
+      numberOfGuests: Number(req.body.numberOfGuests),
+
+      guests,
     };
 
     // ======== Finance validation & workflowStage =========

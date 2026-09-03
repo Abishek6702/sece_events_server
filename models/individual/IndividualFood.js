@@ -16,6 +16,16 @@ const accompanyingStaffSchema = new mongoose.Schema(
 
 const foodTypeSchema = new mongoose.Schema(
   {
+    type: {
+      type: String,
+      trim: true,
+    },
+
+    refreshmentCount: {
+      type: Number,
+      default: 0,
+    },
+
     foodTypes: [
       {
         type: { type: String },
