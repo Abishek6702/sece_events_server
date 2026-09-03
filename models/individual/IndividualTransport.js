@@ -100,6 +100,31 @@ const transportSchema = new mongoose.Schema(
       required: true,
     },
 
+    numberOfGuests: {
+      type: Number,
+      default: 0,
+    },
+
+    guests: [
+      {
+        name: {
+          type: String,
+        },
+        mobile: {
+          type: Number,
+        },
+        organization: {
+          type: String,
+        },
+        gender: {
+          type: String,
+        },
+        designation: {
+          type: String,
+        },
+      },
+    ],
+
     vehicles: [
       {
         type: { type: String },
