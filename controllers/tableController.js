@@ -194,6 +194,7 @@ exports.getDashboardTable = async (req, res) => {
       // ================= PURCHASE =================
       else if (
         module === "purchase" &&
+        event.requestDetails?.requirementDetails?.purchaseRequired === true &&
         event.purchaseDetails?.purchases?.length
       ) {
         data.push({
@@ -211,6 +212,7 @@ exports.getDashboardTable = async (req, res) => {
       // ================= MEDIA =================
       else if (
         module === "media" &&
+        event.requestDetails?.requirementDetails?.mediaRequired === true &&
         event.mediaRequirementDetails?.mediaRequirements?.length
       ) {
         data.push({
