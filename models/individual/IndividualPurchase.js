@@ -90,7 +90,7 @@ const giftItemSchema = new mongoose.Schema(
   {
     giftType: {
       type: String,
-      enum: ["Trophy", "Glass Cup", "Voucher", "Cash Prize"],
+      enum: ["Trophy", "Glass Cup", "Voucher", "Cash Prize", "Gifts"],
     },
 
     trophy: [trophySchema],

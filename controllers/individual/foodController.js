@@ -82,6 +82,33 @@ const validateFinanceFields = ({
   return { valid: true };
 };
 
+const normalizeFoodTypes = (rawFoodTypes) => {
+  if (!Array.isArray(rawFoodTypes)) return [];
+
+  return rawFoodTypes.map((entry) => {
+    if (!entry || typeof entry !== "object") return entry;
+
+    if (entry.type && (entry.refreshmentCount !== undefined || entry.participants || entry.vipGuests || Array.isArray(entry.foodTypes))) {
+      return {
+        type: entry.type,
+        refreshmentCount: Number.isFinite(Number(entry.refreshmentCount)) ? Number(entry.refreshmentCount) : 0,
+        participants: entry.participants || { vegCount: 0, nonVegCount: 0 },
+        vipGuests: entry.vipGuests || { vegCount: 0, nonVegCount: 0 },
+        foodTypes: Array.isArray(entry.foodTypes) ? entry.foodTypes : (entry.type ? [{ type: entry.type }] : []),
+      };
+    }
+
+    const firstFoodType = Array.isArray(entry.foodTypes) && entry.foodTypes.length > 0 ? entry.foodTypes[0] : null;
+    return {
+      type: firstFoodType?.type || entry.type || "",
+      refreshmentCount: Number.isFinite(Number(entry.refreshmentCount)) ? Number(entry.refreshmentCount) : 0,
+      participants: entry.participants || { vegCount: 0, nonVegCount: 0 },
+      vipGuests: entry.vipGuests || { vegCount: 0, nonVegCount: 0 },
+      foodTypes: Array.isArray(entry.foodTypes) ? entry.foodTypes : (firstFoodType ? [firstFoodType] : []),
+    };
+  }).filter((entry) => entry && typeof entry === "object");
+};
+
 // ==========================================
 // CREATE FOOD
 // ==========================================
@@ -93,6 +120,10 @@ exports.createFood = async (req, res) => {
 //     console.log("Finance Required:", req.body.financeRequired);
 // console.log("Advance Amount:", req.body.advanceAmount);
 // console.log("Advance Purpose:", req.body.advancePurpose);
+
+    const parsedFoodTypes = Array.isArray(req.body.foodTypes)
+      ? req.body.foodTypes
+      : (typeof req.body.foodTypes === "string" ? JSON.parse(req.body.foodTypes) : []);
 
     const foodData = {
       ...req.body,
@@ -109,9 +140,7 @@ exports.createFood = async (req, res) => {
         ? JSON.parse(req.body.accompanyingStaff)
         : [],
 
-      foodTypes: req.body.foodTypes
-        ? JSON.parse(req.body.foodTypes)
-        : [],
+      foodTypes: normalizeFoodTypes(parsedFoodTypes),
 
       // Finance fields - default handling will be validated below
       financeRequired: normalizeFinanceValue(
@@ -328,11 +357,16 @@ exports.updateFood = async (req, res) => {
 
     if (!isAdminLike) {
       const updateBody = { ...req.body };
-      ["resourcePersonType", "accompanyingStaff", "foodTypes"].forEach((key) => {
+      ["resourcePersonType", "accompanyingStaff"].forEach((key) => {
         if (Object.prototype.hasOwnProperty.call(updateBody, key)) {
           updateBody[key] = parseJsonField(updateBody[key]);
         }
       });
+
+      if (Object.prototype.hasOwnProperty.call(updateBody, "foodTypes")) {
+        updateBody.foodTypes = normalizeFoodTypes(parseJsonField(updateBody.foodTypes));
+      }
+
       const financeFieldsPresent = ["financeRequired", "estimatedAmount", "advanceAmount", "advancePurpose"].some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key));
 
       if (financeFieldsPresent) {
@@ -384,12 +418,16 @@ exports.updateFood = async (req, res) => {
 
     Object.keys(req.body).forEach((key) => {
       if (!allowed.has(key)) return;
-      if (["resourcePersonType","accompanyingStaff","foodTypes"].includes(key)) {
+      if (["resourcePersonType","accompanyingStaff"].includes(key)) {
         try {
           food[key] = typeof req.body[key] === "string" ? JSON.parse(req.body[key]) : req.body[key];
         } catch (e) {
           food[key] = req.body[key];
         }
+        return;
+      }
+      if (key === "foodTypes") {
+        food[key] = normalizeFoodTypes(typeof req.body[key] === "string" ? JSON.parse(req.body[key]) : req.body[key]);
         return;
       }
       food[key] = req.body[key];
