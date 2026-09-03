@@ -1020,18 +1020,18 @@ const getRequestByFacultyModule = async (req, res) => {
       // Debug: log counts and filter used for this module
       try {
         const totalCount = await Model.countDocuments();
-        console.log("getRequestByFacultyModule debug:", {
-          role,
-          module: key,
-          filter,
-          totalCount,
-        });
+        // console.log("getRequestByFacultyModule debug:", {
+        //   role,
+        //   module: key,
+        //   filter,
+        //   totalCount,
+        // });
       } catch (countErr) {
         console.warn("Failed to count documents for module", key, countErr.message);
       }
 
       const items = await Model.find(filter).populate("employee").sort({ createdAt: -1 }).lean();
-      console.log(`getRequestByFacultyModule matched for ${key}:`, items.length);
+      // console.log(`getRequestByFacultyModule matched for ${key}:`, items.length);
 
       return Promise.all(items.map((item) => formatItem(item, parseFormType(key))));
     });
