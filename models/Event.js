@@ -421,7 +421,12 @@ const refreshmentSchema = new mongoose.Schema(
               nonVegCount: Number,
             },
             refreshmentCount:Number,
-            
+            venueWiseDetails: [
+              {
+                venueName: { type: String, trim: true },
+                count: { type: Number },
+              }
+            ],
           },
         ],
 
