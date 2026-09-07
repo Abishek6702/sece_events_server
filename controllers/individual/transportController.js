@@ -367,13 +367,26 @@ exports.updateTransport = async (req, res) => {
     const isSuperAdmin = ["super admin 1", "super admin 2"].includes(role);
     const isAdminLike = ["super admin 1","super admin 2","superadmin1","superadmin2","superadmin","admin","administrator"].includes(role);
 
+    if (Object.prototype.hasOwnProperty.call(req.body || {}, "guests")) {
+      const parsedGuests = parseJsonField(req.body.guests);
+      if (!Array.isArray(parsedGuests)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid guests JSON. Guests must be a JSON array.",
+        });
+      }
+    }
+
     if (!isAdminLike) {
       const updateBody = { ...req.body };
-      ["checkpoints", "vehicles", "accompanyingStaff"].forEach((key) => {
+      ["checkpoints", "vehicles", "accompanyingStaff", "guests"].forEach((key) => {
         if (Object.prototype.hasOwnProperty.call(updateBody, key)) {
           updateBody[key] = parseJsonField(updateBody[key]);
         }
       });
+      if (Object.prototype.hasOwnProperty.call(updateBody, "numberOfGuests")) {
+        updateBody.numberOfGuests = Number(updateBody.numberOfGuests);
+      }
       const financeFieldsPresent = ["financeRequired","estimatedAmount","advanceAmount","advancePurpose"].some((key) => Object.prototype.hasOwnProperty.call(req.body || {}, key));
       if (financeFieldsPresent) {
         const financeFields = buildFinanceFields(req.body);
@@ -399,7 +412,7 @@ exports.updateTransport = async (req, res) => {
     const transport = await Transport.findById(req.params.id);
     if (!transport) return res.status(404).json({ success: false, message: "Transport not found" });
 
-    const allowed = new Set(["pickupDateTime","dropDateTime","pickupLocation","dropLocation","checkpoints","totalPassengers","vehicles","numberOfBusNeeded","numberOfAccompanyingStaff","accompanyingStaff","specialRequirements","referenceFiles","principalApprovalForm","financeRequired","advanceAmount","estimatedAmount","advancePurpose","advanceToBeReceviedWithin"]);
+    const allowed = new Set(["pickupDateTime","dropDateTime","pickupLocation","dropLocation","checkpoints","totalPassengers","vehicles","numberOfBusNeeded","numberOfAccompanyingStaff","accompanyingStaff","numberOfGuests","guests","specialRequirements","referenceFiles","principalApprovalForm","financeRequired","advanceAmount","estimatedAmount","advancePurpose","advanceToBeReceviedWithin"]);
 
     const financeFieldsPresent2 = ["financeRequired","estimatedAmount","advanceAmount","advancePurpose"].some((k) => Object.prototype.hasOwnProperty.call(req.body || {}, k));
     if (financeFieldsPresent2) {
@@ -420,8 +433,12 @@ exports.updateTransport = async (req, res) => {
 
     Object.keys(req.body).forEach((key) => {
       if (!allowed.has(key)) return;
-      if (["checkpoints","vehicles","accompanyingStaff"].includes(key)) {
+      if (["checkpoints","vehicles","accompanyingStaff","guests"].includes(key)) {
         transport[key] = parseJsonField(req.body[key]);
+        return;
+      }
+      if (key === "numberOfGuests") {
+        transport[key] = Number(req.body[key]);
         return;
       }
       transport[key] = req.body[key];
