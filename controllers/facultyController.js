@@ -69,6 +69,11 @@ exports.importExcelFaculty = async (req, res) => {
     const created = [];
 
     for (let data of faculties) {
+      const facultyRole =
+        data.role?.toLowerCase() === "hod"
+          ? "hod"
+          : (data.role ? String(data.role).trim().toLowerCase() : "faculty");
+
       // map column names (IMPORTANT)
       const facultyData = {
         salutation: data.salutation,
@@ -85,10 +90,11 @@ exports.importExcelFaculty = async (req, res) => {
         designation: data.designation,
         employeeCategory: data.employeeCategory,
         location: data.location,
+        role: facultyRole,
       };
 
       const exists = await Faculty.findOne({
-        $or: [{ email: facultyData.email }, { empId: facultyData.empId },   { phone: facultyData.phone },],
+        $or: [{ email: facultyData.email }, { empId: facultyData.empId }, { phone: facultyData.phone }],
       });
 
       if (exists) continue;
@@ -99,12 +105,12 @@ exports.importExcelFaculty = async (req, res) => {
       const hashed = await bcrypt.hash(password, 10);
 
       await User.create({
-        name: `${faculty.salutation} ${faculty.firstName} ${faculty.lastName}`,
+        name: `${faculty.salutation || ""} ${faculty.firstName} ${faculty.lastName}`.trim(),
         email: facultyData.email,
-        phone: facultyData.phone,
+        phone: String(facultyData.phone),
         password: hashed,
         department: faculty.department,
-        role: data.role?.toLowerCase() === "hod" ? "hod" : "faculty",
+        role: facultyRole,
         isadmin: false,
         facultyId: faculty._id,
         isFirstTimeLogin: true,
@@ -176,6 +182,11 @@ exports.addIndividualFaculty = async (req, res) => {
       });
     }
 
+    const assignedRole =
+      typeof role === "string" && role.toLowerCase() === "hod"
+        ? "hod"
+        : (role || "faculty");
+
     // ✅ Create faculty
     const faculty = await Faculty.create({
       salutation,
@@ -192,6 +203,7 @@ exports.addIndividualFaculty = async (req, res) => {
       designation,
       employeeCategory,
       location,
+      role: assignedRole,
       profileImage,
     });
 
@@ -201,12 +213,12 @@ exports.addIndividualFaculty = async (req, res) => {
 
     // ✅ Create login
     await User.create({
-      name: `${salutation} ${firstName} ${lastName}`,
+      name: `${salutation || ""} ${firstName} ${lastName}`.trim(),
       email,
-      phone,
+      phone: String(phone),
       password: hashed,
       department: faculty.department,
-      role: role === "hod" ? "hod" : "faculty",
+      role: assignedRole,
       isadmin: false,
       facultyId: faculty._id,
       isFirstTimeLogin: true,
@@ -226,9 +238,42 @@ exports.addIndividualFaculty = async (req, res) => {
 // ================= GET ALL =================
 exports.getFaculties = async (req, res) => {
   try {
-    const faculties = await Faculty.find().sort({ createdAt: -1 });
+    const faculties = await Faculty.find().sort({ createdAt: -1 }).lean();
+    const facultyIds = faculties.map((f) => f._id);
+    const emails = faculties.map((f) => f.email).filter(Boolean);
 
-    res.status(200).json(faculties);
+    const users = await User.find({
+      $or: [
+        { facultyId: { $in: facultyIds } },
+        { email: { $in: emails } },
+      ],
+    })
+      .select("facultyId email role department")
+      .lean();
+
+    const userByFacultyId = new Map();
+    const userByEmail = new Map();
+    for (const u of users) {
+      if (u.facultyId) {
+        userByFacultyId.set(String(u.facultyId), u);
+      }
+      if (u.email) {
+        userByEmail.set(u.email.toLowerCase(), u);
+      }
+    }
+
+    const data = faculties.map((faculty) => {
+      const linkedUser =
+        userByFacultyId.get(String(faculty._id)) ||
+        (faculty.email ? userByEmail.get(faculty.email.toLowerCase()) : null);
+
+      return {
+        ...faculty,
+        role: linkedUser?.role || faculty.role || "faculty",
+      };
+    });
+
+    res.status(200).json(data);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -257,18 +302,20 @@ exports.searchFaculty = async (req, res) => {
       ],
     })
       .select(
-        "_id salutation firstName lastName empId designation department phone email",
+        "_id salutation firstName lastName empId designation department phone email role",
       )
-      .limit(10);
+      .limit(10)
+      .lean();
 
     const result = faculties.map((faculty) => ({
       facultyId: faculty._id,
       empId: faculty.empId,
-      name: `${faculty.salutation} ${faculty.firstName} ${faculty.lastName}`,
+      name: `${faculty.salutation || ""} ${faculty.firstName} ${faculty.lastName}`.trim(),
       designation: faculty.designation,
       phone: faculty.phone,
       email: faculty.email,
       department: faculty.department,
+      role: faculty.role || "faculty",
     }));
 
     res.status(200).json({
@@ -288,13 +335,22 @@ exports.getFacultyId = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const faculty = await Faculty.findById(id);
+    const faculty = await Faculty.findById(id).lean();
 
     if (!faculty) {
       return res.status(404).json({ message: "Faculty not found" });
     }
 
-    res.status(200).json(faculty);
+    const linkedUser = await User.findOne({
+      $or: [{ facultyId: id }, { email: faculty.email }],
+    })
+      .select("role department email")
+      .lean();
+
+    res.status(200).json({
+      ...faculty,
+      role: linkedUser?.role || faculty.role || "faculty",
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -306,31 +362,142 @@ exports.editFaculty = async (req, res) => {
     const { id } = req.params;
     const data = req.body;
 
+    const existingFaculty = await Faculty.findById(id);
+    if (!existingFaculty) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
+
+    // Check for unique conflict if email is changed
+    if (data.email && data.email !== existingFaculty.email) {
+      const emailExistsInFaculty = await Faculty.findOne({
+        _id: { $ne: id },
+        email: data.email,
+      });
+      const emailExistsInUser = await User.findOne({
+        facultyId: { $ne: id },
+        email: data.email,
+      });
+      if (emailExistsInFaculty || emailExistsInUser) {
+        return res.status(400).json({
+          message: "A user/faculty with this email already exists",
+        });
+      }
+    }
+
+    // Check for unique conflict if empId is changed
+    if (data.empId && data.empId !== existingFaculty.empId) {
+      const empIdExists = await Faculty.findOne({
+        _id: { $ne: id },
+        empId: data.empId,
+      });
+      if (empIdExists) {
+        return res.status(400).json({
+          message: "Faculty with this Employee ID already exists",
+        });
+      }
+    }
+
+    // Check for unique conflict if phone is changed
+    if (data.phone !== undefined && String(data.phone) !== String(existingFaculty.phone)) {
+      const phoneExistsInFaculty = await Faculty.findOne({
+        _id: { $ne: id },
+        phone: data.phone,
+      });
+      const phoneExistsInUser = await User.findOne({
+        facultyId: { $ne: id },
+        phone: String(data.phone),
+      });
+      if (phoneExistsInFaculty || phoneExistsInUser) {
+        return res.status(400).json({
+          message: "A user/faculty with this phone number already exists",
+        });
+      }
+    }
+
+    // Determine role update
+    let roleToSet;
+    if (data.role !== undefined && data.role !== null && data.role !== "") {
+      roleToSet =
+        typeof data.role === "string" && data.role.toLowerCase() === "hod"
+          ? "hod"
+          : data.role;
+      data.role = roleToSet;
+    }
+
     const faculty = await Faculty.findByIdAndUpdate(id, data, {
       new: true,
       runValidators: true,
     });
 
-    if (!faculty) {
-      return res.status(404).json({ message: "Faculty not found" });
+    // Build user update object
+    const userUpdate = {};
+
+    // Sync name
+    const salutation =
+      data.salutation !== undefined
+        ? data.salutation
+        : (faculty.salutation || "");
+    const firstName =
+      data.firstName !== undefined
+        ? data.firstName
+        : (faculty.firstName || "");
+    const lastName =
+      data.lastName !== undefined
+        ? data.lastName
+        : (faculty.lastName || "");
+    const nameParts = [salutation, firstName, lastName]
+      .map((s) => (s ? String(s).trim() : ""))
+      .filter(Boolean);
+    if (nameParts.length > 0) {
+      userUpdate.name = nameParts.join(" ");
     }
 
-    // update user also (name/email sync)
-    await User.findOneAndUpdate(
+    // Sync email
+    if (data.email || faculty.email) {
+      userUpdate.email = data.email || faculty.email;
+    }
+
+    // Sync phone
+    if (data.phone !== undefined || faculty.phone !== undefined) {
+      userUpdate.phone = String(
+        data.phone !== undefined ? data.phone : faculty.phone,
+      );
+    }
+
+    // Sync department
+    if (data.department || faculty.department) {
+      userUpdate.department = data.department || faculty.department;
+    }
+
+    // Sync role
+    if (roleToSet !== undefined) {
+      userUpdate.role = roleToSet;
+    }
+
+    // Update user linked by facultyId or fallback to old email
+    let updatedUser = await User.findOneAndUpdate(
       { facultyId: id },
-      {
-        name: `${data.salutation} ${data.firstName} ${data.lastName}`,
-        email: data.email,
-        phone: data.phone,
-        department: data.department,
-      },
+      { $set: userUpdate },
+      { new: true },
     );
+
+    if (!updatedUser && existingFaculty.email) {
+      updatedUser = await User.findOneAndUpdate(
+        { email: existingFaculty.email },
+        { $set: { ...userUpdate, facultyId: faculty._id } },
+        { new: true },
+      );
+    }
 
     res.status(200).json({
       message: "Faculty updated successfully",
-      data: faculty,
+      data: {
+        ...(faculty.toObject ? faculty.toObject() : faculty),
+        role: updatedUser?.role || faculty.role || roleToSet || "faculty",
+      },
     });
   } catch (err) {
+    console.error("Edit faculty error:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -347,7 +514,9 @@ exports.deleteFaculty = async (req, res) => {
     }
 
     // delete linked user
-    await User.findOneAndDelete({ facultyId: id });
+    await User.findOneAndDelete({
+      $or: [{ facultyId: id }, { email: faculty.email }],
+    });
 
     res.status(200).json({
       message: "Faculty and login deleted successfully",

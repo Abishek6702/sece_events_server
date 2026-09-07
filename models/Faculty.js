@@ -34,6 +34,7 @@ const facultySchema = new mongoose.Schema(
     },
     employmentStatus: { type: Boolean, default: true },
     location: { type: String, required: true },
+    role: { type: String, default: "faculty" },
     profileImage: {
       url: String,
       publicId: String,
