@@ -14,7 +14,7 @@ const isFacultyRole = (role = "") => normalizeRole(role) === "faculty";
 
 const isHeadTicketingUser = (user = {}) => {
   if (!user) return false;
-  return normalizeRole(user.role) === "head" && normalizeDepartment(user.department) === "Externaltransport";
+  return normalizeRole(user.role) === "head" && normalizeDepartment(user.department) === "externaltransport";
 };
 
 const getApprovalEntry = (request, adminNumber) => {
