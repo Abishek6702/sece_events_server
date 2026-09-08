@@ -454,7 +454,7 @@ const getOverallExpenditure = async (req, res) => {
       expenditureMap.set(String(expenditure.requestId), expenditure);
     });
 
-    const entries = requestEntries.map((entry) => {
+    const entries = requestEntries.filter((entry) => expenditureMap.has(entry.requestId)).map((entry) => {
       const expenditure = expenditureMap.get(entry.requestId) || null;
       const facultyOwner = entry._requestDoc?.employee || null;
       const summary = buildOverallExpenditureSummary(
@@ -545,7 +545,7 @@ const getFacultyExpenditureList = async (req, res) => {
       data: enrichedData,
     });
   } catch (error) {
-    console.error("getFacultyExpenditureList error:", error);
+    // console.error("getFacultyExpenditureList error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
