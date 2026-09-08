@@ -3,6 +3,10 @@ const Event = require("../models/Event.js");
 const {
   getAvailableRooms,
 } = require("../utils/accommodationAvailabilityService");
+const {
+  getVenueAvailability,
+  validateVenueAvailability,
+} = require("../utils/venueAvailabilityService");
 const EventRequirement = require("../models/EventType.js");
 const {
   notifyEventCreation,
@@ -504,6 +508,7 @@ exports.createEvent = async (req, res) => {
         // await handleTransportSubmission(eventData, session);
       }
 
+      await validateVenueAvailability(eventData, null);
       await validateAccommodationAvailability(eventData, null);
 
       const createdEvents = await Event.create([eventData], { session });
@@ -531,9 +536,11 @@ exports.createEvent = async (req, res) => {
   } catch (error) {
     console.error("Error creating event:", error);
     if (error.name === "ValidationError") {
-      return res
-        .status(400)
-        .json({ message: "Validation error", errors: error.errors });
+      return res.status(400).json({
+        message: error.message || "Validation error",
+        errors: error.errors,
+        unavailableVenues: error.unavailableVenues,
+      });
     }
     res.status(500).json({ message: "Server error" });
   }
@@ -719,6 +726,7 @@ exports.updateEvent = async (req, res) => {
     }
     event.timeline.updatedAt = new Date();
 
+    await validateVenueAvailability(event, event._id);
     await validateAccommodationAvailability(event, event._id);
 
     const updatedEvent = await event.save();
@@ -728,9 +736,11 @@ exports.updateEvent = async (req, res) => {
   } catch (error) {
     console.error("Error updating event:", error);
     if (error.name === "ValidationError") {
-      return res
-        .status(400)
-        .json({ message: "Validation error", errors: error.errors });
+      return res.status(400).json({
+        message: error.message || "Validation error",
+        errors: error.errors,
+        unavailableVenues: error.unavailableVenues,
+      });
     }
     res.status(500).json({
       message: "Server error",
@@ -859,6 +869,7 @@ exports.submitEvent = async (req, res) => {
     //   await handleTransportSubmission(event);
     // }
 
+    await validateVenueAvailability(event, event._id);
     await validateAccommodationAvailability(event, event._id);
 
     const updatedEvent = await event.save();
@@ -868,9 +879,11 @@ exports.submitEvent = async (req, res) => {
   } catch (error) {
     console.error("Error submitting event:", error);
     if (error.name === "ValidationError") {
-      return res
-        .status(400)
-        .json({ message: "Validation error", errors: error.errors });
+      return res.status(400).json({
+        message: error.message || "Validation error",
+        errors: error.errors,
+        unavailableVenues: error.unavailableVenues,
+      });
     }
     res.status(500).json({ message: "Server error" });
   }
@@ -1090,6 +1103,8 @@ exports.updateEventStatus = async (req, res) => {
 
     switch (action) {
       case "submit":
+        await validateVenueAvailability(event, event._id);
+        await validateAccommodationAvailability(event, event._id);
         event.isSubmitted = true;
         event.status = "Submitted";
         if (!event.timeline) {
@@ -1365,6 +1380,13 @@ exports.updateEventStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Status update error:", error);
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        message: error.message || "Validation error",
+        errors: error.errors,
+        unavailableVenues: error.unavailableVenues,
+      });
+    }
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -1576,7 +1598,12 @@ exports.requestMediaStaffChange = async (req, res) => {
 
 exports.checkVenueAvailability = async (req, res) => {
   try {
-    const { eventSchedule = [], venues = [] } = req.body;
+    const {
+      eventSchedule = [],
+      venues = [],
+      excludeEventId,
+      eventId,
+    } = req.body;
 
     if (!Array.isArray(eventSchedule) || !eventSchedule.length) {
       return res.status(400).json({
@@ -1592,138 +1619,19 @@ exports.checkVenueAvailability = async (req, res) => {
       });
     }
 
-    const events = await Event.find({
-      status: {
-        $nin: ["Rejected", "Closed"],
-      },
-    }).select(
-      "requestDetails.eventDetails.eventSchedule venueDetails.venues requestDetails.eventDetails.eventName status",
-    );
-
-    const availableVenues = [];
-    const unavailableVenues = [];
-
-    const timeToMinutes = (time) => {
-      if (!time) return 0;
-
-      const [hour, minute] = time.split(":").map(Number);
-
-      return hour * 60 + minute;
-    };
-
-    const isOverlapping = (
-      existingStart,
-      existingEnd,
-      requestedStart,
-      requestedEnd,
-    ) => {
-      const s1 = timeToMinutes(existingStart);
-      const e1 = timeToMinutes(existingEnd);
-
-      const s2 = timeToMinutes(requestedStart);
-      const e2 = timeToMinutes(requestedEnd);
-
-      return s1 < e2 && s2 < e1;
-    };
-
-    for (const venue of venues) {
-      const schedule =
-        eventSchedule.find((item) => item.dayIndex === venue.dayIndex) ||
-        eventSchedule[venue.dayIndex];
-
-      if (!schedule) continue;
-
-      let isBooked = false;
-
-      for (const event of events) {
-        const existingSchedules =
-          event.requestDetails?.eventDetails?.eventSchedule || [];
-
-        const existingVenues = event.venueDetails?.venues || [];
-
-        if (!existingSchedules.length || !existingVenues.length) {
-          continue;
-        }
-
-        const existingSchedule = existingSchedules[venue.dayIndex];
-
-        if (!existingSchedule) {
-          continue;
-        }
-
-        const existingVenue = existingVenues.find(
-          (v) =>
-            v.dayIndex === venue.dayIndex &&
-            v.venueName?.trim().toLowerCase() ===
-              venue.venueName?.trim().toLowerCase(),
-        );
-
-        if (!existingVenue) {
-          continue;
-        }
-
-        const requestDate = new Date(schedule.eventDate)
-          .toISOString()
-          .split("T")[0];
-
-        const existingDate = new Date(existingSchedule.eventDate)
-          .toISOString()
-          .split("T")[0];
-
-        if (requestDate !== existingDate) {
-          continue;
-        }
-
-        const overlap = isOverlapping(
-          existingSchedule.startTime,
-          existingSchedule.endTime,
-          schedule.startTime,
-          schedule.endTime,
-        );
-
-        if (overlap) {
-          isBooked = true;
-
-          unavailableVenues.push({
-            venueName: venue.venueName,
-            status: "Booked",
-            eventName: event.requestDetails?.eventDetails?.eventName || "",
-            eventId: event._id,
-            date: requestDate,
-            startTime: existingSchedule.startTime,
-            endTime: existingSchedule.endTime,
-          });
-
-          break;
-        }
-      }
-
-      if (!isBooked) {
-        availableVenues.push({
-          venueName: venue.venueName,
-          status: "Available",
-        });
-      }
-    }
-
-    let status = "AVAILABLE";
-    let message = "All selected venues are available.";
-
-    if (unavailableVenues.length > 0 && availableVenues.length > 0) {
-      status = "PARTIALLY_AVAILABLE";
-      message = "Some selected venues are already booked.";
-    } else if (unavailableVenues.length === venues.length) {
-      status = "NOT_AVAILABLE";
-      message = "None of the selected venues are available.";
-    }
+    const result = await getVenueAvailability({
+      eventSchedule,
+      venues,
+      excludeEventId: excludeEventId || eventId || null,
+    });
 
     return res.status(200).json({
       success: true,
-      status,
-      message,
+      status: result.status,
+      message: result.message,
       data: {
-        available: availableVenues,
-        unavailable: unavailableVenues,
+        available: result.available,
+        unavailable: result.unavailable,
       },
     });
   } catch (error) {
