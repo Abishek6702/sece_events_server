@@ -96,6 +96,32 @@ const getAllVenues = async (req, res) => {
   }
 };
 
+// ➤ Get all distinct categories
+const getVenueCategories = async (req, res) => {
+  try {
+    const categories = await Venue.distinct("category", {
+      category: { $exists: true, $nin: [null, ""] },
+    });
+
+    const formattedCategories = Array.from(
+      new Set(
+        categories
+          .map((c) => (typeof c === "string" ? c.trim() : c))
+          .filter(Boolean),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+
+    res.status(200).json({
+      success: true,
+      count: formattedCategories.length,
+      categories: formattedCategories,
+      data: formattedCategories,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
 const getVenuesByCategory = async (req, res) => {
   try {
     const { category } = req.params;
@@ -462,6 +488,7 @@ module.exports = {
   importVenuesFromExcel,
   createVenue,
   getAllVenues,
+  getVenueCategories,
   getVenuesByCategory,
   getVenueById,
   updateVenue,
