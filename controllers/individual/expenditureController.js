@@ -545,7 +545,7 @@ const getFacultyExpenditureList = async (req, res) => {
       data: enrichedData,
     });
   } catch (error) {
-    console.error("getFacultyExpenditureList error:", error);
+    // console.error("getFacultyExpenditureList error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
