@@ -420,6 +420,10 @@ const refreshmentSchema = new mongoose.Schema(
               vegCount: Number,
               nonVegCount: Number,
             },
+            placement: {
+              vegCount: Number,
+              nonVegCount: Number,
+            },
             refreshmentCount:Number,
             venueWiseDetails: [
               {
