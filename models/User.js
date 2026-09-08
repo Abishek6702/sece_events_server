@@ -17,12 +17,17 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       ref: "Faculty",
       unique: true,
-      sparse: true
+      sparse: true,
     },
 
     department: { type: String, required: true },
 
-    role: { type: String, required: true, default: "faculty" },
+    role: {
+      type: String,
+      required: true,
+      default: "faculty",
+      enum: ["faculty", "hod", "admin", "admin secretary","head"],
+    },
 
     isadmin: { type: Boolean, default: false },
 
