@@ -419,7 +419,7 @@ const getOverallExpenditure = async (req, res) => {
     const requestEntries = (
       await Promise.all(
         modelList.map(async ({ module, Model }) => {
-          const docs = await Model.find().populate({
+          const docs = await Model.find({ finalStatus: "Approved" }).populate({
             path: "employee",
             select: "_id name email phoneNumber department",
           }).lean();
