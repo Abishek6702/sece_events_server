@@ -744,6 +744,14 @@ const eventSchema = new mongoose.Schema(
       unique: true,
       sparse: true,
     },
+    deleteRemarks: {
+      type: String,
+      trim: true,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
     requestDetails: requestSchema,
     venueDetails: venueSchema,
     ictsDetails: ictsSchema,
@@ -779,6 +787,7 @@ const eventSchema = new mongoose.Schema(
         "DepartmentReview",
         "Closed",
         "Rejected",
+        "Deleted",
       ],
       default: "Draft",
     },
