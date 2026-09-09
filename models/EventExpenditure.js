@@ -34,6 +34,15 @@ const expenditureRowSchema = new mongoose.Schema(
       min: 0,
     },
 
+    paymentMode: {
+      type: String,
+      required: true,
+    },
+    
+    paidFromAdvance:{
+      type:Number
+    },
+
     supportingDocuments: {
       type: [fileReferenceSchema],
       default: [],

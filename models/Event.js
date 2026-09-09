@@ -38,6 +38,11 @@ const organizerSchema = new mongoose.Schema(
     financeRequired: { type: Boolean, default: false },
     estimatedBudget: { type: Number },
 
+    fundingSource: [{
+      type: { type: String },
+      amount: { type: Number },
+    }],
+
     advanceAmount: { type: Number },
     purposeOfAdvance: { type: String },
     advanceToBeReceviedWithin: { type: Number },
@@ -331,7 +336,6 @@ const externalTransportSchema = new mongoose.Schema(
   { _id: false },
 );
 
-
 // transportDetails (finalized)
 const transportSchema = new mongoose.Schema(
   {
@@ -424,12 +428,12 @@ const refreshmentSchema = new mongoose.Schema(
               vegCount: Number,
               nonVegCount: Number,
             },
-            refreshmentCount:Number,
+            refreshmentCount: Number,
             venueWiseDetails: [
               {
                 venueName: { type: String, trim: true },
                 count: { type: Number },
-              }
+              },
             ],
           },
         ],
@@ -772,7 +776,7 @@ const eventSchema = new mongoose.Schema(
     isDocumentsCompleted: { type: Boolean, default: false },
     isExpenditureCompleted: { type: Boolean, default: false },
     isFeedbackCompleted: { type: Boolean, default: false },
-    documentExpenditureApproved: { type: Boolean, default: true },
+    documentExpenditureApproved: { type: Boolean, default: false },
     isClosed: { type: Boolean, default: false },
     // transportInventoryRestored: { type: Boolean, default: false },
 
