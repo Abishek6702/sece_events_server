@@ -949,7 +949,7 @@ exports.getEventById = async (req, res) => {
           projection["mediaRequirementDetails"] = 1;
           break;
 
-        case "externalTransport":
+        case "externalTransports":
           projection["externalTransportDetails"] = 1;
           break;
       }
