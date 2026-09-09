@@ -183,9 +183,9 @@ exports.addIndividualFaculty = async (req, res) => {
     }
 
     const assignedRole =
-      typeof role === "string" && role.toLowerCase() === "hod"
-        ? "hod"
-        : (role || "faculty");
+      typeof role === "string" && role.trim()
+        ? role.trim().toLowerCase()
+        : "faculty";
 
     // ✅ Create faculty
     const faculty = await Faculty.create({
