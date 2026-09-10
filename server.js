@@ -32,6 +32,10 @@ const documentNameRoutes = require("./routes/documentNameRoutes");
 const eventClosingDocumentRoutes = require("./routes/eventClosingDocumentRoutes");
 const eventExpenditureRoutes = require("./routes/eventExpenditureRoutes");
 const individualTicketingRoutes = require("./routes/individualTicketingRoutes");
+const {
+  startBackupService,
+  stopBackupService,
+} = require("./services/backupService");
 
 dotenv.config();
 const app = express();
@@ -112,6 +116,30 @@ app.use("/api/individual-ticketing", individualTicketingRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+startBackupService();
+
+process.on("SIGINT", () => {
+  console.log("SIGINT received. Shutting down...");
+
+  stopBackupService();
+
+  server.close(() => {
+    console.log("Server closed.");
+    process.exit(0);
+  });
+});
+
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received. Shutting down...");
+
+  stopBackupService();
+
+  server.close(() => {
+    console.log("Server closed.");
+    process.exit(0);
+  });
 });
