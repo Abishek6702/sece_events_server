@@ -949,7 +949,7 @@ exports.getEventById = async (req, res) => {
           projection["mediaRequirementDetails"] = 1;
           break;
 
-        case "externalTransport":
+        case "externalTransports":
           projection["externalTransportDetails"] = 1;
           break;
       }
@@ -985,11 +985,36 @@ exports.deleteEvent = async (req, res) => {
       return res.status(400).json({ message: "Invalid ID" });
     }
 
-    const deleted = await Event.findByIdAndDelete(id);
+    const event = await Event.findById(id);
 
-    if (!deleted) {
+    if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
+
+    if (event.isSubmitted && event.iqacNumber) {
+      const deleteRemarks = String(
+        req.body?.remarks || req.body?.deletionRemarks || "",
+      ).trim();
+
+      if (!deleteRemarks) {
+        return res.status(400).json({
+          message: "Delete remarks are required for soft deletion",
+        });
+      }
+
+      event.status = "Deleted";
+      event.isDeleted = true;
+      event.deleteRemarks = deleteRemarks;
+      await event.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Event soft deleted successfully",
+        data: event,
+      });
+    }
+
+    const deleted = await Event.findByIdAndDelete(id);
 
     return res.status(200).json({
       success: true,
@@ -1105,6 +1130,9 @@ exports.updateEventStatus = async (req, res) => {
       case "submit":
         await validateVenueAvailability(event, event._id);
         await validateAccommodationAvailability(event, event._id);
+        if (!event.iqacNumber) {
+          await assignIQACNumber(event);
+        }
         event.isSubmitted = true;
         event.status = "Submitted";
         if (!event.timeline) {

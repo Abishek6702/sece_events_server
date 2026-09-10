@@ -135,6 +135,7 @@ exports.getDashboardStats = async (req, res) => {
       refreshments: "refreshment",
       "poster-dashboard": "poster",
       "video-dashboard": "video",
+      externaltransports: "externalTransports",
     };
     const module = ["admin", "superadmin", "super-admin"].includes(requestedModule)
       ? ""
@@ -172,6 +173,7 @@ exports.getDashboardStats = async (req, res) => {
       icts: "ictsDetails",
       audio: "audioDetails",
       transport: "transportDetails",
+      externalTransports: "externalTransportDetails",
       refreshment: "refreshmentDetails",
       accommodation: "accommodationDetails",
       purchase: "purchaseDetails",
@@ -192,6 +194,7 @@ exports.getDashboardStats = async (req, res) => {
       icts: "requestDetails.requirementDetails.ictsRequired",
       audio: "requestDetails.requirementDetails.audioRequired",
       transport: "requestDetails.requirementDetails.transportRequired",
+      externalTransports: "requestDetails.requirementDetails.externalTransportRequired",
       refreshment: "requestDetails.requirementDetails.refreshmentRequired",
       accommodation: "requestDetails.requirementDetails.accommodationRequired",
       purchase: "requestDetails.requirementDetails.purchaseRequired",
@@ -273,6 +276,7 @@ exports.getDepartmentWiseStats = async (req, res) => {
       accommodation: "accommodationDetails",
       purchase: "purchaseDetails",
       media: "mediaRequirementDetails",
+      externalTransports: "externalTransportDetails",
     };
 
     // validate module only if provided

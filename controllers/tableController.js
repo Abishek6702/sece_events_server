@@ -29,11 +29,10 @@ exports.getDashboardTable = async (req, res) => {
   try {
     const { module } = req.query;
 
-  
     const baseQuery = {
       status: { $ne: "Draft" },
     };
-    
+
     // For all modules except admin and faculty,
     // only return events approved by admin.
     if (module !== "admin" && module !== "faculty") {
@@ -156,7 +155,25 @@ exports.getDashboardTable = async (req, res) => {
           ),
         });
       }
+      
+      // ================= EXTERNAL TRANSPORT =================
+      else if (
+        module === "externalTransports" &&
+        event.requestDetails?.requirementDetails?.externalTransportRequired ===
+          true &&
+        event.externalTransportDetails?.externalTransports?.length
+      ) {
+        data.push({
+          ...commonData,
 
+          externalTransports: event.externalTransportDetails.externalTransports,
+
+          departmentStatus: getDepartmentStatus(
+            event.externalTransportDetails?.status?.status,
+            event.status,
+          ),
+        });
+      }
       // ================= FOOD =================
       else if (
         module === "food" &&
@@ -280,14 +297,10 @@ exports.getDashboardTable = async (req, res) => {
       }
     }
 
-
-
     return res.status(200).json({
       module,
 
       count: data.length,
-
-      
 
       data,
     });
@@ -389,8 +402,12 @@ exports.getHodDashboardTable = async (req, res) => {
       eventName: event.requestDetails?.eventDetails?.eventName || "",
       eventType: event.requestDetails?.eventDetails?.eventType || "",
       venues: event.venueDetails?.venues?.map((v) => v.venueName) || [],
-      dates: event.requestDetails?.eventDetails?.eventSchedule?.map((d) => d.eventDate) || [],
-      organizingDepartment: event.requestDetails?.organizerDetails?.organizingDepartment || "",
+      dates:
+        event.requestDetails?.eventDetails?.eventSchedule?.map(
+          (d) => d.eventDate,
+        ) || [],
+      organizingDepartment:
+        event.requestDetails?.organizerDetails?.organizingDepartment || "",
       adminApproval: event.adminApproval,
       status: event.status,
       hodApproval: event.isHodApproved,
@@ -410,4 +427,3 @@ exports.getHodDashboardTable = async (req, res) => {
     });
   }
 };
-
