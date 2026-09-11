@@ -103,7 +103,7 @@ const getVenueAvailability = async ({
 
   const query = {
     status: {
-      $nin: ["Rejected", "Admin Cancelled", "Draft", "Closed"],
+      $nin: ["Rejected", "Admin Cancelled", "Draft", "Closed","Deleted"],
     },
     "venueDetails.venues": { $exists: true, $not: { $size: 0 } },
   };
