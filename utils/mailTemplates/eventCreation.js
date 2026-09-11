@@ -19,7 +19,7 @@ module.exports = ({ eventName, organizerName, organizingDepartment, eventDate })
 
     <p style="text-align: center; margin-top: 30px; color: #888; font-size: 14px;">
       Regards,<br>
-      <b>SECE Events System</b>
+      <a href="https://srieshwarevents.com" target="_blank" style="color: #2c3e50; text-decoration: none; font-weight: bold;">Sri Eshwar Events</a>
     </p>
   </div>
 `;
