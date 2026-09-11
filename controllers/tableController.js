@@ -40,6 +40,7 @@ exports.getDashboardTable = async (req, res) => {
     }
     const events = await Event.find(baseQuery)
       .populate("organizerId", "name email")
+      .sort({ createdAt: -1 })
       .lean();
 
     let data = [];

@@ -21,7 +21,7 @@ module.exports = ({ name, email, otp }) => `
 
     <p style="text-align:center; margin-top:30px; color:#888;">
       Regards,<br>
-      <b>SECE Events</b>
+      <a href="https://srieshwarevents.com" target="_blank" style="color: #2c3e50; text-decoration: none; font-weight: bold;">Sri Eshwar Events</a>
     </p>
   </div>
 `;
