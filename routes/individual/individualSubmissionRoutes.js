@@ -3,6 +3,7 @@ const {
   getAllIndividualSubmissions,
   getIndividualSubmissionById,
   getRequestByFacultyModule,
+  softDeleteIndividualSubmission,
   getPosterRequests,
   getPosterRequestById,
   getVideoRequests,
@@ -33,6 +34,7 @@ router.get("/", getAllIndividualSubmissions);
 // Example: GET /api/individual-submissions/getrequest/:id?module=food
 router.get("/getrequest", getRequestByFacultyModule);
 router.get("/getrequest/:id", protect, getRequestByFacultyModule);
+router.delete("/:id", softDeleteIndividualSubmission);
 
 // Media head review lists
 router.get("/poster-head", getPosterHeadList);

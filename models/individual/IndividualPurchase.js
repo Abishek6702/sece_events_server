@@ -167,6 +167,22 @@ const purchaseSchema = new mongoose.Schema(
       default: "PURCHASE",
     },
 
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
     financialYear: {
       type: String,
       required: true,

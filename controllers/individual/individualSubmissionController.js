@@ -3,6 +3,7 @@ const IndividualFood = require("../../models/individual/IndividualFood");
 const IndividualPurchase = require("../../models/individual/IndividualPurchase");
 const IndividualTransport = require("../../models/individual/IndividualTransport");
 const IndividualMedia = require("../../models/individual/IndividualMedia");
+const IndividualTicketing = require("../../models/IndividualTicketing");
 const Faculty = require("../../models/Faculty");
 const User = require("../../models/User");
 const {
@@ -39,20 +40,20 @@ const resolveEmployee = async (employeeRef) => {
     return null;
   }
 
-  const facultyDoc = await Faculty.findById(id).select("name email").lean();
+  const facultyDoc = await Faculty.findById(id).select("name email department").lean();
   if (facultyDoc) {
     // If Faculty record exists but lacks a name, try to resolve a User linked to this faculty id
     if (!facultyDoc.name) {
-      const linkedUser = await User.findOne({ facultyId: facultyDoc._id }).select("name email").lean();
+      const linkedUser = await User.findOne({ facultyId: facultyDoc._id }).select("name email department").lean();
       if (linkedUser && linkedUser.name) {
-        return { _id: facultyDoc._id, email: facultyDoc.email, name: linkedUser.name };
+        return { _id: facultyDoc._id, email: facultyDoc.email, name: linkedUser.name, department: linkedUser.department || facultyDoc.department };
       }
     }
 
     return facultyDoc;
   }
 
-  const userDoc = await User.findById(id).select("name email").lean();
+  const userDoc = await User.findById(id).select("name email department").lean();
   return userDoc;
 };
 
@@ -79,9 +80,35 @@ const buildSubmissionItem = (item, formType, resolvedEmployee) => {
     // ignore parsing errors and leave purchaseEarliestDate null
   }
 
+  const isTicketingRequest = formType === "IndividualTicketing" || item?.constructor?.modelName === "IndividualTicketing";
+
+  if (isTicketingRequest) {
+    return {
+      id: item._id,
+      formType: "IndividualTicketing",
+      requestType: "IndividualTicketing",
+      employee:
+        resolvedEmployee?.name ||
+        resolvedEmployee?.email ||
+        (item.facultyId ? String(item.facultyId) : null),
+      employeeEmail: resolvedEmployee?.email || null,
+      employeeDetail: resolvedEmployee || null,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+      status: item.status || "Pending",
+      workflowStage: item.status || null,
+      superAdminApproval: item.superAdmin1Approval || item.superAdmin2Approval || null,
+      headApproval: item.headApproval || null,
+      finalStatus: item.status || null,
+      date: item.travelDate || item.createdAt || null,
+      data: item,
+    };
+  }
+
   return {
     id: item._id,
     formType,
+    requestType: formType,
     // Prefer resolved name, fallback to resolved email, then populated item name/email,
     // then raw id string so UI always has something to display
     employee:
@@ -252,6 +279,7 @@ const getModuleKeyFromModel = (model) => {
   if (model === IndividualPurchase) return "purchase";
   if (model === IndividualTransport) return "transport";
   if (model === IndividualMedia) return "media";
+  if (model === IndividualTicketing) return "ticketing";
   return null;
 };
 
@@ -325,10 +353,11 @@ const resolveSubmissionById = async (id) => {
     IndividualPurchase,
     IndividualTransport,
     IndividualMedia,
+    IndividualTicketing,
   ];
 
   for (const Model of models) {
-    const item = await Model.findById(id);
+    const item = await Model.findOne({ _id: id, isDeleted: { $ne: true } });
     if (item) {
       return { item, Model };
     }
@@ -462,7 +491,9 @@ const buildSubmissionFilter = async ({
   includeAll = false,
   applyReviewFilter = false,
 }) => {
-  const filter = {};
+  const filter = {
+    isDeleted: { $ne: true },
+  };
 
   // Debug: print incoming context for tracing
   // console.log("buildSubmissionFilter user:", user);   7777
@@ -787,6 +818,54 @@ const getVideoHeadList = async (req, res) => {
   }
 };
 
+const buildTicketingVisibilityFilter = async ({ user, facultyId, includeAll = false }) => {
+  const filter = {};
+  const normalizedRole = normalizeRole(user?.role);
+  const currentFacultyId = user?.facultyId ? String(user.facultyId) : null;
+  const currentUserId = user?._id ? String(user._id) : null;
+  const facultyCandidates = [...new Set([currentUserId, currentFacultyId].filter(Boolean))];
+
+  if (["super admin 1", "super admin 2"].includes(normalizedRole)) {
+    if (!includeAll) {
+      filter.status = "Pending";
+    }
+    return filter;
+  }
+
+  if (facultyId) {
+    filter.facultyId = facultyId;
+  } else if (normalizedRole === "faculty") {
+    if (facultyCandidates.length === 1) {
+      filter.facultyId = facultyCandidates[0];
+    } else if (facultyCandidates.length > 1) {
+      filter.facultyId = { $in: facultyCandidates };
+    } else {
+      filter.facultyId = null;
+    }
+  } else if (facultyCandidates.length > 0) {
+    if (facultyCandidates.length === 1) {
+      filter.facultyId = facultyCandidates[0];
+    } else {
+      filter.facultyId = { $in: facultyCandidates };
+    }
+  }
+
+  if (normalizedRole === "faculty") {
+    return filter;
+  }
+
+  if (normalizedRole === "head" && normalizeRole(user?.department) === "external transport") {
+    filter.status = { $in: ["Approved", "Acknowledged", "Completed"] };
+    return filter;
+  }
+
+  if (!includeAll) {
+    filter.status = { $in: ["Pending", "Approved", "Acknowledged", "Completed"] };
+  }
+
+  return filter;
+};
+
 const getAllIndividualSubmissions = async (req, res) => {
   try {
     const { facultyId, module, includeAll } = req.query;
@@ -804,27 +883,27 @@ const getAllIndividualSubmissions = async (req, res) => {
       applyReviewFilter: true,
     });
 
-    const moduleConfigs = normalizedModule
-      ? [
-          {
-            model: IndividualFood,
-            formType: "Food",
-            key: "food",
-          },
-        ].filter(({ key }) => key === normalizedModule)
-      : [
-          { model: IndividualFood, formType: "Food", key: "food" },
-          { model: IndividualPurchase, formType: "Purchase", key: "purchase" },
-          { model: IndividualTransport, formType: "Transport", key: "transport" },
-          { model: IndividualMedia, formType: "Media", key: "media" },
-        ];
+    const baseConfigs = [
+      { model: IndividualFood, formType: "Food", key: "food" },
+      { model: IndividualPurchase, formType: "Purchase", key: "purchase" },
+      { model: IndividualTransport, formType: "Transport", key: "transport" },
+      { model: IndividualMedia, formType: "Media", key: "media" },
+    ];
 
-    if (normalizedModule === "purchase") {
-      moduleConfigs[0] = { model: IndividualPurchase, formType: "Purchase", key: "purchase" };
-    } else if (normalizedModule === "transport") {
-      moduleConfigs[0] = { model: IndividualTransport, formType: "Transport", key: "transport" };
-    } else if (normalizedModule === "media") {
-      moduleConfigs[0] = { model: IndividualMedia, formType: "Media", key: "media" };
+    let moduleConfigs = baseConfigs;
+    let includeTicketing = !normalizedModule || ["ticketing", "individualticketing"].includes(normalizedModule);
+
+    if (normalizedModule) {
+      moduleConfigs = baseConfigs.filter(({ key }) => key === normalizedModule);
+      if (normalizedModule === "purchase") {
+        moduleConfigs = [{ model: IndividualPurchase, formType: "Purchase", key: "purchase" }];
+      } else if (normalizedModule === "transport") {
+        moduleConfigs = [{ model: IndividualTransport, formType: "Transport", key: "transport" }];
+      } else if (normalizedModule === "media") {
+        moduleConfigs = [{ model: IndividualMedia, formType: "Media", key: "media" }];
+      } else if (["ticketing", "individualticketing"].includes(normalizedModule)) {
+        moduleConfigs = [];
+      }
     }
 
     const results = await Promise.all(
@@ -844,6 +923,28 @@ const getAllIndividualSubmissions = async (req, res) => {
     );
 
     const data = results.flat();
+
+    if (includeTicketing) {
+      const ticketingFilter = await buildTicketingVisibilityFilter({
+        user: currentUser,
+        facultyId,
+        includeAll: includeAll === "true" || includeAll === "1",
+      });
+
+      const ticketingItems = await IndividualTicketing.find({ ...ticketingFilter, isDeleted: { $ne: true } })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      const ticketingData = await Promise.all(
+        ticketingItems.map(async (item) => {
+          const resolvedEmployee = await resolveEmployee(item.facultyId);
+          return buildSubmissionItem(item, "IndividualTicketing", resolvedEmployee);
+        }),
+      );
+
+      data.push(...ticketingData);
+    }
+
     data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     return res.status(200).json({
@@ -886,8 +987,9 @@ const getIndividualSubmissionById = async (req, res) => {
     else if (Model === IndividualPurchase) formType = "Purchase";
     else if (Model === IndividualTransport) formType = "Transport";
     else if (Model === IndividualMedia) formType = "Media";
+    else if (Model === IndividualTicketing) formType = "IndividualTicketing";
 
-    const resolvedEmployee = await resolveEmployee(item.employee);
+    const resolvedEmployee = await resolveEmployee(item.employee || item.facultyId);
     const data = buildSubmissionItem(item, formType, resolvedEmployee);
 
     return res.status(200).json({
@@ -916,6 +1018,8 @@ const getRequestByFacultyModule = async (req, res) => {
       purchase: IndividualPurchase,
       transport: IndividualTransport,
       media: IndividualMedia,
+      ticketing: IndividualTicketing,
+      individualticketing: IndividualTicketing,
     };
 
     const moduleKeyFromQuery = String(module || getModuleKeyFromHeadRole(currentUser.role))
@@ -925,27 +1029,33 @@ const getRequestByFacultyModule = async (req, res) => {
       ? [moduleKeyFromQuery]
       : Object.keys(allowedModules);
 
-    const parseFormType = (key) => key.charAt(0).toUpperCase() + key.slice(1);
+    const parseFormType = (key) => {
+      if (key === "ticketing" || key === "individualticketing") return "IndividualTicketing";
+      return key.charAt(0).toUpperCase() + key.slice(1);
+    };
 
     const formatItem = async (item, formType) => {
-      const resolvedEmployee = await resolveEmployee(item.employee);
+      const resolvedEmployee = await resolveEmployee(item.employee || item.facultyId);
       const requestDate =
         item.date ||
         item.deliveryDate ||
         item.pickupDateTime ||
         item.dropDateTime ||
+        item.travelDate ||
         item.createdAt ||
         null;
 
-      return {
+      const basePayload = {
         requestId: item._id,
         id: item._id,
         formType,
+        requestType: formType === "IndividualTicketing" ? "IndividualTicketing" : formType,
         requestNo: item.requestNo || null,
         requestDate,
         module: String(item.module || formType || "").toLowerCase(),
         employee: resolvedEmployee?.name || null,
         employeeEmail: resolvedEmployee?.email || null,
+        employeeDepartment: resolvedEmployee?.department || null,
         employeeDetail: resolvedEmployee || null,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
@@ -958,6 +1068,27 @@ const getRequestByFacultyModule = async (req, res) => {
         finalStatus: item.finalStatus || null,
         data: item,
       };
+
+      if (formType === "IndividualTicketing") {
+        return {
+          ...basePayload,
+          travelOption: item.travelOption || null,
+          travelDate: item.travelDate || null,
+          from: item.from || null,
+          to: item.to || null,
+          flightNumber: item.flightNumber || null,
+          travelClass: item.travelClass || null,
+          numberOfPassengers: item.numberOfPassengers || null,
+          specialRequirements: item.specialRequirements || null,
+          passengers: item.passengers || [],
+          superAdmin1Approval: item.superAdmin1Approval || null,
+          superAdmin2Approval: item.superAdmin2Approval || null,
+          acknowledgedAt: item.acknowledgedAt || null,
+          completedAt: item.completedAt || null,
+        };
+      }
+
+      return basePayload;
     };
 
     // If a specific request id is provided, resolve it across models
@@ -971,10 +1102,12 @@ const getRequestByFacultyModule = async (req, res) => {
       let foundModelKey = null;
 
       if (moduleKeyFromQuery && allowedModules[moduleKeyFromQuery]) {
-        submission = await allowedModules[moduleKeyFromQuery]
-          .findById(requestId)
-          .populate("employee")
-          .lean();
+        const targetModel = allowedModules[moduleKeyFromQuery];
+        if (targetModel === IndividualTicketing) {
+          submission = await targetModel.findOne({ _id: requestId, isDeleted: { $ne: true } }).lean();
+        } else {
+          submission = await targetModel.findOne({ _id: requestId, isDeleted: { $ne: true } }).populate("employee").lean();
+        }
 
         if (submission) foundModelKey = moduleKeyFromQuery;
       }
@@ -986,7 +1119,11 @@ const getRequestByFacultyModule = async (req, res) => {
           return res.status(404).json({ success: false, message: "Individual submission not found" });
         }
 
-        submission = await resolved.Model.findById(requestId).populate("employee").lean();
+        if (resolved.Model === IndividualTicketing) {
+          submission = await resolved.Model.findOne({ _id: requestId, isDeleted: { $ne: true } }).lean();
+        } else {
+          submission = await resolved.Model.findOne({ _id: requestId, isDeleted: { $ne: true } }).populate("employee").lean();
+        }
         foundModelKey = getModuleKeyFromModel(resolved.Model) || null;
       }
 
@@ -1001,13 +1138,22 @@ const getRequestByFacultyModule = async (req, res) => {
       if (!allowedModules[key]) {
         return res.status(400).json({
           success: false,
-          message: "Invalid module. Allowed values: food, purchase, transport, media",
+          message: "Invalid module. Allowed values: food, purchase, transport, media, ticketing",
         });
       }
     }
 
-    // Fetch items per module applying the same review/workflow filters
     const perModulePromises = targetModules.map(async (key) => {
+      if (key === "ticketing" || key === "individualticketing") {
+        const ticketingFilter = await buildTicketingVisibilityFilter({
+          user: currentUser,
+          facultyId,
+          includeAll: includeAll === "true" || includeAll === "1",
+        });
+        const items = await IndividualTicketing.find(ticketingFilter).sort({ createdAt: -1 }).lean();
+        return Promise.all(items.map((item) => formatItem(item, parseFormType(key))));
+      }
+
       const Model = allowedModules[key];
       const filter = await buildSubmissionFilter({
         facultyId,
@@ -1017,22 +1163,7 @@ const getRequestByFacultyModule = async (req, res) => {
         applyReviewFilter: true,
       });
 
-      // Debug: log counts and filter used for this module
-      try {
-        const totalCount = await Model.countDocuments();
-        // console.log("getRequestByFacultyModule debug:", {
-        //   role,
-        //   module: key,
-        //   filter,
-        //   totalCount,
-        // });
-      } catch (countErr) {
-        console.warn("Failed to count documents for module", key, countErr.message);
-      }
-
-      const items = await Model.find(filter).populate("employee").sort({ createdAt: -1 }).lean();
-      // console.log(`getRequestByFacultyModule matched for ${key}:`, items.length);
-
+      const items = await Model.find({ ...filter, isDeleted: { $ne: true } }).populate("employee").sort({ createdAt: -1 }).lean();
       return Promise.all(items.map((item) => formatItem(item, parseFormType(key))));
     });
 
@@ -1048,6 +1179,75 @@ const getRequestByFacultyModule = async (req, res) => {
     }
 
     return res.status(500).json({ success: false, message: "Failed to fetch requests for faculty module", error: error.message });
+  }
+};
+
+const softDeleteIndividualSubmission = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid individual submission id",
+      });
+    }
+
+    const models = [IndividualFood, IndividualPurchase, IndividualTransport, IndividualMedia];
+    let foundSubmission = null;
+    let foundModel = null;
+
+    for (const Model of models) {
+      const item = await Model.findById(id);
+      if (item) {
+        foundSubmission = item;
+        foundModel = Model;
+        break;
+      }
+    }
+
+    if (!foundSubmission) {
+      return res.status(404).json({
+        success: false,
+        message: "Individual submission not found",
+      });
+    }
+
+    if (foundSubmission.isDeleted) {
+      return res.status(409).json({
+        success: false,
+        message: "Individual submission already deleted",
+      });
+    }
+
+    foundSubmission.isDeleted = true;
+    foundSubmission.deletedAt = new Date();
+    foundSubmission.deletedBy = req.user._id;
+    await foundSubmission.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Individual submission deleted successfully",
+      data: {
+        id: foundSubmission._id,
+        isDeleted: foundSubmission.isDeleted,
+        deletedAt: foundSubmission.deletedAt,
+        deletedBy: foundSubmission.deletedBy,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete individual submission",
+      error: error.message,
+    });
   }
 };
 
@@ -1739,6 +1939,7 @@ module.exports = {
   getAllIndividualSubmissions,
   getIndividualSubmissionById,
   getRequestByFacultyModule,
+  softDeleteIndividualSubmission,
   getMediaHeadList,
   getPosterRequests,
   getPosterRequestById,

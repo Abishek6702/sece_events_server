@@ -46,6 +46,35 @@ const individualTicketingSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    requestNo: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    module: {
+      type: String,
+      required: true,
+      default: "EXTERNALTRANSPORT",
+    },
+    financialYear: {
+      type: String,
+      required: true,
+      default: "",
+    },
+    departmentCode: {
+      type: String,
+      required: true,
+      default: "IR",
+    },
+    requestSequence: {
+      type: Number,
+      default: 0,
+    },
+    departmentSequence: {
+      type: Number,
+      default: 0,
+    },
     travelOption: { type: String, required: true, trim: true },
     travelDate: { type: Date, required: true },
     from: { type: String, required: true, trim: true },
@@ -60,6 +89,21 @@ const individualTicketingSchema = new mongoose.Schema(
       enum: ["Pending", "Approved", "Acknowledged", "Completed", "Rejected"],
       default: "Pending",
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    acknowledgedAt: { type: Date, default: null },
+    completedAt: { type: Date, default: null },
     superAdmin1Approval: { type: approvalSchema, default: () => ({ status: "Pending" }) },
     superAdmin2Approval: { type: approvalSchema, default: () => ({ status: "Pending" }) },
     history: { type: [ticketHistorySchema], default: [] },

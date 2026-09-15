@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const IndividualTicketing = require("../models/IndividualTicketing");
 const User = require("../models/User");
+const generateIndividualRequestNumber = require("../utils/generateIndividualRequestNumber");
+const sendMail = require("../utils/sendMail");
 
 const ALLOWED_TRAVEL_OPTIONS = ["Flight", "Train", "Bus", "Cab", "Other"];
 const APPROVAL_STATUS_VALUES = ["Pending", "Approved", "Rejected"];
@@ -125,9 +127,11 @@ const validateTicketingPayload = (payload = {}) => {
 };
 
 const ensureRequestOwnership = (req, request) => {
-  const actorUserId = String(req.user?.facultyId || req.user?._id || "");
+  const actorUserId = req.user?._id ? String(req.user._id) : "";
+  const actorFacultyId = req.user?.facultyId ? String(req.user.facultyId) : "";
   const requestFacultyId = String(request.facultyId || "");
-  return actorUserId && requestFacultyId && actorUserId === requestFacultyId;
+  const candidateIds = [...new Set([actorUserId, actorFacultyId].filter(Boolean))];
+  return candidateIds.length > 0 && requestFacultyId && candidateIds.includes(requestFacultyId);
 };
 
 const getHeadUser = async () => {
@@ -144,6 +148,43 @@ const ensureSuperAdminReviewClosed = (request) => {
   return [sa1Status, sa2Status].some((status) => ["Approved", "Rejected"].includes(status));
 };
 
+const sendTicketingApprovalEmail = async (request, actorUser) => {
+  try {
+    const facultyUser = await User.findById(request.facultyId).select("name email").lean();
+    const headUser = await User.findOne({
+      department: { $regex: /^Externaltransport$/i },
+      role: { $regex: /^head$/i },
+    }).select("name email").lean();
+
+    const recipients = [];
+    if (facultyUser?.email) recipients.push(facultyUser.email);
+    if (headUser?.email) recipients.push(headUser.email);
+
+    if (!recipients.length) return;
+
+    const detailsHtml = `
+      <div>
+        <p>Dear Team,</p>
+        <p>The ticket request for <strong>${request.from}</strong> to <strong>${request.to}</strong> has been approved by <strong>${actorUser?.name || "Super Admin"}</strong>.</p>
+        <p><strong>Travel Date:</strong> ${new Date(request.travelDate).toLocaleDateString()}</p>
+        <p><strong>Travel Option:</strong> ${request.travelOption}</p>
+        <p><strong>Status:</strong> ${request.status}</p>
+      </div>
+    `;
+
+    for (const recipient of recipients) {
+      await sendMail(recipient, `[SECE Events] Individual Ticketing Approved - ${request._id}`, detailsHtml);
+    }
+  } catch (error) {
+    console.error("Error sending ticket approval email:", error);
+  }
+};
+
+const buildTicketingQuery = (baseQuery = {}) => ({
+  ...baseQuery,
+  isDeleted: { $ne: true },
+});
+
 exports.createTicketingRequest = async (req, res) => {
   try {
     const validation = validateTicketingPayload(req.body);
@@ -155,13 +196,30 @@ exports.createTicketingRequest = async (req, res) => {
       return res.status(401).json({ success: false, message: "Authentication required." });
     }
 
-    const facultyId = req.user.facultyId || req.user._id;
+    const facultyId = req.user?._id || req.user?.facultyId;
     if (!facultyId) {
       return res.status(400).json({ success: false, message: "Faculty identity is missing." });
     }
 
+    const departmentCode = String(req.body.departmentCode || "IR")
+      .trim()
+      .toUpperCase();
+
+    const requestNumbering = await generateIndividualRequestNumber(
+      "EXTERNALTRANSPORT",
+      departmentCode,
+      null,
+      { returnDetails: true },
+    );
+
     const ticket = await IndividualTicketing.create({
       facultyId,
+      requestNo: requestNumbering.requestNo,
+      module: requestNumbering.moduleName,
+      financialYear: requestNumbering.financialYear,
+      departmentCode: requestNumbering.departmentCode,
+      requestSequence: requestNumbering.requestSequence,
+      departmentSequence: requestNumbering.departmentSequence,
       travelOption: req.body.travelOption,
       travelDate: new Date(req.body.travelDate),
       from: req.body.from,
@@ -196,12 +254,14 @@ exports.createTicketingRequest = async (req, res) => {
 
 exports.getFacultyTicketingRequests = async (req, res) => {
   try {
-    const facultyId = req.user?.facultyId || req.user?._id;
+    const facultyId = req.user?._id || req.user?.facultyId;
     if (!facultyId) {
       return res.status(400).json({ success: false, message: "Faculty identity is missing." });
     }
 
-    const tickets = await IndividualTicketing.find({ facultyId }).sort({ createdAt: -1 }).lean();
+    const candidateIds = [...new Set([String(req.user?._id), String(req.user?.facultyId)].filter(Boolean))];
+    const query = candidateIds.length > 1 ? { facultyId: { $in: candidateIds } } : { facultyId: candidateIds[0] };
+    const tickets = await IndividualTicketing.find(buildTicketingQuery(query)).sort({ createdAt: -1 }).lean();
     return res.status(200).json({ success: true, data: tickets });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message || "Failed to fetch faculty ticket requests." });
@@ -214,9 +274,9 @@ exports.getSuperAdminTicketingRequests = async (req, res) => {
       return res.status(403).json({ success: false, message: "Only Super Admin 1 and Super Admin 2 can access this endpoint." });
     }
 
-    const tickets = await IndividualTicketing.find({
+    const tickets = await IndividualTicketing.find(buildTicketingQuery({
       status: { $in: ["Pending", "Approved", "Acknowledged"] },
-    }).sort({ createdAt: -1 }).lean();
+    })).sort({ createdAt: -1 }).lean();
 
     return res.status(200).json({ success: true, data: tickets });
   } catch (error) {
@@ -234,9 +294,9 @@ exports.editTicketingRequest = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ticket id." });
     }
 
-    const request = await IndividualTicketing.findById(req.params.id);
+    const request = await IndividualTicketing.findOne({ _id: req.params.id, isDeleted: { $ne: true } });
     if (!request) {
-      return res.status(404).json({ success: false, message: "Ticket request not found." });
+      return res.status(404).json({ success: false, message: request ? "Individual ticket already deleted" : "Ticket request not found." });
     }
 
     if (request.status !== "Pending") {
@@ -332,6 +392,7 @@ exports.approveTicketingRequest = async (req, res) => {
     );
 
     await request.save();
+    await sendTicketingApprovalEmail(request, req.user);
 
     return res.status(200).json({
       success: true,
@@ -415,9 +476,9 @@ exports.getHeadTicketingRequests = async (req, res) => {
       return res.status(403).json({ success: false, message: "Only the External Transport department head can access this endpoint." });
     }
 
-    const tickets = await IndividualTicketing.find({
+    const tickets = await IndividualTicketing.find(buildTicketingQuery({
       status: { $in: ["Approved", "Acknowledged", "Completed"] },
-    }).sort({ updatedAt: -1 }).lean();
+    })).sort({ updatedAt: -1 }).lean();
 
     return res.status(200).json({ success: true, data: tickets });
   } catch (error) {
@@ -435,7 +496,7 @@ exports.acknowledgeTicketingRequest = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ticket id." });
     }
 
-    const request = await IndividualTicketing.findById(req.params.id);
+    const request = await IndividualTicketing.findOne({ _id: req.params.id, isDeleted: { $ne: true } });
     if (!request) {
       return res.status(404).json({ success: false, message: "Ticket request not found." });
     }
@@ -445,6 +506,7 @@ exports.acknowledgeTicketingRequest = async (req, res) => {
     }
 
     request.status = "Acknowledged";
+    request.acknowledgedAt = new Date();
     request.updatedAt = new Date();
     request.history.push(
       buildHistoryEntry({
@@ -477,7 +539,7 @@ exports.completeTicketingRequest = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ticket id." });
     }
 
-    const request = await IndividualTicketing.findById(req.params.id);
+    const request = await IndividualTicketing.findOne({ _id: req.params.id, isDeleted: { $ne: true } });
     if (!request) {
       return res.status(404).json({ success: false, message: "Ticket request not found." });
     }
@@ -487,6 +549,7 @@ exports.completeTicketingRequest = async (req, res) => {
     }
 
     request.status = "Completed";
+    request.completedAt = new Date();
     request.updatedAt = new Date();
     request.history.push(
       buildHistoryEntry({
@@ -515,7 +578,7 @@ exports.getTicketingRequestById = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ticket id." });
     }
 
-    const request = await IndividualTicketing.findById(req.params.id).lean();
+    const request = await IndividualTicketing.findOne({ _id: req.params.id, isDeleted: { $ne: true } }).lean();
     if (!request) {
       return res.status(404).json({ success: false, message: "Ticket request not found." });
     }
@@ -535,6 +598,45 @@ exports.getTicketingRequestById = async (req, res) => {
     return res.status(403).json({ success: false, message: "You are not authorized to access this ticket request." });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message || "Failed to load ticket request." });
+  }
+};
+
+exports.softDeleteTicketingRequest = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ success: false, message: "Authentication required." });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid ticket id." });
+    }
+
+    const request = await IndividualTicketing.findById(req.params.id);
+    if (!request) {
+      return res.status(404).json({ success: false, message: "Ticket request not found." });
+    }
+
+    if (request.isDeleted) {
+      return res.status(409).json({ success: false, message: "Individual ticket already deleted" });
+    }
+
+    request.isDeleted = true;
+    request.deletedAt = new Date();
+    request.deletedBy = req.user._id;
+    await request.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Individual ticket deleted successfully.",
+      data: {
+        id: request._id,
+        isDeleted: request.isDeleted,
+        deletedAt: request.deletedAt,
+        deletedBy: request.deletedBy,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to delete ticket request." });
   }
 };
 

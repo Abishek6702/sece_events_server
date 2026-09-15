@@ -11,6 +11,7 @@ const {
   acknowledgeTicketingRequest,
   completeTicketingRequest,
   getTicketingRequestById,
+  softDeleteTicketingRequest,
 } = require("../controllers/individualTicketingController");
 
 const router = express.Router();
@@ -21,6 +22,7 @@ router.get("/faculty", getFacultyTicketingRequests);
 router.get("/superadmin", getSuperAdminTicketingRequests);
 router.get("/head", getHeadTicketingRequests);
 router.get("/:id", getTicketingRequestById);
+router.delete("/:id", softDeleteTicketingRequest);
 router.put("/:id/edit", editTicketingRequest);
 router.put("/:id/approve", approveTicketingRequest);
 router.put("/:id/reject", rejectTicketingRequest);
