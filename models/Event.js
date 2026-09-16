@@ -392,7 +392,8 @@ const refreshmentSchema = new mongoose.Schema(
   {
     refreshments: [
       {
-        date: { type: Date },
+        fromDate: { type: Date },
+        toDate: { type: Date },
 
         resourcePersonType: [{ type: String, trim: true }],
 
