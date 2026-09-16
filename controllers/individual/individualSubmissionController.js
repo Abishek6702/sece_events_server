@@ -131,8 +131,10 @@ const isReviewerRole = (role = "") => {
     "department_head",
     "admin",
     "superadmin",
+    "super admin",
     "super admin 1",
     "super admin 2",
+    "admin secretary",
   ].includes(normalizedRole);
 };
 
@@ -148,7 +150,7 @@ const isHodRole = (role = "") => {
 
 const isSuperAdminRole = (role = "") => {
   const normalizedRole = normalizeRole(role);
-  return ["super admin 1", "super admin 2"].includes(normalizedRole);
+  return ["super admin", "super admin 1", "super admin 2", "admin secretary"].includes(normalizedRole);
 };
 
 const buildApprovalEntry = (user, roleLabel, action, reason) => ({
@@ -491,8 +493,10 @@ const buildSubmissionFilter = async ({
 
 
   const superAdminWorkflowStages = {
+    "super admin": "SuperAdmin1",
     "super admin 1": "SuperAdmin1",
     "super admin 2": "SuperAdmin2",
+    "admin secretary": "SuperAdmin1",
   };
 
   // For Super Admins determine their workflow stage mapping
@@ -899,6 +903,41 @@ const getIndividualSubmissionById = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch individual submission",
+      error: error.message,
+    });
+  }
+};
+
+const deleteIndividualSubmission = async (req, res) => {
+  try {
+    const role = normalizeRole(req.user?.role);
+
+    if (!isSuperAdminRole(role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Only Super Admin or Admin Secretary users can delete individual submissions",
+      });
+    }
+
+    const submission = await resolveSubmissionById(req.params.id);
+    if (!submission) {
+      return res.status(404).json({
+        success: false,
+        message: "Individual submission not found",
+      });
+    }
+
+    await submission.Model.deleteOne({ _id: submission.item._id });
+
+    return res.status(200).json({
+      success: true,
+      message: "Individual submission deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete individual submission",
       error: error.message,
     });
   }
@@ -1738,6 +1777,7 @@ module.exports = {
   getDepartmentTeamStats,
   getAllIndividualSubmissions,
   getIndividualSubmissionById,
+  deleteIndividualSubmission,
   getRequestByFacultyModule,
   getMediaHeadList,
   getPosterRequests,

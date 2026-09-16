@@ -17,7 +17,7 @@ const normalizeRole = (role) =>
   String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
 
 const isSuperAdmin = (req) =>
-  ["super admin 1", "super admin 2"].includes(normalizeRole(req.user?.role));
+  ["super admin", "super admin 1", "super admin 2", "admin secretary"].includes(normalizeRole(req.user?.role));
 
 const isFaculty = (req) => normalizeRole(req.user?.role) === "faculty";
 

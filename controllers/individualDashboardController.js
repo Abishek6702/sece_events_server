@@ -54,6 +54,7 @@ const isAdminLikeRole = (role = "") => {
     "superadmin1",
     "superadmin2",
     "superadmin",
+    "adminsecretary",
     "admin",
     "administrator",
   ].includes(normalizedRole);

@@ -9,7 +9,8 @@ const TICKET_STATUSES = ["Pending", "Approved", "Acknowledged", "Completed", "Re
 const normalizeRole = (value = "") => String(value || "").trim().toLowerCase();
 const normalizeDepartment = (value = "") => String(value || "").trim().toLowerCase();
 
-const isSuperAdminRole = (role = "") => ["super admin 1", "super admin 2"].includes(normalizeRole(role));
+const isSuperAdminRole = (role = "") =>
+  ["super admin", "super admin 1", "super admin 2", "admin secretary"].includes(normalizeRole(role));
 const isFacultyRole = (role = "") => normalizeRole(role) === "faculty";
 
 const isHeadTicketingUser = (user = {}) => {
