@@ -2,6 +2,7 @@ const express = require("express");
 const {
   getAllIndividualSubmissions,
   getIndividualSubmissionById,
+  deleteIndividualSubmission,
   getRequestByFacultyModule,
   getPosterRequests,
   getPosterRequestById,
@@ -48,6 +49,7 @@ router.get("/video/:id", getVideoRequestById);
 
 // Individual submission by ID
 router.get("/:id", getIndividualSubmissionById);
+router.delete("/:id", deleteIndividualSubmission);
 router.put("/:id/close", closeIndividualSubmission);
 router.put("/:id/interchange", interchangeMediaAssignment);
 

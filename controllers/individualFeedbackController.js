@@ -26,7 +26,7 @@ const normalizeRole = (role = "") =>
 const isAdminLikeRole = (role = "") => {
   const normalizedRole = normalizeRole(role);
 
-  return ["superadmin1", "superadmin2", "superadmin", "admin", "administrator"].includes(normalizedRole);
+  return ["superadmin1", "superadmin2", "superadmin", "adminsecretary", "admin", "administrator"].includes(normalizedRole);
 };
 
 const getModuleConfig = (moduleName = "") => {
