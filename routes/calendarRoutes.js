@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getVenues, getEvents, getAllVenuesEvents } = require("../controllers/calendarController");
+const { getVenues, getEvents, getAllVenuesEvents, getAllRoomsEvents } = require("../controllers/calendarController");
 const protect = require("../middleware/protect")
 
 // GET /api/calendar/venues
@@ -11,5 +11,8 @@ router.get("/events",protect, getEvents);
 
 // GET /api/calendar/all-venues-events?date=...
 router.get("/all-venues-events", protect, getAllVenuesEvents);
+
+// GET /api/calendar/all-rooms-events?date=...
+router.get("/all-rooms-events", protect, getAllRoomsEvents);
 
 module.exports = router;
