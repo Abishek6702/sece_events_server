@@ -273,10 +273,10 @@ const audioSchema = new mongoose.Schema(
               type: {
                 type: String,
               },
-              quantity: { type: Number, min: 1 },
+              quantity: { type: Number},
             },
           ],
-          validate: (v) => v.length > 0,
+         
         },
 
         otherRequirements: { type: String },
