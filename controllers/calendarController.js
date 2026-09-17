@@ -1,5 +1,6 @@
 const Event = require("../models/Event");
 const Venue = require("../models/Venue");
+const AccommodationRoom = require("../models/AccommodationRoom");
 
 const HARDCODED_VENUES = [
   "Main Board Room",
@@ -301,9 +302,115 @@ async function getAllVenuesEvents(req, res) {
   }
 }
 
+async function getAllRoomsEvents(req, res) {
+  try {
+    const { date } = req.query;
+
+    const anchorDate = date ? new Date(date) : new Date();
+    if (Number.isNaN(anchorDate.getTime())) {
+      return res.status(400).json({ message: "Invalid date" });
+    }
+
+    const { start, end } = getRangeForView("month", anchorDate);
+
+    // 1. Get all active rooms
+    const allRooms = await AccommodationRoom.find({ isActive: true })
+      .sort({ venue: 1, roomNumber: 1 })
+      .lean();
+
+    // 2. Fetch all events in the month that have accommodation bookings
+    const events = await Event.find({
+      status: { $nin: ["Draft", "Closed", "Rejected"] },
+      "accommodationDetails.accommodations": {
+        $elemMatch: {
+          checkOutDateTime: { $gte: start },
+          checkInDateTime: { $lt: end },
+        },
+      },
+    })
+      .select(
+        "accommodationDetails requestDetails.eventDetails.eventName requestDetails.organizerDetails.organizingDepartment organizerId"
+      )
+      .populate({
+        path: "organizerId",
+        model: "Faculty",
+        select: "salutation firstName lastName empId phone",
+      })
+      .lean();
+
+    // 3. Build map: roomId -> [ { eventName, department, checkInDateTime, checkOutDateTime, organizerName, organizerEmpId, organizerMobile, color } ]
+    const eventsByRoom = {};
+    allRooms.forEach((r) => { eventsByRoom[r._id.toString()] = []; });
+
+    for (const evt of events) {
+      const eventName = evt.requestDetails?.eventDetails?.eventName || "—";
+      const department = evt.requestDetails?.organizerDetails?.organizingDepartment || "";
+      const color = DEPARTMENT_COLORS[department] || "slate";
+
+      const org = evt.organizerId;
+      let organizerName = "N/A";
+      if (org) {
+        const parts = [org.salutation, org.firstName, org.lastName].filter(Boolean);
+        organizerName = parts.join(" ") || "N/A";
+      }
+      const organizerEmpId = org?.empId || "N/A";
+      const organizerMobile = org?.phone || "N/A";
+
+      for (const acc of evt.accommodationDetails?.accommodations || []) {
+        if (!acc.checkInDateTime || !acc.checkOutDateTime) continue;
+        const checkIn  = new Date(acc.checkInDateTime);
+        const checkOut = new Date(acc.checkOutDateTime);
+        // only include if overlaps the month
+        if (checkOut < start || checkIn >= end) continue;
+
+        for (const sel of acc.roomSelections || []) {
+          if (!sel.roomId) continue;
+          const rid = sel.roomId.toString();
+          const entry = {
+            eventId: evt._id,
+            eventName,
+            department,
+            color,
+            checkInDateTime:  checkIn,
+            checkOutDateTime: checkOut,
+            roomNumber: sel.roomNumber || "",
+            venue: sel.venue || "",
+            occupantCount: sel.occupantCount || 0,
+            organizerName,
+            organizerEmpId,
+            organizerMobile,
+          };
+          if (eventsByRoom[rid]) {
+            eventsByRoom[rid].push(entry);
+          } else {
+            eventsByRoom[rid] = [entry];
+          }
+        }
+      }
+    }
+
+    const rooms = allRooms.map((r) => ({
+      roomId: r._id.toString(),
+      roomNumber: r.roomNumber,
+      venue: r.venue,
+      capacity: r.capacity,
+    }));
+
+    return res.status(200).json({
+      range: { start, end },
+      rooms,
+      eventsByRoom,
+    });
+  } catch (err) {
+    console.error("getAllRoomsEvents error:", err);
+    return res.status(500).json({ message: "Failed to load room events" });
+  }
+}
+
 module.exports = {
   getVenues,
   getEvents,
   getAllVenuesEvents,
+  getAllRoomsEvents,
   DEPARTMENT_COLORS,
 };
