@@ -188,7 +188,6 @@ exports.getDashboardStats = async (req, res) => {
       });
     }
 
-    // Map each module to its requirementDetails flag field
     const requirementFlags = {
       venue: "requestDetails.requirementDetails.venueRequired",
       icts: "requestDetails.requirementDetails.ictsRequired",
@@ -199,6 +198,18 @@ exports.getDashboardStats = async (req, res) => {
       accommodation: "requestDetails.requirementDetails.accommodationRequired",
       purchase: "requestDetails.requirementDetails.purchaseRequired",
       media: "requestDetails.requirementDetails.mediaRequired",
+    };
+
+    const arrayFlags = {
+      venue: "venueDetails.venues",
+      icts: "ictsDetails.ictses",
+      audio: "audioDetails.audios",
+      transport: "transportDetails.transports",
+      externalTransports: "externalTransportDetails.externalTransports",
+      refreshment: "refreshmentDetails.refreshments",
+      accommodation: "accommodationDetails.accommodations",
+      purchase: "purchaseDetails.purchases",
+      media: "mediaRequirementDetails.mediaRequirements",
     };
 
     const moduleStats = {};
@@ -212,12 +223,24 @@ exports.getDashboardStats = async (req, res) => {
 
       const path = modules[key];
       const reqFlag = requirementFlags[key];
+      const arrayFlag = arrayFlags[key];
 
       // Base: approved events that actually requested this module
-      const moduleBase = {
-        ...moduleFilter,
-        ...(reqFlag ? { [reqFlag]: true } : {}),
-      };
+      let moduleBase = { ...moduleFilter };
+      if (reqFlag && arrayFlag) {
+        moduleBase = {
+          ...moduleBase,
+          $or: [
+            { [reqFlag]: true },
+            { [`${arrayFlag}.0`]: { $exists: true } }
+          ]
+        };
+      } else if (reqFlag) {
+        moduleBase = {
+          ...moduleBase,
+          [reqFlag]: true
+        };
+      }
 
       const total = await Event.countDocuments(moduleBase);
 

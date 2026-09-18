@@ -29,9 +29,13 @@ exports.getDashboardTable = async (req, res) => {
   try {
     const { module } = req.query;
 
-    const baseQuery = {
-      status: { $ne: "Draft" },
-    };
+    let baseQuery = {};
+
+    if (module === "admin" || module === "faculty") {
+      baseQuery.status = { $nin: ["Draft"] };
+    } else {
+      baseQuery.status = { $nin: ["Draft", "Rejected", "Deleted"] };
+    }
 
     // For all modules except admin and faculty,
     // only return events approved by admin.
@@ -90,11 +94,15 @@ exports.getDashboardTable = async (req, res) => {
       }
 
       // ================= VENUE =================
-      else if (module === "venue" && event.venueDetails?.venues?.length) {
+      else if (
+        module === "venue" &&
+        (event.requestDetails?.requirementDetails?.venueRequired === true ||
+          event.venueDetails?.venues?.length)
+      ) {
         data.push({
           ...commonData,
 
-          venues: event.venueDetails.venues.map((v) => ({
+          venues: (event.venueDetails?.venues || []).map((v) => ({
             venueName: v.venueName,
             participants: v.numberOfParticipants,
           })),
@@ -107,11 +115,15 @@ exports.getDashboardTable = async (req, res) => {
       }
 
       // ================= ICTS =================
-      else if (module === "icts" && event.ictsDetails?.ictses?.length) {
+      else if (
+        module === "icts" &&
+        (event.requestDetails?.requirementDetails?.ictsRequired === true ||
+          event.ictsDetails?.ictses?.length)
+      ) {
         data.push({
           ...commonData,
 
-          venues: event.ictsDetails.ictses.map((i) => ({
+          venues: (event.ictsDetails?.ictses || []).map((i) => ({
             venue: i.venueName,
             internetFacility: i.internetFacility,
           })),
@@ -124,11 +136,15 @@ exports.getDashboardTable = async (req, res) => {
       }
 
       // ================= AUDIO =================
-      else if (module === "audio" && event.audioDetails?.audios?.length) {
+      else if (
+        module === "audio" &&
+        (event.requestDetails?.requirementDetails?.audioRequired === true ||
+          event.audioDetails?.audios?.length)
+      ) {
         data.push({
           ...commonData,
 
-          venues: event.audioDetails.audios.map((a) => ({
+          venues: (event.audioDetails?.audios || []).map((a) => ({
             venue: a.venueName,
             items: a.audioItems,
           })),
@@ -143,12 +159,13 @@ exports.getDashboardTable = async (req, res) => {
       // ================= TRANSPORT =================
       else if (
         module === "transport" &&
-        event.transportDetails?.transports?.length
+        (event.requestDetails?.requirementDetails?.transportRequired === true ||
+          event.transportDetails?.transports?.length)
       ) {
         data.push({
           ...commonData,
 
-          transport: event.transportDetails.transports,
+          transport: event.transportDetails?.transports || [],
 
           departmentStatus: getDepartmentStatus(
             event.transportDetails?.status?.status,
@@ -160,14 +177,13 @@ exports.getDashboardTable = async (req, res) => {
       // ================= EXTERNAL TRANSPORT =================
       else if (
         module === "externalTransports" &&
-        event.requestDetails?.requirementDetails?.externalTransportRequired ===
-          true &&
-        event.externalTransportDetails?.externalTransports?.length
+        (event.requestDetails?.requirementDetails?.externalTransportRequired === true ||
+          event.externalTransportDetails?.externalTransports?.length)
       ) {
         data.push({
           ...commonData,
 
-          externalTransports: event.externalTransportDetails.externalTransports,
+          externalTransports: event.externalTransportDetails?.externalTransports || [],
 
           departmentStatus: getDepartmentStatus(
             event.externalTransportDetails?.status?.status,
@@ -178,12 +194,13 @@ exports.getDashboardTable = async (req, res) => {
       // ================= FOOD =================
       else if (
         module === "food" &&
-        event.refreshmentDetails?.refreshments?.length
+        (event.requestDetails?.requirementDetails?.refreshmentRequired === true ||
+          event.refreshmentDetails?.refreshments?.length)
       ) {
         data.push({
           ...commonData,
 
-          refreshments: event.refreshmentDetails.refreshments,
+          refreshments: event.refreshmentDetails?.refreshments || [],
 
           departmentStatus: getDepartmentStatus(
             event.refreshmentDetails?.status?.status,
@@ -195,12 +212,13 @@ exports.getDashboardTable = async (req, res) => {
       // ================= ACCOMMODATION =================
       else if (
         module === "accommodation" &&
-        event.accommodationDetails?.accommodations?.length
+        (event.requestDetails?.requirementDetails?.accommodationRequired === true ||
+          event.accommodationDetails?.accommodations?.length)
       ) {
         data.push({
           ...commonData,
 
-          accommodations: event.accommodationDetails.accommodations,
+          accommodations: event.accommodationDetails?.accommodations || [],
 
           departmentStatus: getDepartmentStatus(
             event.accommodationDetails?.status?.status,
@@ -212,13 +230,13 @@ exports.getDashboardTable = async (req, res) => {
       // ================= PURCHASE =================
       else if (
         module === "purchase" &&
-        event.requestDetails?.requirementDetails?.purchaseRequired === true &&
-        event.purchaseDetails?.purchases?.length
+        (event.requestDetails?.requirementDetails?.purchaseRequired === true ||
+          event.purchaseDetails?.purchases?.length)
       ) {
         data.push({
           ...commonData,
 
-          purchases: event.purchaseDetails.purchases,
+          purchases: event.purchaseDetails?.purchases || [],
 
           departmentStatus: getDepartmentStatus(
             event.purchaseDetails?.status?.status,
