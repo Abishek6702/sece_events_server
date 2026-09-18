@@ -5,7 +5,9 @@ const Event = require("../models/Event");
 
 const DEPARTMENT_ALIASES = {
   venue: ["venue"],
-  icts: ["icts", "ict"],
+  icts: ["icts", "ict", "ictc"],
+  ict: ["icts", "ict", "ictc"],
+  ictc: ["icts", "ict", "ictc"],
   audio: ["audio"],
   transport: ["transport"],
   food: ["food", "refreshment", "refreshments"],

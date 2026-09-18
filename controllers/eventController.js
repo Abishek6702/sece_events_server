@@ -1864,7 +1864,20 @@ exports.updateDocumentExpenditureApproval = async (req, res) => {
     }
 
     event.documentExpenditureApproved = !!approved;
+    
+    if (approved) {
+      event.isClosed = true;
+      event.status = "Closed";
+      if (!event.timeline) event.timeline = {};
+      event.timeline.closedAt = new Date();
+    }
+
     await event.save();
+
+    if (approved) {
+      // 📧 Send notification for event closure
+      await notifyEventClosure(event, "Final documents and expenditure approved");
+    }
 
     return res.status(200).json({
       success: true,
