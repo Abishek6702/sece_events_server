@@ -13,7 +13,6 @@ const expenditureRowSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
     },
 
     billNo: {
@@ -30,13 +29,11 @@ const expenditureRowSchema = new mongoose.Schema(
 
     billAmount: {
       type: Number,
-      required: true,
       min: 0,
     },
 
     paymentMode: {
       type: String,
-      required: true,
     },
     
     paidFromAdvance:{
@@ -56,7 +53,6 @@ const incomeSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      required: true,
     },
 
     details: {
@@ -65,7 +61,6 @@ const incomeSchema = new mongoose.Schema(
 
     amount: {
       type: Number,
-      required: true,
       min: 0,
     },
   },
