@@ -696,6 +696,9 @@ exports.updateEvent = async (req, res) => {
       await assignIQACNumber(event);
 
       // await handleTransportSubmission(event);
+      
+      // 📧 Send notification for event creation/submission
+      await notifyEventCreation(event);
     }
 
     // =====================================
@@ -850,6 +853,9 @@ exports.submitEvent = async (req, res) => {
 
     if (!wasSubmitted) {
       await assignIQACNumber(event);
+      
+      // 📧 Send notification for event creation/submission
+      await notifyEventCreation(event);
     }
 
     if (!event.timeline) {
