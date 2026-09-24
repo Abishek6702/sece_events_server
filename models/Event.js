@@ -38,10 +38,12 @@ const organizerSchema = new mongoose.Schema(
     financeRequired: { type: Boolean, default: false },
     estimatedBudget: { type: Number },
 
-    fundingSource: [{
-      type: { type: String },
-      amount: { type: Number },
-    }],
+    fundingSource: [
+      {
+        type: { type: String },
+        amount: { type: Number },
+      },
+    ],
 
     advanceAmount: { type: Number },
     purposeOfAdvance: { type: String },
@@ -286,11 +288,15 @@ const audioSchema = new mongoose.Schema(
               type: {
                 type: String,
               },
-              quantity: { type: Number},
+              quantity: { type: Number },
             },
           ],
-         
         },
+        
+        isEbRequired: { type: Boolean, default: false },
+        noOfSystems: { type: Number, default: 0, min: 0 },
+        ledWallRequired: { type: Boolean, default: false },
+        acRequired: { type: Boolean, default: false },
 
         otherRequirements: { type: String },
         specialRequirements: { type: String },
