@@ -29,6 +29,11 @@ const venueSchema = new mongoose.Schema(
       min: 0,
     },
 
+    contactDepartmentHead: {
+      type: Boolean,
+      default: false,
+    },
+
     audio: {
       wiredMic: { type: Number, default: 0 },
       handMic: { type: Number, default: 0 },

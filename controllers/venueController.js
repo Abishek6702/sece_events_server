@@ -218,7 +218,7 @@ const getVenueOptions = async (req, res) => {
 
       // 🔹 Basic venue list
       case "venue":
-        projection = { venue: 1, capacity: 1 };
+        projection = { venue: 1, capacity: 1, contactDepartmentHead: 1 };
         break;
 
       // 🔹 Audio filter

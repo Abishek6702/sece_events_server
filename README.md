@@ -196,7 +196,7 @@ Base URL: `http://localhost:<PORT>/api`
 
 Selected venue contact fields are stored under each `event.venueDetails.venues[]` entry:
 
-- `isDepartmentHeadContacted` (Boolean)
+- `isContactedDepartment` (Boolean)
 - `departmentHeadName` (String)
 - `departmentHeadDesignation` (String)
 - `departmentHeadMobile` (String)
