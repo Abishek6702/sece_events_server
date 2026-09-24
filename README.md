@@ -194,6 +194,13 @@ Base URL: `http://localhost:<PORT>/api`
   - `withProctoring` (Number)
 - `remarks` (String)
 
+Selected venue contact fields are stored under each `event.venueDetails.venues[]` entry:
+
+- `isDepartmentHeadContacted` (Boolean)
+- `departmentHeadName` (String)
+- `departmentHeadDesignation` (String)
+- `departmentHeadMobile` (String)
+
 ---
 
 ## Schemas

@@ -179,6 +179,12 @@ const venueSchema = new mongoose.Schema(
 
         venueName: { type: String, trim: true },
 
+        isDepartmentHeadContacted: { type: Boolean, default: false },
+        department: { type: String, trim: true },
+        departmentHeadName: { type: String, trim: true },
+        departmentHeadDesignation: { type: String, trim: true },
+        departmentHeadMobile: { type: String, trim: true },
+
         numberOfParticipants: { type: Number },
         seatingCapacity: { type: Number },
 
