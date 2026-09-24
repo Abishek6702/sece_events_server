@@ -115,18 +115,25 @@ const eventDetailsSchema = new mongoose.Schema(
 
     targetAudience: {
       type: [String],
-      enum: [
-        "Students",
-        "Faculty",
-        "Students/Faculty",
-        "Others",
-        "Internal Students",
-        "Internal Faculty",
-        "External Students",
-        "External Faculty",
-        "Industry Person",
-      ],
     },
+
+    // Populated when "Internal Student s" is in targetAudience
+    internalStudentsBreakdown: [
+      {
+        year: { type: String }, // e.g. "1st", "2nd", "3rd", "4th"
+        departments: [
+          {
+            department: { type: String },
+            sections: [
+              {
+                section: { type: String },
+                count: { type: Number, default: 0 },
+              },
+            ],
+          },
+        ],
+      },
+    ],
 
     numberOfDays: { type: Number },
 

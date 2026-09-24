@@ -137,7 +137,109 @@ const fixArrays = (data) => {
     });
   }
 
+  // internalStudentsBreakdown (nested inside requestDetails.eventDetails)
+  const eventDetails = data.requestDetails?.eventDetails;
+  if (eventDetails) {
+    if (typeof eventDetails.internalStudentsBreakdown === "string") {
+      eventDetails.internalStudentsBreakdown = JSON.parse(
+        eventDetails.internalStudentsBreakdown,
+      );
+    }
+    if (Array.isArray(eventDetails.internalStudentsBreakdown)) {
+      eventDetails.internalStudentsBreakdown.forEach((yearEntry) => {
+        if (typeof yearEntry.departments === "string") {
+          yearEntry.departments = JSON.parse(yearEntry.departments);
+        }
+        if (Array.isArray(yearEntry.departments)) {
+          yearEntry.departments.forEach((dept) => {
+            if (typeof dept.sections === "string") {
+              dept.sections = JSON.parse(dept.sections);
+            }
+          });
+        }
+      });
+    }
+  }
+
   return data;
+};
+
+/**
+ * Validates internalStudentsBreakdown when "Internal Students" is a target audience.
+ * Throws a ValidationError if breakdown data is missing or malformed.
+ */
+const validateInternalStudentsBreakdown = (eventData) => {
+  const eventDetails =
+    eventData?.requestDetails?.eventDetails ||
+    eventData?.eventDetails;
+
+  if (!eventDetails) return;
+
+  const targetAudience = eventDetails.targetAudience || [];
+  if (!targetAudience.includes("Internal Students")) return;
+
+  const breakdown = eventDetails.internalStudentsBreakdown;
+
+  if (!Array.isArray(breakdown) || breakdown.length === 0) {
+    const error = new Error(
+      "internalStudentsBreakdown is required when target audience includes 'Internal Students'.",
+    );
+    error.name = "ValidationError";
+    throw error;
+  }
+
+  for (const yearEntry of breakdown) {
+    if (!yearEntry.year || typeof yearEntry.year !== "string") {
+      const error = new Error(
+        "Each entry in internalStudentsBreakdown must have a valid 'year' (e.g. '1st', '2nd', '3rd', '4th').",
+      );
+      error.name = "ValidationError";
+      throw error;
+    }
+
+    if (!Array.isArray(yearEntry.departments) || yearEntry.departments.length === 0) {
+      const error = new Error(
+        `Year '${yearEntry.year}' must have at least one department in internalStudentsBreakdown.`,
+      );
+      error.name = "ValidationError";
+      throw error;
+    }
+
+    for (const dept of yearEntry.departments) {
+      if (!dept.department || typeof dept.department !== "string") {
+        const error = new Error(
+          `Each department entry for year '${yearEntry.year}' must have a valid 'department' name.`,
+        );
+        error.name = "ValidationError";
+        throw error;
+      }
+
+      if (!Array.isArray(dept.sections) || dept.sections.length === 0) {
+        const error = new Error(
+          `Department '${dept.department}' in year '${yearEntry.year}' must have at least one section.`,
+        );
+        error.name = "ValidationError";
+        throw error;
+      }
+
+      for (const sec of dept.sections) {
+        if (!sec.section || typeof sec.section !== "string") {
+          const error = new Error(
+            `Each section in dept '${dept.department}' / year '${yearEntry.year}' must have a valid 'section' name.`,
+          );
+          error.name = "ValidationError";
+          throw error;
+        }
+        if (typeof sec.count !== "number" || sec.count < 0) {
+          const error = new Error(
+            `Section '${sec.section}' in dept '${dept.department}' / year '${yearEntry.year}' must have a valid non-negative 'count'.`,
+          );
+          error.name = "ValidationError";
+          throw error;
+        }
+      }
+    }
+  }
 };
 
 const VALID_STATUSES = new Set([
@@ -871,6 +973,7 @@ exports.submitEvent = async (req, res) => {
 
     await validateVenueAvailability(event, event._id);
     await validateAccommodationAvailability(event, event._id);
+    validateInternalStudentsBreakdown(event);
 
     const updatedEvent = await event.save();
     res
@@ -1130,6 +1233,7 @@ exports.updateEventStatus = async (req, res) => {
       case "submit":
         await validateVenueAvailability(event, event._id);
         await validateAccommodationAvailability(event, event._id);
+        validateInternalStudentsBreakdown(event);
         if (!event.iqacNumber) {
           await assignIQACNumber(event);
         }
