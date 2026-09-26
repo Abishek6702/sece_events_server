@@ -37,6 +37,9 @@ const {
   stopBackupService,
 } = require("./services/backupService");
 
+const ictsStaffAllocationRoutes = require("./routes/ictsStaffAllocationRoutes");
+const audioStaffAllocationRoutes = require("./routes/audioStaffAllocationRoutes");
+
 dotenv.config();
 const app = express();
 app.disable("x-powered-by");
@@ -86,7 +89,6 @@ app.use(hpp());
 app.use(auditLogger);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // app.use("/api", apiLimiter);
-const ictsStaffAllocationRoutes = require("./routes/ictsStaffAllocationRoutes");
 
 app.use("/api/test", testRoutes);
 app.use("/api/auth", authRoutes);
@@ -102,6 +104,7 @@ app.use("/api/feedback", individualFeedbackRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/media-staff-change", mediaStaffChangeRoutes);
 app.use("/api/icts-staff-allocation", ictsStaffAllocationRoutes);
+app.use("/api/audio-staff-allocation", audioStaffAllocationRoutes);
 // app.use("/api/transport-inventory", transportInventoryRoutes);
 app.use("/api/table", tableRoutes);
 app.use("/api/eventTypes", eventTypeRoutes);

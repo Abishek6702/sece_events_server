@@ -50,6 +50,7 @@ const organizerSchema = new mongoose.Schema(
     advanceToBeReceviedWithin: { type: Number },
 
     ExpectedEventOutcome: { type: String },
+    aboutProgram: { type: String },
 
     organizingDepartment: { type: String },
     organizerCount: { type: Number },
@@ -300,6 +301,14 @@ const audioSchema = new mongoose.Schema(
 
         otherRequirements: { type: String },
         specialRequirements: { type: String },
+
+        staff: {
+          name: String,
+          email: String,
+          phone: String,
+          empId: String,
+          designation: String,
+        },
       },
     ],
     status: departmentStatusSchema,
