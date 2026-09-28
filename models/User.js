@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       default: "faculty",
-      enum: ["faculty", "hod", "admin", "admin secretary","head", "super admin 1","super admin 2"],
+      enum: ["faculty", "hod", "admin", "admin secretary","head", "super admin 1","super admin 2","super admin 3"],
     },
 
     isadmin: { type: Boolean, default: false },
