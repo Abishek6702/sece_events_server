@@ -226,21 +226,15 @@ exports.getDashboardStats = async (req, res) => {
       const arrayFlag = arrayFlags[key];
 
       // Base: approved events that actually requested this module
-      let moduleBase = { ...moduleFilter };
-      if (reqFlag && arrayFlag) {
-        moduleBase = {
-          ...moduleBase,
-          $or: [
-            { [reqFlag]: true },
-            { [`${arrayFlag}.0`]: { $exists: true } }
-          ]
-        };
-      } else if (reqFlag) {
-        moduleBase = {
-          ...moduleBase,
-          [reqFlag]: true
-        };
-      }
+      // Base: approved events that actually requested this module
+let moduleBase = { ...moduleFilter };
+
+if (reqFlag) {
+  moduleBase = {
+    ...moduleBase,
+    [reqFlag]: true,
+  };
+}
 
       const total = await Event.countDocuments(moduleBase);
 

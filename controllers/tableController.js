@@ -175,22 +175,22 @@ exports.getDashboardTable = async (req, res) => {
       }
       
       // ================= EXTERNAL TRANSPORT =================
-      else if (
-        module === "externalTransports" &&
-        (event.requestDetails?.requirementDetails?.externalTransportRequired === true ||
-          event.externalTransportDetails?.externalTransports?.length)
-      ) {
-        data.push({
-          ...commonData,
+else if (
+  module === "externalTransports" &&
+  event.requestDetails?.requirementDetails?.externalTransportRequired === true
+) {
+  data.push({
+    ...commonData,
 
-          externalTransports: event.externalTransportDetails?.externalTransports || [],
+    externalTransports:
+      event.externalTransportDetails?.externalTransports || [],
 
-          departmentStatus: getDepartmentStatus(
-            event.externalTransportDetails?.status?.status,
-            event.status,
-          ),
-        });
-      }
+    departmentStatus: getDepartmentStatus(
+      event.externalTransportDetails?.status?.status,
+      event.status,
+    ),
+  });
+}
       // ================= FOOD =================
       else if (
         module === "food" &&
