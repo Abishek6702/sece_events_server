@@ -1,6 +1,11 @@
 const backupService = require("mongodb-backup-service");
 
 function startBackupService() {
+  if (process.env.BACKUP_ENABLED !== "true") {
+    console.log("[BACKUP INFO] Backup service disabled (BACKUP_ENABLED is not true).");
+    return;
+  }
+
   backupService.start({
     mongoUri: process.env.MONGO_URI,
 

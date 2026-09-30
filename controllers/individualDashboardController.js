@@ -2,6 +2,7 @@ const IndividualFood = require("../models/individual/IndividualFood");
 const IndividualPurchase = require("../models/individual/IndividualPurchase");
 const IndividualMedia = require("../models/individual/IndividualMedia");
 const IndividualTransport = require("../models/individual/IndividualTransport");
+const IndividualEventAttending = require("../models/individual/IndividualEventAttending");
 const { buildIndividualDashboardBreakdowns } = require("../utils/individualDashboardStats");
 
 const INDIVIDUAL_MODULE_CONFIG = {
@@ -9,6 +10,7 @@ const INDIVIDUAL_MODULE_CONFIG = {
   purchase: { model: IndividualPurchase, label: "PURCHASE" },
   media: { model: IndividualMedia, label: "MEDIA" },
   transport: { model: IndividualTransport, label: "TRANSPORT" },
+  eventattending: { model: IndividualEventAttending, label: "EVENT ATTENDING" },
 };
 
 const normalizeIndividualModule = (moduleName = "") => String(moduleName || "").trim().toLowerCase();
@@ -35,7 +37,10 @@ const getIndividualScopeQuery = (req = {}) => {
   }
 
   return {
-    $or: employeeIds.map((employeeId) => ({ employee: employeeId })),
+    $or: employeeIds.flatMap((employeeId) => [
+      { employee: employeeId },
+      { facultyId: employeeId },
+    ]),
   };
 };
 
@@ -68,6 +73,7 @@ const getAllowedModuleRole = (moduleName = "") => {
     purchase: "purchase head",
     media: "media head",
     transport: "transport head",
+    eventattending: "event attending head",
   }[normalizedModule] || "";
 };
 
@@ -93,7 +99,7 @@ exports.isAllowedIndividualDashboardRole = (role = "", moduleName = "") => {
 
   if (isDepartmentHeadRole(normalizedRole)) {
     const department = String(moduleName || "").trim().toLowerCase();
-    return ["food", "purchase", "media", "transport"].includes(department) || !department;
+    return ["food", "purchase", "media", "transport", "eventattending", "event-attending"].includes(department) || !department;
   }
 
   if (normalizedRole === "faculty") {
@@ -208,11 +214,24 @@ const getIndividualHeadStats = async (Model, req) => {
 };
 
 const getIndividualModuleBreakdowns = async (Model, req) => {
-  const records = await Model.find(buildScopedQuery(req))
-    .populate({ path: "employee", select: "name department email" })
+  let query = Model.find(buildScopedQuery(req));
+
+  if (Model === IndividualEventAttending) {
+    query = query.populate({ path: "facultyId", select: "name department email" });
+  } else {
+    query = query.populate({ path: "employee", select: "name department email" });
+  }
+
+  const records = await query
     .populate({ path: "superAdminApproval.approvedBy", select: "name email" })
     .populate({ path: "headApproval.approvedBy", select: "name email" })
     .lean();
+
+  if (Model === IndividualEventAttending) {
+    records.forEach((record) => {
+      record.employee = record.facultyId;
+    });
+  }
 
   return buildIndividualDashboardBreakdowns(records);
 };
@@ -378,7 +397,7 @@ exports.getIndividualDashboardStats = async (req, res) => {
       });
     }
 
-    validateIndividualDashboardAccess(req, moduleConfig.label.toLowerCase());
+    validateIndividualDashboardAccess(req, moduleName);
 
     const [stats, breakdowns] = await Promise.all([
       getIndividualModuleStats(moduleConfig.model, req),

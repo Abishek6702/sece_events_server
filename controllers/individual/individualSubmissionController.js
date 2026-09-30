@@ -3,6 +3,8 @@ const IndividualFood = require("../../models/individual/IndividualFood");
 const IndividualPurchase = require("../../models/individual/IndividualPurchase");
 const IndividualTransport = require("../../models/individual/IndividualTransport");
 const IndividualMedia = require("../../models/individual/IndividualMedia");
+const IndividualEventAttending = require("../../models/individual/IndividualEventAttending");
+const { create: createIndividualEventAttending } = require("./individualEventAttendingController");
 const Faculty = require("../../models/Faculty");
 const User = require("../../models/User");
 const {
@@ -55,6 +57,11 @@ const resolveEmployee = async (employeeRef) => {
   const userDoc = await User.findById(id).select("name email").lean();
   return userDoc;
 };
+
+const populateSubmissionEmployee = (query, Model) =>
+  Model === IndividualEventAttending
+    ? query.populate("facultyId")
+    : query.populate("employee");
 
 const buildSubmissionItem = (item, formType, resolvedEmployee) => {
   // If the item already has a populated employee object, prefer its name/email
@@ -110,6 +117,8 @@ const buildSubmissionItem = (item, formType, resolvedEmployee) => {
       item.video?.date ||
       item.pickupDateTime ||
       item.dropDateTime ||
+      item.programFromDate ||
+      item.onDutyFrom ||
       null,
     data: item,
   };
@@ -245,6 +254,7 @@ const getModuleHeadRole = (model) => {
   if (model === IndividualPurchase) return "purchase head";
   if (model === IndividualTransport) return "transport head";
   if (model === IndividualMedia) return "media head";
+  if (model === IndividualEventAttending) return "event attending head";
 
   return "module head";
 };
@@ -254,6 +264,7 @@ const getModuleKeyFromModel = (model) => {
   if (model === IndividualPurchase) return "purchase";
   if (model === IndividualTransport) return "transport";
   if (model === IndividualMedia) return "media";
+  if (model === IndividualEventAttending) return "eventattending";
   return null;
 };
 
@@ -265,6 +276,8 @@ const getModuleKeyFromHeadRole = (role = "") => {
     "purchase head": "purchase",
     "transport head": "transport",
     "media head": "media",
+    "eventattending head": "eventattending",
+    "event attending head": "eventattending",
   }[normalizedRole] || "";
 };
 
@@ -280,6 +293,8 @@ const isHeadReviewerRole = (role) => [
   "purchase head",
   "transport head",
   "media head",
+  "eventattending head",
+  "event attending head",
 ].includes(normalizeRole(role));
 
 const setSubmissionStatus = (item, statusValue) => {
@@ -327,6 +342,7 @@ const resolveSubmissionById = async (id) => {
     IndividualPurchase,
     IndividualTransport,
     IndividualMedia,
+    IndividualEventAttending,
   ];
 
   for (const Model of models) {
@@ -821,6 +837,7 @@ const getAllIndividualSubmissions = async (req, res) => {
           { model: IndividualPurchase, formType: "Purchase", key: "purchase" },
           { model: IndividualTransport, formType: "Transport", key: "transport" },
           { model: IndividualMedia, formType: "Media", key: "media" },
+          { model: IndividualEventAttending, formType: "Event Attending", key: "eventattending" },
         ];
 
     if (normalizedModule === "purchase") {
@@ -829,18 +846,30 @@ const getAllIndividualSubmissions = async (req, res) => {
       moduleConfigs[0] = { model: IndividualTransport, formType: "Transport", key: "transport" };
     } else if (normalizedModule === "media") {
       moduleConfigs[0] = { model: IndividualMedia, formType: "Media", key: "media" };
+    } else if (normalizedModule === "eventattending" || normalizedModule === "event-attending") {
+      moduleConfigs[0] = {
+        model: IndividualEventAttending,
+        formType: "Event Attending",
+        key: "eventattending",
+      };
+    }
+
+    const eventFilter = { ...filter };
+    if (eventFilter.employee) {
+      eventFilter.facultyId = eventFilter.employee;
+      delete eventFilter.employee;
     }
 
     const results = await Promise.all(
       moduleConfigs.map(async ({ model, formType }) => {
         const items = await model
-          .find(filter)
+          .find(model === IndividualEventAttending ? eventFilter : filter)
           .sort({ createdAt: -1 })
           .lean();
 
         return Promise.all(
           items.map(async (item) => {
-            const resolvedEmployee = await resolveEmployee(item.employee);
+            const resolvedEmployee = await resolveEmployee(item.employee || item.facultyId);
             return buildSubmissionItem(item, formType, resolvedEmployee);
           }),
         );
@@ -890,8 +919,9 @@ const getIndividualSubmissionById = async (req, res) => {
     else if (Model === IndividualPurchase) formType = "Purchase";
     else if (Model === IndividualTransport) formType = "Transport";
     else if (Model === IndividualMedia) formType = "Media";
+    else if (Model === IndividualEventAttending) formType = "Event Attending";
 
-    const resolvedEmployee = await resolveEmployee(item.employee);
+    const resolvedEmployee = await resolveEmployee(item.employee || item.facultyId);
     const data = buildSubmissionItem(item, formType, resolvedEmployee);
 
     return res.status(200).json({
@@ -955,6 +985,7 @@ const getRequestByFacultyModule = async (req, res) => {
       purchase: IndividualPurchase,
       transport: IndividualTransport,
       media: IndividualMedia,
+      eventattending: IndividualEventAttending,
     };
 
     const moduleKeyFromQuery = String(module || getModuleKeyFromHeadRole(currentUser.role))
@@ -965,14 +996,20 @@ const getRequestByFacultyModule = async (req, res) => {
       : Object.keys(allowedModules);
 
     const parseFormType = (key) => key.charAt(0).toUpperCase() + key.slice(1);
+    const getFormType = (key) =>
+      key === "eventattending" || key === "event-attending"
+        ? "Event Attending"
+        : parseFormType(key);
 
     const formatItem = async (item, formType) => {
-      const resolvedEmployee = await resolveEmployee(item.employee);
+      const resolvedEmployee = await resolveEmployee(item.employee || item.facultyId);
       const requestDate =
         item.date ||
         item.deliveryDate ||
         item.pickupDateTime ||
         item.dropDateTime ||
+        item.programFromDate ||
+        item.onDutyFrom ||
         item.createdAt ||
         null;
 
@@ -1010,10 +1047,11 @@ const getRequestByFacultyModule = async (req, res) => {
       let foundModelKey = null;
 
       if (moduleKeyFromQuery && allowedModules[moduleKeyFromQuery]) {
-        submission = await allowedModules[moduleKeyFromQuery]
-          .findById(requestId)
-          .populate("employee")
-          .lean();
+        const Model = allowedModules[moduleKeyFromQuery];
+        submission = await populateSubmissionEmployee(
+          Model.findById(requestId),
+          Model,
+        ).lean();
 
         if (submission) foundModelKey = moduleKeyFromQuery;
       }
@@ -1025,7 +1063,10 @@ const getRequestByFacultyModule = async (req, res) => {
           return res.status(404).json({ success: false, message: "Individual submission not found" });
         }
 
-        submission = await resolved.Model.findById(requestId).populate("employee").lean();
+        submission = await populateSubmissionEmployee(
+          resolved.Model.findById(requestId),
+          resolved.Model,
+        ).lean();
         foundModelKey = getModuleKeyFromModel(resolved.Model) || null;
       }
 
@@ -1040,7 +1081,7 @@ const getRequestByFacultyModule = async (req, res) => {
       if (!allowedModules[key]) {
         return res.status(400).json({
           success: false,
-          message: "Invalid module. Allowed values: food, purchase, transport, media",
+          message: "Invalid module. Allowed values: food, purchase, transport, media, eventattending",
         });
       }
     }
@@ -1055,6 +1096,15 @@ const getRequestByFacultyModule = async (req, res) => {
         includeAll: includeAll === "true" || includeAll === "1",
         applyReviewFilter: true,
       });
+      const modelFilter = Model === IndividualEventAttending
+        ? {
+            ...filter,
+            ...(filter.employee ? { facultyId: filter.employee } : {}),
+          }
+        : filter;
+      if (Model === IndividualEventAttending) {
+        delete modelFilter.employee;
+      }
 
       // Debug: log counts and filter used for this module
       try {
@@ -1069,10 +1119,13 @@ const getRequestByFacultyModule = async (req, res) => {
         console.warn("Failed to count documents for module", key, countErr.message);
       }
 
-      const items = await Model.find(filter).populate("employee").sort({ createdAt: -1 }).lean();
+      const items = await populateSubmissionEmployee(
+        Model.find(modelFilter),
+        Model,
+      ).sort({ createdAt: -1 }).lean();
       // console.log(`getRequestByFacultyModule matched for ${key}:`, items.length);
 
-      return Promise.all(items.map((item) => formatItem(item, parseFormType(key))));
+      return Promise.all(items.map((item) => formatItem(item, getFormType(key))));
     });
 
     const results = await Promise.all(perModulePromises);
@@ -1771,6 +1824,8 @@ const closeIndividualSubmission = async (req, res) => {
   }
 };
 module.exports = {
+  createIndividualEventAttending,
+  setSubmissionStatus,
   buildApprovalHistoryEntry,
   upsertApprovalHistoryEntry,
   buildMediaHeadListFilter,
