@@ -44,6 +44,26 @@ const expenditureRowSchema = new mongoose.Schema(
       type: [fileReferenceSchema],
       default: [],
     },
+
+    // acconut holder name / number / ifsc / bank name / branch for renumeration alone
+    bankDetailsForRenumeration: {
+      
+      accountHolderName: {
+        type: String,
+      },
+      accountNumber: {
+        type: String,
+      },
+      ifscCode: {
+        type: String,
+      },
+      bankName: {
+        type: String,
+      },
+      branch: {
+        type: String,
+      },
+    },
   },
   { _id: true },
 );
