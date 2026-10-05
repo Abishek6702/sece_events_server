@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+﻿const mongoose = require("mongoose");
 const Event = require("../models/Event.js");
 const {
   getAvailableRooms,
@@ -496,7 +496,7 @@ async function validateAccommodationAvailability(
                 throw error;
               }
 
-              // Admin contacted → allow
+              // Admin contacted â†’ allow
             } else {
               const error = new Error(
                 `Room ${roomAvail.venue} ${roomAvail.roomNumber} is no longer available for the selected date and time. Please select another room.`,
@@ -619,7 +619,7 @@ exports.createEvent = async (req, res) => {
 
       await session.commitTransaction();
 
-      // 📧 Send notification
+      // ðŸ“§ Send notification
       if (normalizedStatus === "Submitted") {
         await notifyEventCreation(event);
       }
@@ -799,7 +799,7 @@ exports.updateEvent = async (req, res) => {
 
       // await handleTransportSubmission(event);
       
-      // 📧 Send notification for event creation/submission
+      // ðŸ“§ Send notification for event creation/submission
       await notifyEventCreation(event);
     }
 
@@ -956,7 +956,7 @@ exports.submitEvent = async (req, res) => {
     if (!wasSubmitted) {
       await assignIQACNumber(event);
       
-      // 📧 Send notification for event creation/submission
+      // ðŸ“§ Send notification for event creation/submission
       await notifyEventCreation(event);
     }
 
@@ -1017,7 +1017,7 @@ exports.getEventById = async (req, res) => {
 
     let projection = {};
 
-    // ✅ Module based projection
+    // âœ… Module based projection
     if (module) {
       projection = {
         requestDetails: 1,
@@ -1131,7 +1131,7 @@ exports.deleteEvent = async (req, res) => {
       data: deleted,
     });
   } catch (err) {
-    console.error("❌ DELETE ERROR:", err);
+    console.error("âŒ DELETE ERROR:", err);
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -1143,7 +1143,7 @@ exports.getFilteredEvents = async (req, res) => {
   try {
     const { department, eventType, module, status } = req.query;
 
-    // 🔹 FILTER
+    // ðŸ”¹ FILTER
     let filter = {};
 
     if (department) {
@@ -1161,7 +1161,7 @@ exports.getFilteredEvents = async (req, res) => {
 
     let events;
 
-    // ✅ If module is provided → use projection
+    // âœ… If module is provided â†’ use projection
     if (module) {
       let projection = {
         requestDetails: 1,
@@ -1197,7 +1197,7 @@ exports.getFilteredEvents = async (req, res) => {
 
       events = await Event.find(filter).select(projection);
     } else {
-      // ✅ No module → return full document
+      // âœ… No module â†’ return full document
       events = await Event.find(filter);
     }
 
@@ -1251,7 +1251,7 @@ exports.updateEventStatus = async (req, res) => {
           };
         }
         event.timeline.submittedAt = new Date();
-        // 📧 Send notification for event creation/submission
+        // ðŸ“§ Send notification for event creation/submission
         await notifyEventCreation(event);
         break;
 
@@ -1264,7 +1264,7 @@ exports.updateEventStatus = async (req, res) => {
           };
         }
         event.timeline.hodApprovedAt = new Date();
-        // 📧 Send notification for HOD approval
+        // ðŸ“§ Send notification for HOD approval
         await notifyHODApproval(event);
         break;
 
@@ -1278,7 +1278,7 @@ exports.updateEventStatus = async (req, res) => {
         }
         event.timeline.adminApprovedAt = new Date();
         await allocateDefaultMediaStaff(event);
-        // 📧 Send notification for admin approval and to department heads
+        // ðŸ“§ Send notification for admin approval and to department heads
         await notifyAdminApproval(event);
         await notifyDepartmentHeads(event);
         break;
@@ -1303,7 +1303,7 @@ exports.updateEventStatus = async (req, res) => {
         }
         event.timeline.rejectedAt = new Date();
         event.rejectReason = reason || "";
-        // 📧 Send notification for rejection
+        // ðŸ“§ Send notification for rejection
         await notifyEventRejection(event, reason || "");
         break;
 
@@ -1352,7 +1352,7 @@ exports.updateEventStatus = async (req, res) => {
         //
         //   event.transportInventoryRestored = true;
         // }
-        // 📧 Send notification for event closure
+        // ðŸ“§ Send notification for event closure
         await notifyEventClosure(event, reason || "");
         break;
 
@@ -1985,7 +1985,7 @@ exports.updateDocumentExpenditureApproval = async (req, res) => {
     await event.save();
 
     if (approved) {
-      // 📧 Send notification for event closure
+      // ðŸ“§ Send notification for event closure
       await notifyEventClosure(event, "Final documents and expenditure approved");
     }
 
@@ -2073,5 +2073,54 @@ exports.getEventRequiredDocuments = async (req, res) => {
       message: "Server Error",
       error: error.message,
     });
+  }
+};
+
+exports.checkFacultyEventRestriction = async (req, res) => {
+  try {
+    const { facultyId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(facultyId)) {
+      return res.status(400).json({ success: false, message: "Invalid facultyId" });
+    }
+    const facultyObjectId = new mongoose.Types.ObjectId(facultyId);
+    const activeEvents = await Event.find({
+      status: { $nin: ["Draft", "Closed", "Rejected", "Deleted"] },
+      isClosed: { $ne: true },
+      $or: [
+        { organizerId: facultyObjectId },
+        { "requestDetails.organizerDetails.organizers.facultyId": facultyObjectId },
+      ],
+    })
+      .select("requestDetails.eventDetails.eventSchedule requestDetails.eventDetails.eventName isClosed status")
+      .lean();
+    if (!activeEvents || activeEvents.length === 0) {
+      return res.status(200).json({ actionRestricted: false });
+    }
+    const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
+    const now = new Date();
+    for (const event of activeEvents) {
+      const schedule = event.requestDetails?.eventDetails?.eventSchedule || [];
+      if (schedule.length === 0) continue;
+      const lastEventDate = schedule.reduce((latest, day) => {
+        if (!day.eventDate) return latest;
+        const d = new Date(day.eventDate);
+        return d > latest ? d : latest;
+      }, new Date(0));
+      if (lastEventDate >= now) continue;
+      const msSinceEnd = now - lastEventDate;
+      if (msSinceEnd > TEN_DAYS_MS) {
+        const eventName = event.requestDetails?.eventDetails?.eventName || "a previous event";
+        return res.status(200).json({
+          actionRestricted: true,
+          message: "You haven't closed the previous event. Please close it before registering a new event.",
+          eventId: event._id,
+          eventName,
+        });
+      }
+    }
+    return res.status(200).json({ actionRestricted: false });
+  } catch (error) {
+    console.error("Check Faculty Event Restriction Error:", error);
+    return res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
