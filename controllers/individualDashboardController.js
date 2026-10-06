@@ -93,7 +93,13 @@ exports.isAllowedIndividualDashboardRole = (role = "", moduleName = "") => {
     return true;
   }
 
-  if (normalizedRole === allowedModuleRole) {
+  const isEventAttendingModule = ["eventattending", "event-attending"].includes(
+    normalizeIndividualModule(moduleName),
+  );
+  if (
+    normalizedRole === allowedModuleRole ||
+    (isEventAttendingModule && normalizedRole === "externaltransporthead")
+  ) {
     return true;
   }
 

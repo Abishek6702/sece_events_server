@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { toIstIndividualEventAttendingResponse } = require("../../utils/individualEventAttendingDateTime");
 
 const participantSchema = new mongoose.Schema(
   {
@@ -12,6 +13,7 @@ const participantSchema = new mongoose.Schema(
 const passengerSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
+    phone: { type: String, trim: true },
     phoneNumber: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true },
     designation: { type: String, required: true, trim: true },
@@ -28,10 +30,7 @@ const externalTransportSchema = new mongoose.Schema(
     travelDate: { type: Date, required: true },
     from: { type: String, required: true, trim: true },
     to: { type: String, required: true, trim: true },
-    transportNumber: { type: String, required: true, trim: true },
-    travelClass: { type: String, required: true, trim: true },
-    numberOfPassengers: { type: Number, required: true, min: 1 },
-    specialRequirements: { type: String, default: "", trim: true },
+    classOrBerth: { type: String, required: true, trim: true },
     passengers: { type: [passengerSchema], required: true },
   },
   { _id: true },
@@ -118,6 +117,17 @@ const individualEventAttendingSchema = new mongoose.Schema(
     programToDate: { type: Date, required: true },
     onDutyFrom: { type: Date, required: true },
     onDutyTo: { type: Date, required: true },
+    offCampusFrom: { type: Date, default: null },
+    offCampusTo: { type: Date, default: null },
+    specialRequirement: { type: String, trim: true, default: "" },
+    otherRequirements: { type: String, trim: true, default: "" },
+    accommodation: { type: String, trim: true, default: "" },
+    accommodationRequired: { type: Boolean, default: false },
+    food: { type: String, trim: true, default: "" },
+    foodRequired: { type: Boolean, default: false },
+    transport: { type: String, trim: true, default: "" },
+    transportRequired: { type: Boolean, default: false },
+    principalApprovalFormName: { type: String, trim: true, default: "" },
     externalTransportRequired: { type: Boolean, default: false },
     externalTransport: { type: [externalTransportSchema], default: [] },
     workflowStage: {
@@ -202,6 +212,10 @@ const individualEventAttendingSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+individualEventAttendingSchema.set("toJSON", {
+  transform: (_document, returned) => toIstIndividualEventAttendingResponse(returned),
+});
+
 individualEventAttendingSchema.pre("validate", async function validateTransport() {
   if (!this.externalTransportRequired) {
     this.externalTransport = [];
@@ -212,11 +226,9 @@ individualEventAttendingSchema.pre("validate", async function validateTransport(
     throw new Error("externalTransport is required when externalTransportRequired is true.");
   }
 
-  const invalidEntry = this.externalTransport.find(
-    (entry) => entry.passengers.length !== entry.numberOfPassengers,
-  );
-  if (invalidEntry) {
-    throw new Error("numberOfPassengers must match the passengers array length.");
+  const missingPassengers = this.externalTransport.find((entry) => !entry.passengers?.length);
+  if (missingPassengers) {
+    throw new Error("Each external transport must include at least one passenger.");
   }
 });
 

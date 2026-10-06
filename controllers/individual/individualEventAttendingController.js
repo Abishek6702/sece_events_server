@@ -1,6 +1,10 @@
 const IndividualEventAttending = require("../../models/individual/IndividualEventAttending");
 const mongoose = require("mongoose");
 const generateIndividualRequestNumber = require("../../utils/generateIndividualRequestNumber");
+const {
+  normalizeIndividualEventAttendingDateTimes,
+  toIstIndividualEventAttendingResponse,
+} = require("../../utils/individualEventAttendingDateTime");
 
 const requiredFields = [
   "programType",
@@ -39,28 +43,15 @@ const validatePayload = (payload = {}) => {
 
   for (let transportIndex = 0; transportIndex < payload.externalTransport.length; transportIndex += 1) {
     const transport = payload.externalTransport[transportIndex];
-    for (const field of [
-      "travelOption",
-      "travelDate",
-      "from",
-      "to",
-      "transportNumber",
-      "travelClass",
-      "numberOfPassengers",
-      "passengers",
-    ]) {
+    for (const field of ["travelOption", "travelDate", "from", "to", "classOrBerth"]) {
       if (transport?.[field] === undefined || transport?.[field] === null ||
         (typeof transport[field] === "string" && transport[field].trim() === "")) {
         return `External transport ${transportIndex + 1} field '${field}' is required.`;
       }
     }
 
-    const passengerCount = Number(transport.numberOfPassengers);
-    if (!Number.isInteger(passengerCount) || passengerCount < 1) {
-      return "External transport numberOfPassengers must be a positive integer.";
-    }
-    if (!Array.isArray(transport.passengers) || transport.passengers.length !== passengerCount) {
-      return "External transport numberOfPassengers must match the passengers array length.";
+    if (!Array.isArray(transport.passengers) || transport.passengers.length === 0) {
+      return `External transport ${transportIndex + 1} passengers must contain at least one passenger.`;
     }
 
     for (let passengerIndex = 0; passengerIndex < transport.passengers.length; passengerIndex += 1) {
@@ -97,7 +88,7 @@ exports.create = async (req, res) => {
     );
 
     const request = await IndividualEventAttending.create({
-      ...req.body,
+      ...normalizeIndividualEventAttendingDateTimes(req.body),
       facultyId,
       requestType: "individualEventAttending",
       requestNo: requestNumbering.requestNo,
@@ -107,13 +98,11 @@ exports.create = async (req, res) => {
       requestSequence: requestNumbering.requestSequence,
       departmentSequence: requestNumbering.departmentSequence,
       numberOfParticipants: Number(req.body.numberOfParticipants),
+      principalApprovalFormName: String(
+        req.body.principalApprovalFormName || req.body.principalApprovalForm?.name || "",
+      ).trim(),
       externalTransportRequired: req.body.externalTransportRequired === true,
-      externalTransport: req.body.externalTransportRequired === true
-        ? req.body.externalTransport.map((transport) => ({
-            ...transport,
-            numberOfPassengers: Number(transport.numberOfPassengers),
-          }))
-        : [],
+      externalTransport: req.body.externalTransportRequired === true ? req.body.externalTransport : [],
       workflowStage: "Submitted",
       status: "Pending",
       finalStatus: "Pending",
@@ -154,7 +143,10 @@ exports.getMine = async (req, res) => {
   try {
     const facultyId = req.user?.facultyId || req.user?._id;
     const requests = await IndividualEventAttending.find({ facultyId }).sort({ createdAt: -1 }).lean();
-    return res.status(200).json({ success: true, data: requests });
+    return res.status(200).json({
+      success: true,
+      data: requests.map(toIstIndividualEventAttendingResponse),
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message || "Failed to fetch requests." });
   }
@@ -176,7 +168,10 @@ exports.getById = async (req, res) => {
       return res.status(404).json({ success: false, message: "Individual event attending request not found." });
     }
 
-    return res.status(200).json({ success: true, data: request });
+    return res.status(200).json({
+      success: true,
+      data: toIstIndividualEventAttendingResponse(request),
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message || "Failed to fetch request." });
   }
