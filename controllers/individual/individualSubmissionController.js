@@ -1569,7 +1569,8 @@ const headApproval = async (req, res) => {
       .trim();
 
     const allowedAsHead = isExternalTransportRequest
-      ? role === "external transport head"
+      ? role === "external transport head" ||
+        (role === "head" && ["externaltransport", "external transport"].includes(normalizedDepartment))
       : isModuleHeadRole(role, submission.Model) ||
         (isHodRole(role) && normalizedDepartment === moduleKey);
 
@@ -1581,7 +1582,7 @@ const headApproval = async (req, res) => {
     }
 
     const allowedActions = isExternalTransportRequest
-      ? ["approve", "reject"]
+      ? ["approve", "acknowledge", "complete", "reject"]
       : ["acknowledge", "complete", "reject"];
     if (!allowedActions.includes(action)) {
       return res.status(400).json({
@@ -1696,7 +1697,7 @@ const headApproval = async (req, res) => {
     // ---------------- COMPLETE ----------------
     if (action === "complete" || (isExternalTransportRequest && action === "approve")) {
 
-      if (!isExternalTransportRequest && item.headApproval.status !== "Acknowledged") {
+      if (action === "complete" && item.headApproval.status !== "Acknowledged") {
         return res.status(400).json({
           success: false,
           message: "Please acknowledge the request first",
