@@ -34,7 +34,7 @@ const individualDepartmentCounterSchema = new mongoose.Schema(
     module: {
       type: String,
       required: true,
-      enum: ["FOOD", "PURCHASE", "MEDIA", "TRANSPORT"],
+      enum: ["FOOD", "PURCHASE", "MEDIA", "TRANSPORT", "EVENTATTENDING"],
     },
     financialYear: {
       type: String,

@@ -3,6 +3,8 @@ const IndividualFood = require("../../models/individual/IndividualFood");
 const IndividualPurchase = require("../../models/individual/IndividualPurchase");
 const IndividualTransport = require("../../models/individual/IndividualTransport");
 const IndividualMedia = require("../../models/individual/IndividualMedia");
+const IndividualEventAttending = require("../../models/individual/IndividualEventAttending");
+const { create: createIndividualEventAttending } = require("./individualEventAttendingController");
 const Faculty = require("../../models/Faculty");
 const User = require("../../models/User");
 const {
@@ -11,6 +13,10 @@ const {
   buildMediaRequestVisibilityFilter,
 } = require("../../utils/mediaAssignment");
 const { notifyIndividualRequest } = require("../../utils/individualNotifications");
+const {
+  formatDateTimeAsIst,
+  toIstIndividualEventAttendingResponse,
+} = require("../../utils/individualEventAttendingDateTime");
 
 const resolveEmployee = async (employeeRef) => {
   if (!employeeRef) {
@@ -56,7 +62,13 @@ const resolveEmployee = async (employeeRef) => {
   return userDoc;
 };
 
+const populateSubmissionEmployee = (query, Model) =>
+  Model === IndividualEventAttending
+    ? query.populate("facultyId")
+    : query.populate("employee");
+
 const buildSubmissionItem = (item, formType, resolvedEmployee) => {
+  const isEventAttending = formType === "Event Attending";
   // If the item already has a populated employee object, prefer its name/email
   const populatedEmployee = item && typeof item.employee === "object" ? item.employee : null;
   const employeeNameFromItem = populatedEmployee?.name || populatedEmployee?.email || null;
@@ -79,9 +91,26 @@ const buildSubmissionItem = (item, formType, resolvedEmployee) => {
     // ignore parsing errors and leave purchaseEarliestDate null
   }
 
+  const submissionDate =
+    item.date ||
+    item.deliveryDate ||
+    purchaseEarliestDate ||
+    item.poster?.deliveryDate ||
+    item.poster?.date ||
+    item.video?.deliveryDate ||
+    item.video?.date ||
+    item.pickupDateTime ||
+    item.dropDateTime ||
+    item.programFromDate ||
+    item.onDutyFrom ||
+    null;
+
   return {
     id: item._id,
     formType,
+    ...(item.externalTransportRequired === true
+      ? { department: "Externaltransport" }
+      : {}),
     // Prefer resolved name, fallback to resolved email, then populated item name/email,
     // then raw id string so UI always has something to display
     employee:
@@ -100,18 +129,8 @@ const buildSubmissionItem = (item, formType, resolvedEmployee) => {
     finalStatus: item.finalStatus || null,
     // Submissions may store relevant dates in different fields per module.
     // Provide a best-effort top-level `date` by checking common locations.
-    date:
-      item.date ||
-      item.deliveryDate ||
-      purchaseEarliestDate ||
-      item.poster?.deliveryDate ||
-      item.poster?.date ||
-      item.video?.deliveryDate ||
-      item.video?.date ||
-      item.pickupDateTime ||
-      item.dropDateTime ||
-      null,
-    data: item,
+    date: isEventAttending ? formatDateTimeAsIst(submissionDate) : submissionDate,
+    data: isEventAttending ? toIstIndividualEventAttendingResponse(item) : item,
   };
 };
 
@@ -240,13 +259,55 @@ const upsertApprovalHistoryEntry = (item, entry) => {
   }
 };
 
-const getModuleHeadRole = (model) => {
+const getModuleHeadRole = (model, item = null) => {
   if (model === IndividualFood) return "food head";
   if (model === IndividualPurchase) return "purchase head";
   if (model === IndividualTransport) return "transport head";
   if (model === IndividualMedia) return "media head";
+  if (model === IndividualEventAttending) {
+    return item?.externalTransportRequired === true
+      ? "external transport head"
+      : "event attending head";
+  }
 
   return "module head";
+};
+
+const applySuperAdminApprovalOutcome = (item, model) => {
+  if (model === IndividualEventAttending && item.externalTransportRequired !== true) {
+    item.workflowStage = "Completed";
+    item.finalStatus = "Completed";
+    setSubmissionStatus(item, "Completed");
+    return null;
+  }
+
+  item.workflowStage = "DepartmentReview";
+  item.finalStatus = "Pending";
+  setSubmissionStatus(item, "Pending");
+  return getModuleHeadRole(model, item);
+};
+
+const applyExternalTransportHeadApproval = (item, approvedBy) => {
+  const actionDate = new Date();
+  item.headApproval = item.headApproval || {};
+  item.headApproval.status = "Completed";
+  item.headApproval.approvedBy = approvedBy;
+  item.headApproval.approvedAt = actionDate;
+  item.headApproval.updatedAt = actionDate;
+  item.workflowStage = "Completed";
+  item.finalStatus = "Completed";
+  setSubmissionStatus(item, "Completed");
+
+  upsertApprovalHistoryEntry(
+    item,
+    buildApprovalHistoryEntry({
+      role: "external transport head",
+      approvedBy,
+      action: "Completed",
+      remarks: "Request Approved and Completed",
+      actionDate,
+    }),
+  );
 };
 
 const getModuleKeyFromModel = (model) => {
@@ -254,6 +315,7 @@ const getModuleKeyFromModel = (model) => {
   if (model === IndividualPurchase) return "purchase";
   if (model === IndividualTransport) return "transport";
   if (model === IndividualMedia) return "media";
+  if (model === IndividualEventAttending) return "eventattending";
   return null;
 };
 
@@ -265,6 +327,9 @@ const getModuleKeyFromHeadRole = (role = "") => {
     "purchase head": "purchase",
     "transport head": "transport",
     "media head": "media",
+    "eventattending head": "eventattending",
+    "event attending head": "eventattending",
+    "external transport head": "eventattending",
   }[normalizedRole] || "";
 };
 
@@ -280,6 +345,9 @@ const isHeadReviewerRole = (role) => [
   "purchase head",
   "transport head",
   "media head",
+  "eventattending head",
+  "event attending head",
+  "external transport head",
 ].includes(normalizeRole(role));
 
 const setSubmissionStatus = (item, statusValue) => {
@@ -327,6 +395,7 @@ const resolveSubmissionById = async (id) => {
     IndividualPurchase,
     IndividualTransport,
     IndividualMedia,
+    IndividualEventAttending,
   ];
 
   for (const Model of models) {
@@ -472,7 +541,7 @@ const buildSubmissionFilter = async ({
 
   const role = normalizeRole(user?.role);
   const isAdmin = Boolean(user?.isadmin);
-  const isReviewer = isReviewerRole(role) || isAdmin;
+  const isReviewer = isReviewerRole(role) || isAdmin || role === "external transport head";
   const isDepartmentHead = [
     "hod",
     "head",
@@ -482,6 +551,13 @@ const buildSubmissionFilter = async ({
 
   const normalizedModule = String(module || "").toLowerCase().trim();
   const normalizedDepartment = String(user?.department || "").toLowerCase().trim();
+
+  if (
+    ["eventattending", "event-attending"].includes(normalizedModule) &&
+    role === "external transport head"
+  ) {
+    filter.externalTransportRequired = true;
+  }
 
   const isModuleHead =
     normalizedModule &&
@@ -821,6 +897,7 @@ const getAllIndividualSubmissions = async (req, res) => {
           { model: IndividualPurchase, formType: "Purchase", key: "purchase" },
           { model: IndividualTransport, formType: "Transport", key: "transport" },
           { model: IndividualMedia, formType: "Media", key: "media" },
+          { model: IndividualEventAttending, formType: "Event Attending", key: "eventattending" },
         ];
 
     if (normalizedModule === "purchase") {
@@ -829,18 +906,30 @@ const getAllIndividualSubmissions = async (req, res) => {
       moduleConfigs[0] = { model: IndividualTransport, formType: "Transport", key: "transport" };
     } else if (normalizedModule === "media") {
       moduleConfigs[0] = { model: IndividualMedia, formType: "Media", key: "media" };
+    } else if (normalizedModule === "eventattending" || normalizedModule === "event-attending") {
+      moduleConfigs[0] = {
+        model: IndividualEventAttending,
+        formType: "Event Attending",
+        key: "eventattending",
+      };
+    }
+
+    const eventFilter = { ...filter };
+    if (eventFilter.employee) {
+      eventFilter.facultyId = eventFilter.employee;
+      delete eventFilter.employee;
     }
 
     const results = await Promise.all(
       moduleConfigs.map(async ({ model, formType }) => {
         const items = await model
-          .find(filter)
+          .find(model === IndividualEventAttending ? eventFilter : filter)
           .sort({ createdAt: -1 })
           .lean();
 
         return Promise.all(
           items.map(async (item) => {
-            const resolvedEmployee = await resolveEmployee(item.employee);
+            const resolvedEmployee = await resolveEmployee(item.employee || item.facultyId);
             return buildSubmissionItem(item, formType, resolvedEmployee);
           }),
         );
@@ -890,8 +979,9 @@ const getIndividualSubmissionById = async (req, res) => {
     else if (Model === IndividualPurchase) formType = "Purchase";
     else if (Model === IndividualTransport) formType = "Transport";
     else if (Model === IndividualMedia) formType = "Media";
+    else if (Model === IndividualEventAttending) formType = "Event Attending";
 
-    const resolvedEmployee = await resolveEmployee(item.employee);
+    const resolvedEmployee = await resolveEmployee(item.employee || item.facultyId);
     const data = buildSubmissionItem(item, formType, resolvedEmployee);
 
     return res.status(200).json({
@@ -955,6 +1045,7 @@ const getRequestByFacultyModule = async (req, res) => {
       purchase: IndividualPurchase,
       transport: IndividualTransport,
       media: IndividualMedia,
+      eventattending: IndividualEventAttending,
     };
 
     const moduleKeyFromQuery = String(module || getModuleKeyFromHeadRole(currentUser.role))
@@ -965,21 +1056,32 @@ const getRequestByFacultyModule = async (req, res) => {
       : Object.keys(allowedModules);
 
     const parseFormType = (key) => key.charAt(0).toUpperCase() + key.slice(1);
+    const getFormType = (key) =>
+      key === "eventattending" || key === "event-attending"
+        ? "Event Attending"
+        : parseFormType(key);
 
     const formatItem = async (item, formType) => {
-      const resolvedEmployee = await resolveEmployee(item.employee);
-      const requestDate =
+      const resolvedEmployee = await resolveEmployee(item.employee || item.facultyId);
+      const isEventAttending = formType === "Event Attending";
+      const rawRequestDate =
         item.date ||
         item.deliveryDate ||
         item.pickupDateTime ||
         item.dropDateTime ||
+        item.programFromDate ||
+        item.onDutyFrom ||
         item.createdAt ||
         null;
+      const requestDate = isEventAttending ? formatDateTimeAsIst(rawRequestDate) : rawRequestDate;
 
       return {
         requestId: item._id,
         id: item._id,
         formType,
+        ...(item.externalTransportRequired === true
+          ? { department: "Externaltransport" }
+          : {}),
         requestNo: item.requestNo || null,
         requestDate,
         module: String(item.module || formType || "").toLowerCase(),
@@ -995,7 +1097,7 @@ const getRequestByFacultyModule = async (req, res) => {
         headApproval: item.headApproval || null,
         approvalHistory: item.approvalHistory || null,
         finalStatus: item.finalStatus || null,
-        data: item,
+        data: isEventAttending ? toIstIndividualEventAttendingResponse(item) : item,
       };
     };
 
@@ -1010,10 +1112,11 @@ const getRequestByFacultyModule = async (req, res) => {
       let foundModelKey = null;
 
       if (moduleKeyFromQuery && allowedModules[moduleKeyFromQuery]) {
-        submission = await allowedModules[moduleKeyFromQuery]
-          .findById(requestId)
-          .populate("employee")
-          .lean();
+        const Model = allowedModules[moduleKeyFromQuery];
+        submission = await populateSubmissionEmployee(
+          Model.findById(requestId),
+          Model,
+        ).lean();
 
         if (submission) foundModelKey = moduleKeyFromQuery;
       }
@@ -1025,7 +1128,10 @@ const getRequestByFacultyModule = async (req, res) => {
           return res.status(404).json({ success: false, message: "Individual submission not found" });
         }
 
-        submission = await resolved.Model.findById(requestId).populate("employee").lean();
+        submission = await populateSubmissionEmployee(
+          resolved.Model.findById(requestId),
+          resolved.Model,
+        ).lean();
         foundModelKey = getModuleKeyFromModel(resolved.Model) || null;
       }
 
@@ -1040,7 +1146,7 @@ const getRequestByFacultyModule = async (req, res) => {
       if (!allowedModules[key]) {
         return res.status(400).json({
           success: false,
-          message: "Invalid module. Allowed values: food, purchase, transport, media",
+          message: "Invalid module. Allowed values: food, purchase, transport, media, eventattending",
         });
       }
     }
@@ -1055,6 +1161,15 @@ const getRequestByFacultyModule = async (req, res) => {
         includeAll: includeAll === "true" || includeAll === "1",
         applyReviewFilter: true,
       });
+      const modelFilter = Model === IndividualEventAttending
+        ? {
+            ...filter,
+            ...(filter.employee ? { facultyId: filter.employee } : {}),
+          }
+        : filter;
+      if (Model === IndividualEventAttending) {
+        delete modelFilter.employee;
+      }
 
       // Debug: log counts and filter used for this module
       try {
@@ -1069,10 +1184,13 @@ const getRequestByFacultyModule = async (req, res) => {
         console.warn("Failed to count documents for module", key, countErr.message);
       }
 
-      const items = await Model.find(filter).populate("employee").sort({ createdAt: -1 }).lean();
+      const items = await populateSubmissionEmployee(
+        Model.find(modelFilter),
+        Model,
+      ).sort({ createdAt: -1 }).lean();
       // console.log(`getRequestByFacultyModule matched for ${key}:`, items.length);
 
-      return Promise.all(items.map((item) => formatItem(item, parseFormType(key))));
+      return Promise.all(items.map((item) => formatItem(item, getFormType(key))));
     });
 
     const results = await Promise.all(perModulePromises);
@@ -1359,21 +1477,19 @@ const superAdminApproval = async (req, res) => {
         item.finalStatus = "Rejected";
         setSubmissionStatus(item, "Rejected");
       } else {
-        item.workflowStage = "DepartmentReview";
-        item.finalStatus = "Pending";
-        setSubmissionStatus(item, "Pending");
-
-        const moduleHeadRole = getModuleHeadRole(submission.Model);
-        upsertApprovalHistoryEntry(
-          item,
-          buildApprovalHistoryEntry({
-            role: moduleHeadRole,
-            approvedBy: null,
-            action: "Pending",
-            remarks: `Waiting for ${moduleHeadRole.replace(/ head$/, " Head")} approval`,
-            actionDate: null,
-          }),
-        );
+        const moduleHeadRole = applySuperAdminApprovalOutcome(item, submission.Model);
+        if (moduleHeadRole) {
+          upsertApprovalHistoryEntry(
+            item,
+            buildApprovalHistoryEntry({
+              role: moduleHeadRole,
+              approvedBy: null,
+              action: "Pending",
+              remarks: `Waiting for ${moduleHeadRole.replace(/ head$/, " Head")} approval`,
+              actionDate: null,
+            }),
+          );
+        }
       }
     } else {
       // Super Admin rejected — immediate termination
@@ -1444,15 +1560,18 @@ const headApproval = async (req, res) => {
       });
     }
 
-    const expectedHeadRole = getModuleHeadRole(submission.Model);
+    const isExternalTransportRequest =
+      submission.Model === IndividualEventAttending && item.externalTransportRequired === true;
+    const expectedHeadRole = getModuleHeadRole(submission.Model, item);
     const moduleKey = getModuleKeyFromModel(submission.Model);
     const normalizedDepartment = String(currentUser.department || "")
       .toLowerCase()
       .trim();
 
-    const allowedAsHead =
-      isModuleHeadRole(role, submission.Model) ||
-      (isHodRole(role) && normalizedDepartment === moduleKey);
+    const allowedAsHead = isExternalTransportRequest
+      ? role === "external transport head"
+      : isModuleHeadRole(role, submission.Model) ||
+        (isHodRole(role) && normalizedDepartment === moduleKey);
 
     if (!allowedAsHead) {
       return res.status(403).json({
@@ -1461,10 +1580,13 @@ const headApproval = async (req, res) => {
       });
     }
 
-    if (!["acknowledge", "complete", "reject"].includes(action)) {
+    const allowedActions = isExternalTransportRequest
+      ? ["approve", "reject"]
+      : ["acknowledge", "complete", "reject"];
+    if (!allowedActions.includes(action)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid action. Allowed values: acknowledge, complete, reject",
+        message: `Invalid action. Allowed values: ${allowedActions.join(", ")}`,
       });
     }
 
@@ -1572,35 +1694,39 @@ const headApproval = async (req, res) => {
     }
 
     // ---------------- COMPLETE ----------------
-    if (action === "complete") {
+    if (action === "complete" || (isExternalTransportRequest && action === "approve")) {
 
-      if (item.headApproval.status !== "Acknowledged") {
+      if (!isExternalTransportRequest && item.headApproval.status !== "Acknowledged") {
         return res.status(400).json({
           success: false,
           message: "Please acknowledge the request first",
         });
       }
 
-      item.headApproval.status = "Completed";
-      item.headApproval.approvedBy = currentUser._id;
-      item.headApproval.approvedAt = new Date();
-      item.headApproval.updatedAt = new Date();
+      if (isExternalTransportRequest) {
+        applyExternalTransportHeadApproval(item, currentUser._id);
+      } else {
+        item.headApproval.status = "Completed";
+        item.headApproval.approvedBy = currentUser._id;
+        item.headApproval.approvedAt = new Date();
+        item.headApproval.updatedAt = new Date();
 
-      item.workflowStage = "Completed";
-      item.finalStatus = "Approved";
+        item.workflowStage = "Completed";
+        item.finalStatus = "Approved";
 
-      setSubmissionStatus(item, "Approved");
+        setSubmissionStatus(item, "Approved");
 
-      upsertApprovalHistoryEntry(
-        item,
-        buildApprovalHistoryEntry({
-          role: expectedHeadRole,
-          approvedBy: currentUser._id,
-          action: "Completed",
-          remarks: "Request Completed",
-          actionDate: new Date(),
-        })
-      );
+        upsertApprovalHistoryEntry(
+          item,
+          buildApprovalHistoryEntry({
+            role: expectedHeadRole,
+            approvedBy: currentUser._id,
+            action: "Completed",
+            remarks: "Request Completed",
+            actionDate: new Date(),
+          })
+        );
+      }
 
       await item.save();
 
@@ -1614,7 +1740,9 @@ const headApproval = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: "Request completed successfully",
+        message: isExternalTransportRequest
+          ? "Request approved and completed successfully"
+          : "Request completed successfully",
         data: item,
       });
     }
@@ -1771,8 +1899,14 @@ const closeIndividualSubmission = async (req, res) => {
   }
 };
 module.exports = {
+  createIndividualEventAttending,
+  setSubmissionStatus,
+  applySuperAdminApprovalOutcome,
+  applyExternalTransportHeadApproval,
   buildApprovalHistoryEntry,
   upsertApprovalHistoryEntry,
+  buildSubmissionItem,
+  buildSubmissionFilter,
   buildMediaHeadListFilter,
   getDepartmentTeamStats,
   getAllIndividualSubmissions,
