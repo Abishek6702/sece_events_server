@@ -77,12 +77,25 @@ const getAllowedModuleRole = (moduleName = "") => {
   }[normalizedModule] || "";
 };
 
-const getHeadModule = (role = "") => {
+const getHeadModule = (role = "", department = "") => {
   const normalizedRole = normalizeDashboardRole(role);
 
-  return Object.keys(INDIVIDUAL_MODULE_CONFIG).find(
+  const roleModule = Object.keys(INDIVIDUAL_MODULE_CONFIG).find(
     (moduleName) => normalizeDashboardRole(getAllowedModuleRole(moduleName)) === normalizedRole,
-  ) || "";
+  );
+
+  if (roleModule) {
+    return roleModule;
+  }
+
+  if (
+    isDepartmentHeadRole(normalizedRole) &&
+    normalizeDashboardRole(department) === "externaltransport"
+  ) {
+    return "eventattending";
+  }
+
+  return "";
 };
 
 exports.isAllowedIndividualDashboardRole = (role = "", moduleName = "") => {
@@ -374,7 +387,7 @@ const getIndividualBreakdownPayload = async (
       modules,
     });
   } catch (error) {
-    console.error("Individual dashboard breakdown error:", error);
+    // console.error("Individual dashboard breakdown error:", error);
     return sendIndividualDashboardError(res, error);
   }
 };
@@ -417,7 +430,7 @@ exports.getIndividualDashboardStats = async (req, res) => {
       breakdowns,
     });
   } catch (error) {
-    console.error("Individual dashboard stats error:", error);
+    // console.error("Individual dashboard stats error:", error);
     return sendIndividualDashboardError(res, error);
   }
 };
@@ -442,7 +455,7 @@ exports.getIndividualSuperAdminWiseStats = async (req, res) => {
 exports.getIndividualHeadWiseStats = async (req, res) => {
   try {
     const requestedModule = normalizeIndividualModule(req.query.module);
-    const loggedInHeadModule = getHeadModule(req.user?.role);
+    const loggedInHeadModule = getHeadModule(req.user?.role, req.user?.department);
     const moduleName = requestedModule || loggedInHeadModule;
     const moduleConfig = getValidatedIndividualModule({ query: { module: moduleName } });
 
@@ -458,7 +471,7 @@ exports.getIndividualHeadWiseStats = async (req, res) => {
       stats: await getIndividualHeadStats(moduleConfig.model, req),
     });
   } catch (error) {
-    console.error("Individual head dashboard stats error:", error);
+    // console.error("Individual head dashboard stats error:", error);
     return sendIndividualDashboardError(res, error);
   }
 };
