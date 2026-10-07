@@ -198,6 +198,10 @@ const individualEventAttendingSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
+    advanceToBeReceivedWithin: {
+      type: Number,
+      default: null,
+    },
     estimatedAmount: {
       type: Number,
       default: null,
