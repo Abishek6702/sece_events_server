@@ -161,7 +161,7 @@ const submitIndividualFeedback = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("submitIndividualFeedback error:", error);
+    // console.error("submitIndividualFeedback error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -204,7 +204,7 @@ const getIndividualFeedback = async (req, res) => {
       })),
     });
   } catch (error) {
-    console.error("getIndividualFeedback error:", error);
+    // console.error("getIndividualFeedback error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
