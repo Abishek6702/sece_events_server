@@ -1,10 +1,41 @@
 const IndividualEventAttending = require("../../models/individual/IndividualEventAttending");
 const mongoose = require("mongoose");
+const Faculty = require("../../models/Faculty");
 const generateIndividualRequestNumber = require("../../utils/generateIndividualRequestNumber");
+const { notifyIndividualRequest } = require("../../utils/individualNotifications");
 const {
   normalizeIndividualEventAttendingDateTimes,
   toIstIndividualEventAttendingResponse,
 } = require("../../utils/individualEventAttendingDateTime");
+
+const normalizeFinanceValue = (financeRequired) => {
+  if (typeof financeRequired === "string") {
+    return ["yes", "true"].includes(financeRequired.trim().toLowerCase())
+      ? "Yes"
+      : "No";
+  }
+
+  return financeRequired === true ? "Yes" : "No";
+};
+
+const parseNumberField = (value) =>
+  value !== undefined && value !== null && String(value).trim() !== ""
+    ? Number(value)
+    : null;
+
+const parseStringField = (value) =>
+  value !== undefined && value !== null ? String(value).trim() : "";
+
+const validateFinanceFields = ({ financeRequired, estimatedAmount, advanceAmount, advancePurpose }) => {
+  if (financeRequired !== "Yes") return null;
+  if (estimatedAmount === null || Number.isNaN(estimatedAmount)) {
+    return "Estimated Amount is required when Finance Required is Yes.";
+  }
+  if (advanceAmount === null || Number.isNaN(advanceAmount) || advancePurpose === "") {
+    return "Advance Amount and Purpose of Advance are required when Finance Required is Yes.";
+  }
+  return null;
+};
 
 const requiredFields = [
   "programType",
@@ -75,6 +106,18 @@ exports.create = async (req, res) => {
       return res.status(400).json({ success: false, message: validationError });
     }
 
+    const financeFields = {
+      financeRequired: normalizeFinanceValue(req.body.financeRequired),
+      advanceAmount: parseNumberField(req.body.advanceAmount),
+      advanceToBeReceivedWithin: parseNumberField(req.body.advanceToBeReceivedWithin),
+      estimatedAmount: parseNumberField(req.body.estimatedAmount),
+      advancePurpose: parseStringField(req.body.advancePurpose),
+    };
+    const financeValidationError = validateFinanceFields(financeFields);
+    if (financeValidationError) {
+      return res.status(400).json({ success: false, message: financeValidationError });
+    }
+
     const facultyId = req.user?.facultyId || req.user?._id;
     if (!facultyId) {
       return res.status(400).json({ success: false, message: "Faculty identity is missing." });
@@ -106,10 +149,13 @@ exports.create = async (req, res) => {
       workflowStage: "Submitted",
       status: "Pending",
       finalStatus: "Pending",
-      financeRequired: "No",
-      advanceAmount: null,
-      estimatedAmount: null,
-      advancePurpose: "",
+      financeRequired: financeFields.financeRequired,
+      advanceAmount: financeFields.financeRequired === "Yes" ? financeFields.advanceAmount : null,
+      advanceToBeReceivedWithin: financeFields.financeRequired === "Yes"
+        ? financeFields.advanceToBeReceivedWithin
+        : null,
+      estimatedAmount: financeFields.financeRequired === "Yes" ? financeFields.estimatedAmount : null,
+      advancePurpose: financeFields.financeRequired === "Yes" ? financeFields.advancePurpose : "",
       referenceFiles: [],
       approvalHistory: [
         {
@@ -127,6 +173,26 @@ exports.create = async (req, res) => {
           actionDate: null,
         },
       ],
+    });
+
+    const facultyDoc = await Faculty.findById(facultyId).select("name email").lean();
+    const requesterEmail = req.user?.email || req.body.employeeEmail || req.body.email || null;
+    const employeeDetail = {
+      name: facultyDoc?.name || req.user?.name || req.body.employeeName || "The requester",
+      email: facultyDoc?.email || requesterEmail,
+    };
+
+    await notifyIndividualRequest({
+      request: {
+        ...request.toObject(),
+        employeeDetail,
+        employeeEmail: requesterEmail,
+        email: requesterEmail,
+      },
+      moduleName: "eventattending",
+      action: "submitted",
+      actorName: req.user?.name || req.body.employeeName || "The requester",
+      roleHint: "super-admin",
     });
 
     return res.status(201).json({
