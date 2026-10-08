@@ -45,9 +45,10 @@ const requiredFields = [
   "expectedOutcome",
   "programFromDate",
   "programToDate",
-  "onDutyFrom",
-  "onDutyTo",
+  // "onDutyFrom",
+  // "onDutyTo",
 ];
+
 
 const validatePayload = (payload = {}) => {
   for (const field of requiredFields) {
@@ -141,6 +142,9 @@ exports.create = async (req, res) => {
       requestSequence: requestNumbering.requestSequence,
       departmentSequence: requestNumbering.departmentSequence,
       numberOfParticipants: Number(req.body.numberOfParticipants),
+      foodAmount: parseNumberField(req.body.foodAmount),
+      transportAmount: parseNumberField(req.body.transportAmount),
+      accommodationAmount: parseNumberField(req.body.accommodationAmount),
       principalApprovalFormName: String(
         req.body.principalApprovalFormName || req.body.principalApprovalForm?.name || "",
       ).trim(),
