@@ -110,7 +110,7 @@ const individualEventAttendingSchema = new mongoose.Schema(
     requestType: { type: String, default: "individualEventAttending", immutable: true },
     programType: { type: String, required: true, trim: true },
     programName: { type: String, required: true, trim: true },
-    numberOfParticipants: { type: Number, required: true, min: 1 },
+    numberOfParticipants: { type: Number, required: true, min: 0 },
     participants: { type: [participantSchema], required: true, default: [] },
     expectedOutcome: { type: String, required: true, trim: true },
     programFromDate: { type: Date, required: true },

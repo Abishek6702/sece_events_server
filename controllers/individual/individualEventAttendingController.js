@@ -26,6 +26,43 @@ const parseNumberField = (value) =>
 const parseStringField = (value) =>
   value !== undefined && value !== null ? String(value).trim() : "";
 
+const parseMultipartArrayField = (payload, field) => {
+  const value = payload[field];
+  if (typeof value !== "string") return null;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    return `Field '${field}' must contain valid JSON.`;
+  }
+
+  if (!Array.isArray(parsed)) {
+    return `Field '${field}' must be a JSON array.`;
+  }
+
+  payload[field] = parsed;
+  return null;
+};
+
+const parseBooleanField = (value) => {
+  if (typeof value === "boolean") return value;
+  if (typeof value !== "string") return null;
+
+  switch (value.trim().toLowerCase()) {
+    case "true":
+    case "yes":
+    case "1":
+      return true;
+    case "false":
+    case "no":
+    case "0":
+      return false;
+    default:
+      return null;
+  }
+};
+
 const validateFinanceFields = ({ financeRequired, estimatedAmount, advanceAmount, advancePurpose }) => {
   if (financeRequired !== "Yes") return null;
   if (estimatedAmount === null || Number.isNaN(estimatedAmount)) {
@@ -59,8 +96,8 @@ const validatePayload = (payload = {}) => {
   }
 
   const participantCount = Number(payload.numberOfParticipants);
-  if (!Number.isInteger(participantCount) || participantCount < 1) {
-    return "numberOfParticipants must be a positive integer.";
+  if (!Number.isInteger(participantCount) || participantCount < 0) {
+    return "numberOfParticipants must be a non-negative integer.";
   }
   if (!Array.isArray(payload.participants) || payload.participants.length !== participantCount) {
     return "numberOfParticipants must match the participants array length.";
@@ -102,17 +139,36 @@ const validatePayload = (payload = {}) => {
 
 exports.create = async (req, res) => {
   try {
-    const validationError = validatePayload(req.body);
+    const payload = { ...req.body };
+    for (const field of ["participants", "externalTransport"]) {
+      const parseError = parseMultipartArrayField(payload, field);
+      if (parseError) {
+        return res.status(400).json({ success: false, message: parseError });
+      }
+    }
+
+    if (payload.externalTransportRequired !== undefined) {
+      const externalTransportRequired = parseBooleanField(payload.externalTransportRequired);
+      if (externalTransportRequired === null) {
+        return res.status(400).json({
+          success: false,
+          message: "Field 'externalTransportRequired' must be a boolean.",
+        });
+      }
+      payload.externalTransportRequired = externalTransportRequired;
+    }
+
+    const validationError = validatePayload(payload);
     if (validationError) {
       return res.status(400).json({ success: false, message: validationError });
     }
 
     const financeFields = {
-      financeRequired: normalizeFinanceValue(req.body.financeRequired),
-      advanceAmount: parseNumberField(req.body.advanceAmount),
-      advanceToBeReceivedWithin: parseNumberField(req.body.advanceToBeReceivedWithin),
-      estimatedAmount: parseNumberField(req.body.estimatedAmount),
-      advancePurpose: parseStringField(req.body.advancePurpose),
+      financeRequired: normalizeFinanceValue(payload.financeRequired),
+      advanceAmount: parseNumberField(payload.advanceAmount),
+      advanceToBeReceivedWithin: parseNumberField(payload.advanceToBeReceivedWithin),
+      estimatedAmount: parseNumberField(payload.estimatedAmount),
+      advancePurpose: parseStringField(payload.advancePurpose),
     };
     const financeValidationError = validateFinanceFields(financeFields);
     if (financeValidationError) {
@@ -126,13 +182,13 @@ exports.create = async (req, res) => {
 
     const requestNumbering = await generateIndividualRequestNumber(
       "EVENTATTENDING",
-      req.user?.department || req.body.department || "UNKNOWN",
+      req.user?.department || payload.department || "UNKNOWN",
       null,
       { returnDetails: true },
     );
 
     const request = await IndividualEventAttending.create({
-      ...normalizeIndividualEventAttendingDateTimes(req.body),
+      ...normalizeIndividualEventAttendingDateTimes(payload),
       facultyId,
       requestType: "individualEventAttending",
       requestNo: requestNumbering.requestNo,
@@ -141,15 +197,20 @@ exports.create = async (req, res) => {
       departmentCode: requestNumbering.departmentCode,
       requestSequence: requestNumbering.requestSequence,
       departmentSequence: requestNumbering.departmentSequence,
-      numberOfParticipants: Number(req.body.numberOfParticipants),
-      foodAmount: parseNumberField(req.body.foodAmount),
-      transportAmount: parseNumberField(req.body.transportAmount),
-      accommodationAmount: parseNumberField(req.body.accommodationAmount),
+      numberOfParticipants: Number(payload.numberOfParticipants),
+      foodAmount: parseNumberField(payload.foodAmount),
+      transportAmount: parseNumberField(payload.transportAmount),
+      accommodationAmount: parseNumberField(payload.accommodationAmount),
       principalApprovalFormName: String(
-        req.body.principalApprovalFormName || req.body.principalApprovalForm?.name || "",
+        req.files?.principalApprovalForm?.[0]?.path ||
+          req.files?.principalApprovalForm?.[0]?.secure_url ||
+          req.files?.principalApprovalForm?.[0]?.url ||
+          payload.principalApprovalForm?.url ||
+          payload.principalApprovalFormUrl ||
+          "",
       ).trim(),
-      externalTransportRequired: req.body.externalTransportRequired === true,
-      externalTransport: req.body.externalTransportRequired === true ? req.body.externalTransport : [],
+      externalTransportRequired: payload.externalTransportRequired === true,
+      externalTransport: payload.externalTransportRequired === true ? payload.externalTransport : [],
       workflowStage: "Submitted",
       status: "Pending",
       finalStatus: "Pending",
@@ -180,9 +241,9 @@ exports.create = async (req, res) => {
     });
 
     const facultyDoc = await Faculty.findById(facultyId).select("name email").lean();
-    const requesterEmail = req.user?.email || req.body.employeeEmail || req.body.email || null;
+    const requesterEmail = req.user?.email || payload.employeeEmail || payload.email || null;
     const employeeDetail = {
-      name: facultyDoc?.name || req.user?.name || req.body.employeeName || "The requester",
+      name: facultyDoc?.name || req.user?.name || payload.employeeName || "The requester",
       email: facultyDoc?.email || requesterEmail,
     };
 
@@ -195,7 +256,7 @@ exports.create = async (req, res) => {
       },
       moduleName: "eventattending",
       action: "submitted",
-      actorName: req.user?.name || req.body.employeeName || "The requester",
+      actorName: req.user?.name || payload.employeeName || "The requester",
       roleHint: "super-admin",
     });
 
