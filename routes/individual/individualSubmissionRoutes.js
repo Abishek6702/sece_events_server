@@ -1,4 +1,5 @@
 const express = require("express");
+const upload = require("../../middleware/multerConfig");
 const {
   getAllIndividualSubmissions,
   getIndividualSubmissionById,
@@ -27,7 +28,11 @@ router.use(protect);
 
 // Faculty: submit the complete Individual Event Attending request,
 // including optional external transport in the same document.
-router.post("/event-attending", createIndividualEventAttending);
+router.post(
+  "/event-attending",
+  upload.fields([{ name: "principalApprovalForm", maxCount: 1 }]),
+  createIndividualEventAttending,
+);
 
 // Faculty: GET /api/individual-submissions
 // HOD/Head: GET /api/individual-submissions?module=food
