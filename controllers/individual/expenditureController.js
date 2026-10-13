@@ -5,12 +5,14 @@ const IndividualFood = require("../../models/individual/IndividualFood");
 const IndividualTransport = require("../../models/individual/IndividualTransport");
 const IndividualMedia = require("../../models/individual/IndividualMedia");
 const IndividualPurchase = require("../../models/individual/IndividualPurchase");
+const IndividualEventAttending = require("../../models/individual/IndividualEventAttending");
 
 const requestModels = [
-  { module: "food", Model: IndividualFood },
-  { module: "transport", Model: IndividualTransport },
-  { module: "media", Model: IndividualMedia },
-  { module: "purchase", Model: IndividualPurchase },
+  { module: "food", Model: IndividualFood, ownerField: "employee" },
+  { module: "transport", Model: IndividualTransport, ownerField: "employee" },
+  { module: "media", Model: IndividualMedia, ownerField: "employee" },
+  { module: "purchase", Model: IndividualPurchase, ownerField: "employee" },
+  { module: "eventattending", Model: IndividualEventAttending, ownerField: "facultyId" },
 ];
 
 const normalizeRole = (role) =>
@@ -28,8 +30,8 @@ const isRequestOwnedByFaculty = (req, request) => {
   if (!request || !isFaculty(req)) return false;
 
   const currentUserId = String(req.user?.facultyId || req.user?._id || "");
-  const employeeId = String(request.employee || "");
-  return currentUserId && employeeId && currentUserId === employeeId;
+  const requestFacultyId = String(request.employee || request.facultyId || "");
+  return currentUserId && requestFacultyId && currentUserId === requestFacultyId;
 };
 
 const getRequest = async (requestId) => {
@@ -174,7 +176,10 @@ const getUploadedSupportingDocument = (req) => {
 const resolveExpenditureModule = (requestedModule, requestModule) => {
   const module = String(requestedModule || "").toLowerCase().trim();
   if (["others", "miscellaneous", "misc"].includes(module)) return "others";
-  return requestModule;
+  const resolvedModule = String(requestModule || "").toLowerCase().trim();
+  return ["food", "transport", "media", "purchase", "others"].includes(resolvedModule)
+    ? resolvedModule
+    : "combined";
 };
 
 const buildFields = (body = {}) => ({
@@ -357,20 +362,17 @@ const getOverallExpenditure = async (req, res) => {
     if (requestId) {
       const expenditure = await IndividualExpenditure.findOne({ requestId }).lean();
 
-      const requestDoc = await Promise.all(
-        requestModels.map(async ({ module, Model }) => {
-          const doc = await Model.findById(requestId).populate({
-            path: "employee",
-            select: "_id name email phoneNumber department salutation firstName lastName empId designation",
-          }).lean();
-          if (!doc) return null;
+      let requestDoc = null;
+      for (const { module, Model, ownerField } of requestModels) {
+        const doc = await Model.findById(requestId).populate({
+          path: ownerField,
+          select: "_id name email phoneNumber department salutation firstName lastName empId designation",
+        }).lean();
+        if (!doc) continue;
 
-          return {
-            module,
-            request: doc,
-          };
-        }),
-      ).then((results) => results.find((entry) => entry && entry.request) || null);
+        requestDoc = { module, ownerField, request: doc };
+        break;
+      }
 
       if (!expenditure) {
         const request = requestDoc?.request || null;
@@ -398,29 +400,25 @@ const getOverallExpenditure = async (req, res) => {
         });
       }
 
-      const facultyOwner = requestDoc?.request?.employee
-        ? await Faculty.findById(requestDoc.request.employee).lean()
+      const requestOwner = requestDoc?.request?.[requestDoc.ownerField];
+      const facultyOwner = requestOwner
+        ? await Faculty.findById(requestOwner._id || requestOwner).lean()
         : null;
 
       return res.status(200).json({
         success: true,
         message: "Overall expenditure details fetched successfully",
-        data: buildOverallExpenditureSummary(requestDoc, expenditure, facultyOwner),
+        data: buildOverallExpenditureSummary(requestDoc, expenditure, facultyOwner || requestOwner),
       });
     }
 
-    const modelList = [
-      { module: "food", Model: IndividualFood },
-      { module: "transport", Model: IndividualTransport },
-      { module: "media", Model: IndividualMedia },
-      { module: "purchase", Model: IndividualPurchase },
-    ];
+    const modelList = requestModels;
 
     const requestEntries = (
       await Promise.all(
-        modelList.map(async ({ module, Model }) => {
+        modelList.map(async ({ module, Model, ownerField }) => {
           const docs = await Model.find({ finalStatus: "Approved" }).populate({
-            path: "employee",
+            path: ownerField,
             select: "_id name email phoneNumber department",
           }).lean();
 
@@ -429,15 +427,16 @@ const getOverallExpenditure = async (req, res) => {
             requestNo: doc.requestNo || null,
             module,
             status: doc.finalStatus || doc.overallStatus || doc.status || doc.approvalStatus || "Pending",
-            faculty: doc.employee
+            faculty: doc[ownerField]
               ? {
-                  _id: doc.employee._id ? String(doc.employee._id) : null,
-                  name: doc.employee.name || "",
-                  email: doc.employee.email || "",
-                  phoneNumber: doc.employee.phoneNumber || "",
-                  department: doc.employee.department || "",
+                  _id: doc[ownerField]._id ? String(doc[ownerField]._id) : null,
+                  name: doc[ownerField].name || "",
+                  email: doc[ownerField].email || "",
+                  phoneNumber: doc[ownerField].phoneNumber || "",
+                  department: doc[ownerField].department || "",
                 }
               : null,
+            ownerField,
             _requestDoc: doc,
           }));
         })
@@ -456,9 +455,9 @@ const getOverallExpenditure = async (req, res) => {
 
     const entries = requestEntries.filter((entry) => expenditureMap.has(entry.requestId)).map((entry) => {
       const expenditure = expenditureMap.get(entry.requestId) || null;
-      const facultyOwner = entry._requestDoc?.employee || null;
+      const facultyOwner = entry._requestDoc?.[entry.ownerField] || null;
       const summary = buildOverallExpenditureSummary(
-        { request: entry._requestDoc },
+        { request: entry._requestDoc, ownerField: entry.ownerField },
         expenditure,
         facultyOwner,
       );
@@ -496,9 +495,9 @@ const getFacultyExpenditureList = async (req, res) => {
     }
 
     const requestResults = await Promise.all(
-      requestModels.map(async ({ Model }) => {
-        const docs = await Model.find({ employee: facultyId })
-          .select("_id requestNo module status createdAt date pickupDateTime dropDateTime deliveryDate")
+      requestModels.map(async ({ Model, ownerField }) => {
+        const docs = await Model.find({ [ownerField]: facultyId })
+          .select("_id requestNo module status finalStatus createdAt date pickupDateTime dropDateTime deliveryDate programFromDate")
           .lean();
         return docs;
       }),
@@ -563,8 +562,9 @@ const getExpenditure = async (req, res) => {
       return res.status(403).json({ success: false, message: "Faculty can only view their own expenditure details" });
     }
 
-    const requestOwner = result.resolved.request?.employee
-      ? await Faculty.findById(result.resolved.request.employee).lean()
+    const requestFacultyId = result.resolved.request?.employee || result.resolved.request?.facultyId;
+    const requestOwner = requestFacultyId
+      ? await Faculty.findById(requestFacultyId).lean()
       : null;
 
     const facultyBasicDetails = shouldIncludeFacultyBasicDetails(req)
