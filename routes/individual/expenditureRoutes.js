@@ -9,6 +9,7 @@ const {
   updateExpenditure,
   approveExpenditure,
   rejectExpenditure,
+  deleteExpenditure,
 } = require("../../controllers/individual/expenditureController");
 
 const router = express.Router();
@@ -33,4 +34,5 @@ router.put(
 );
 router.put("/:expenditureId/approve", approveExpenditure);
 router.put("/:expenditureId/reject", rejectExpenditure);
+router.delete("/:expenditureId", deleteExpenditure);
 module.exports = router;
