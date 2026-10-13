@@ -1,5 +1,9 @@
 ﻿const mongoose = require("mongoose");
 const Event = require("../models/Event.js");
+
+const EventExpenditure = require("../models/EventExpenditure");
+const EventClosingDocument = require("../models/EventClosingDocumentSchema.js");
+const Feedback = require("../models/Feedback");
 const {
   getAvailableRooms,
 } = require("../utils/accommodationAvailabilityService");
@@ -22,6 +26,8 @@ const { allocateDefaultMediaStaff } = require("../utils/mediaStaffAllocation");
 // const {
 //   handleTransportSubmission,
 // } = require("../utils/transportSubmissionHandler.js");
+
+
 
 const assignIQACNumber = require("../utils/assignIQACNumber");
 
@@ -2122,5 +2128,110 @@ exports.checkFacultyEventRestriction = async (req, res) => {
   } catch (error) {
     console.error("Check Faculty Event Restriction Error:", error);
     return res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+
+exports.resetEventClosing = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid event ID",
+    });
+  }
+
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const event = await Event.findById(id).session(session);
+
+    if (!event) {
+      await session.abortTransaction();
+
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    // Delete only records belonging to this event
+    const expenditureResult =
+      await EventExpenditure.deleteMany(
+        { eventId: event._id },
+        { session }
+      );
+
+    const closingDocumentResult =
+      await EventClosingDocument.deleteMany(
+        { eventId: event._id },
+        { session }
+      );
+
+    const feedbackResult = await Feedback.deleteMany(
+      { eventId: event._id },
+      { session }
+    );
+
+    // Reset the event's closing workflow
+    event.isDocumentsCompleted = false;
+    event.isExpenditureCompleted = false;
+    event.isFeedbackCompleted = false;
+    event.documentExpenditureApproved = false;
+    event.isClosed = false;
+
+    // Reopen the event at the approved stage
+    event.status = "Approved";
+
+    // Clear references to deleted feedback documents
+    event.feedbacks = [];
+
+    // Clear the closure timestamp
+    if (event.timeline) {
+      event.timeline.closedAt = null;
+    }
+
+    await event.save({ session });
+
+    await session.commitTransaction();
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Event closing process reset successfully",
+      data: {
+        eventId: event._id,
+        status: event.status,
+        isDocumentsCompleted: event.isDocumentsCompleted,
+        isExpenditureCompleted: event.isExpenditureCompleted,
+        isFeedbackCompleted: event.isFeedbackCompleted,
+        documentExpenditureApproved:
+          event.documentExpenditureApproved,
+        isClosed: event.isClosed,
+        deleted: {
+          expenditures: expenditureResult.deletedCount,
+          closingDocuments:
+            closingDocumentResult.deletedCount,
+          feedbacks: feedbackResult.deletedCount,
+        },
+      },
+    });
+  } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+
+    console.error("Reset event closing error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to reset event closing process",
+      error: error.message,
+    });
+  } finally {
+    await session.endSession();
   }
 };
