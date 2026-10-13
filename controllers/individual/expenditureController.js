@@ -806,6 +806,35 @@ const reviewExpenditure = async (req, res, action) => {
 const approveExpenditure = (req, res) => reviewExpenditure(req, res, "approve");
 const rejectExpenditure = (req, res) => reviewExpenditure(req, res, "reject");
 
+const deleteExpenditure = async (req, res) => {
+  if (!isSuperAdmin(req)) {
+    return res.status(403).json({
+      success: false,
+      message: "Only Super Admin 1 and Super Admin 2 can delete expenditure details",
+    });
+  }
+
+  const { expenditureId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(expenditureId)) {
+    return res.status(404).json({ success: false, message: "Expenditure details not found" });
+  }
+
+  try {
+    const expenditure = await IndividualExpenditure.findByIdAndDelete(expenditureId);
+    if (!expenditure) {
+      return res.status(404).json({ success: false, message: "Expenditure details not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Expenditure details deleted successfully",
+      data: expenditure,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   requestModels,
   closeApprovedRequestOnExpenditure,
@@ -822,4 +851,5 @@ module.exports = {
   resetExpenditureApprovalState,
   approveExpenditure,
   rejectExpenditure,
+  deleteExpenditure,
 };
