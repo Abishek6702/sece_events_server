@@ -12,6 +12,7 @@ const MODULE_LABELS = {
   purchase: "Purchase",
   transport: "Transport",
   media: "Media",
+  eventattending: "Event Attending",
 };
 
 const getActorDisplayName = (request, actorName) => {

@@ -1,4 +1,5 @@
 const express = require("express");
+const upload = require("../../middleware/multerConfig");
 const {
   getAllIndividualSubmissions,
   getIndividualSubmissionById,
@@ -16,6 +17,7 @@ const {
   superAdminApproval,
   headApproval,
   closeIndividualSubmission,
+  createIndividualEventAttending,
 } = require("../../controllers/individual/individualSubmissionController");
 
 const protect = require("../../middleware/protect");
@@ -23,6 +25,14 @@ const protect = require("../../middleware/protect");
 const router = express.Router();
 
 router.use(protect);
+
+// Faculty: submit the complete Individual Event Attending request,
+// including optional external transport in the same document.
+router.post(
+  "/event-attending",
+  upload.fields([{ name: "principalApprovalForm", maxCount: 1 }]),
+  createIndividualEventAttending,
+);
 
 // Faculty: GET /api/individual-submissions
 // HOD/Head: GET /api/individual-submissions?module=food
