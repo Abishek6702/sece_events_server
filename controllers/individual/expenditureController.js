@@ -19,7 +19,7 @@ const normalizeRole = (role) =>
   String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
 
 const isSuperAdmin = (req) =>
-  ["super admin", "super admin 1", "super admin 2", "admin secretary"].includes(normalizeRole(req.user?.role));
+  ["super admin", "super admin 1", "super admin 2", "super admin 3", "admin secretary"].includes(normalizeRole(req.user?.role));
 
 const isFaculty = (req) => normalizeRole(req.user?.role) === "faculty";
 
@@ -352,7 +352,7 @@ const getOverallExpenditure = async (req, res) => {
   if (!isSuperAdmin(req)) {
     return res.status(403).json({
       success: false,
-      message: "Only Super Admin 1 and Super Admin 2 can view overall expenditure details",
+      message: "Only Super Admin users can view overall expenditure details",
     });
   }
 
@@ -551,7 +551,7 @@ const getFacultyExpenditureList = async (req, res) => {
 
 const getExpenditure = async (req, res) => {
   if (!isSuperAdmin(req) && !isFaculty(req)) {
-    return res.status(403).json({ success: false, message: "Only faculty, Super Admin 1 and Super Admin 2 can view expenditure details" });
+    return res.status(403).json({ success: false, message: "Only faculty and Super Admin users can view expenditure details" });
   }
 
   try {
@@ -746,7 +746,7 @@ const reviewExpenditure = async (req, res, action) => {
   if (!isSuperAdmin(req)) {
     return res.status(403).json({
       success: false,
-      message: "Only Super Admin 1 and Super Admin 2 can review expenditure details",
+      message: "Only Super Admin users can review expenditure details",
     });
   }
 
@@ -810,7 +810,7 @@ const deleteExpenditure = async (req, res) => {
   if (!isSuperAdmin(req)) {
     return res.status(403).json({
       success: false,
-      message: "Only Super Admin 1 and Super Admin 2 can delete expenditure details",
+      message: "Only Super Admin users can delete expenditure details",
     });
   }
 

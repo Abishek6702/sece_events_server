@@ -10,7 +10,7 @@ const normalizeRole = (value = "") => String(value || "").trim().toLowerCase();
 const normalizeDepartment = (value = "") => String(value || "").trim().toLowerCase();
 
 const isSuperAdminRole = (role = "") =>
-  ["super admin", "super admin 1", "super admin 2", "admin secretary"].includes(normalizeRole(role));
+  ["super admin", "super admin 1", "super admin 2", "super admin 3", "admin secretary"].includes(normalizeRole(role));
 const isFacultyRole = (role = "") => normalizeRole(role) === "faculty";
 
 const isHeadTicketingUser = (user = {}) => {
@@ -212,7 +212,7 @@ exports.getFacultyTicketingRequests = async (req, res) => {
 exports.getSuperAdminTicketingRequests = async (req, res) => {
   try {
     if (!isSuperAdminRole(req.user?.role)) {
-      return res.status(403).json({ success: false, message: "Only Super Admin 1 and Super Admin 2 can access this endpoint." });
+      return res.status(403).json({ success: false, message: "Only Super Admin users can access this endpoint." });
     }
 
     const tickets = await IndividualTicketing.find({
@@ -228,7 +228,7 @@ exports.getSuperAdminTicketingRequests = async (req, res) => {
 exports.editTicketingRequest = async (req, res) => {
   try {
     if (!isSuperAdminRole(req.user?.role)) {
-      return res.status(403).json({ success: false, message: "Only Super Admin 1 and Super Admin 2 can edit ticket requests." });
+      return res.status(403).json({ success: false, message: "Only Super Admin users can edit ticket requests." });
     }
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -285,7 +285,7 @@ exports.editTicketingRequest = async (req, res) => {
 exports.approveTicketingRequest = async (req, res) => {
   try {
     if (!isSuperAdminRole(req.user?.role)) {
-      return res.status(403).json({ success: false, message: "Only Super Admin 1 and Super Admin 2 can approve ticket requests." });
+      return res.status(403).json({ success: false, message: "Only Super Admin users can approve ticket requests." });
     }
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -299,6 +299,7 @@ exports.approveTicketingRequest = async (req, res) => {
 
     const normalizedRole = normalizeRole(req.user.role);
     const adminNumber = normalizedRole === "super admin 1" ? 1 : 2;
+    const adminLabel = normalizedRole === "super admin 3" ? "Super Admin 3" : `Super Admin ${adminNumber}`;
     const approvalField = adminNumber === 1 ? "superAdmin1Approval" : "superAdmin2Approval";
 
     if (["Approved", "Rejected"].includes(request.status)) {
@@ -336,7 +337,7 @@ exports.approveTicketingRequest = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Ticket request approved by Super Admin ${adminNumber}.`,
+      message: `Ticket request approved by ${adminLabel}.`,
       data: request,
     });
   } catch (error) {
@@ -347,7 +348,7 @@ exports.approveTicketingRequest = async (req, res) => {
 exports.rejectTicketingRequest = async (req, res) => {
   try {
     if (!isSuperAdminRole(req.user?.role)) {
-      return res.status(403).json({ success: false, message: "Only Super Admin 1 and Super Admin 2 can reject ticket requests." });
+      return res.status(403).json({ success: false, message: "Only Super Admin users can reject ticket requests." });
     }
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -361,6 +362,7 @@ exports.rejectTicketingRequest = async (req, res) => {
 
     const normalizedRole = normalizeRole(req.user.role);
     const adminNumber = normalizedRole === "super admin 1" ? 1 : 2;
+    const adminLabel = normalizedRole === "super admin 3" ? "Super Admin 3" : `Super Admin ${adminNumber}`;
     const approvalField = adminNumber === 1 ? "superAdmin1Approval" : "superAdmin2Approval";
 
     if (["Rejected", "Completed", "Acknowledged"].includes(request.status)) {
@@ -402,7 +404,7 @@ exports.rejectTicketingRequest = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Ticket request rejected by Super Admin ${adminNumber}.`,
+      message: `Ticket request rejected by ${adminLabel}.`,
       data: request,
     });
   } catch (error) {

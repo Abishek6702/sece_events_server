@@ -344,13 +344,15 @@ exports.updateFood = async (req, res) => {
   try {
     // preserve existing non-admin update behavior
     const role = String(req.user?.role || "").toLowerCase().replace(/\s+/g, " ");
-    const isSuperAdmin = ["super admin", "super admin 1", "super admin 2", "admin secretary"].includes(role);
+    const isSuperAdmin = ["super admin", "super admin 1", "super admin 2", "super admin 3", "admin secretary"].includes(role);
     const isAdminLike = [
       "super admin",
       "super admin 1",
       "super admin 2",
+      "super admin 3",
       "superadmin1",
       "superadmin2",
+      "superadmin3",
       "superadmin",
       "admin secretary",
       "admin",

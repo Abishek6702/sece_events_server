@@ -7,6 +7,11 @@ const requiredDocumentNames = [
   "Report Required Document",
   "Certificate Required Document",
 ];
+const documentFieldNames = {
+  doc_jio_tag_required_document_file: "Jio Tag Required Document",
+  doc_report_required_document_file: "Report Required Document",
+  doc_certificate_required_document_file: "Certificate Required Document",
+};
 const validateDocumentUrl = (value) => {
   if (value === "") return true;
 
@@ -60,17 +65,84 @@ const normalizeDocuments = (documents) => {
   return { documents: normalizedDocuments };
 };
 
+const validateDocumentsField = (documents) => {
+  let parsedDocuments = documents;
+
+  if (typeof documents === "string") {
+    try {
+      parsedDocuments = JSON.parse(documents);
+    } catch {
+      return { error: "documents must contain valid JSON." };
+    }
+  }
+
+  return normalizeDocuments(parsedDocuments);
+};
+
+const normalizeSubmittedDocuments = (documents, files = []) => {
+  const initialDocuments =
+    documents === undefined
+      ? requiredDocumentNames.map((documentName) => ({ documentName, documentUrl: "" }))
+      : documents;
+  const normalized = validateDocumentsField(initialDocuments);
+
+  if (normalized.error) {
+    return normalized;
+  }
+
+  for (const file of files) {
+    const documentName = documentFieldNames[file.fieldname];
+    if (!documentName) {
+      return { error: `Unexpected file field '${file.fieldname}'.` };
+    }
+
+    const documentUrl = file.path || file.secure_url || file.url || "";
+    if (!documentUrl) {
+      return { error: `Uploaded file for '${documentName}' has no URL.` };
+    }
+
+    const document = normalized.documents.find((entry) => entry.documentName === documentName);
+    document.documentUrl = documentUrl;
+    document.status = "Submitted";
+  }
+
+  return normalized;
+};
+
+const normalizeEventId = (value) => {
+  if (value && typeof value === "object" && value._id !== undefined) {
+    return normalizeEventId(value._id);
+  }
+
+  if (typeof value !== "string" && !mongoose.isValidObjectId(value)) {
+    return null;
+  }
+
+  const eventId = String(value).trim();
+  const wrappedObjectId = eventId.match(/^ObjectId\(['"]([a-f\d]{24})['"]\)$/i);
+  const normalizedEventId = wrappedObjectId ? wrappedObjectId[1] : eventId;
+
+  return mongoose.isValidObjectId(normalizedEventId) ? normalizedEventId : null;
+};
+
 const isValidEventId = (eventId) =>
   typeof eventId === "string" && mongoose.isValidObjectId(eventId);
 
-const toResponseData = (checklist) => ({
-  event: checklist.event.toString(),
-  documents: checklist.documents.map(({ documentName, documentUrl, status }) => ({
+const toResponseData = (checklist) => {
+  const documents = checklist.documents.map(({ documentName, documentUrl, status }) => ({
     documentName,
     documentUrl,
     status,
-  })),
-});
+  }));
+
+  return {
+    event: checklist.event.toString(),
+    documentCompleted:
+      documents.length === requiredDocumentNames.length &&
+      documents.every((document) => document.status === "Submitted"),
+    documents,
+  };
+};
 
 const respondWithError = (res, error, operation) => {
   if (error.code === 11000) {
@@ -92,16 +164,17 @@ const respondWithError = (res, error, operation) => {
 };
 
 exports.createDocuments = async (req, res) => {
-  const { event, documents } = req.body || {};
+  const { documents } = req.body || {};
+  const event = normalizeEventId(req.body?.event);
 
   if (!isValidEventId(event)) {
     return res.status(400).json({
       success: false,
-      message: "event must be a valid event ID.",
+      message: "event must be a 24-character MongoDB _id of an IndividualEventAttending request.",
     });
   }
 
-  const normalized = normalizeDocuments(documents);
+  const normalized = normalizeSubmittedDocuments(documents, req.files || []);
   if (normalized.error) {
     return res.status(400).json({ success: false, message: normalized.error });
   }
@@ -178,7 +251,7 @@ exports.updateDocuments = async (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid event ID." });
   }
 
-  const normalized = normalizeDocuments(req.body?.documents);
+  const normalized = validateDocumentsField(req.body?.documents);
   if (normalized.error) {
     return res.status(400).json({ success: false, message: normalized.error });
   }
