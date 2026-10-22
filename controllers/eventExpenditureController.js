@@ -204,10 +204,12 @@ exports.createEventExpenditure = async (req, res) => {
 
 exports.getEventExpenditures = async (req, res) => {
   try {
-    const expenditures = await EventExpenditure.find().populate(
-      "eventId",
-      "requestDetails.eventDetails.eventName requestDetails.eventDetails.eventSchedule  requestDetails.eventDetails.eventType iqacNumber status documentExpenditureApproved",
-    );
+    const expenditures = await EventExpenditure.find()
+      .populate(
+        "eventId",
+        "requestDetails.eventDetails.eventName requestDetails.eventDetails.eventSchedule  requestDetails.eventDetails.eventType iqacNumber status documentExpenditureApproved",
+      )
+      .sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
       count: expenditures.length,
