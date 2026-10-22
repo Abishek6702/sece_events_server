@@ -64,7 +64,7 @@ const resolveEmployee = async (employeeRef) => {
 
 const populateSubmissionEmployee = (query, Model) =>
   Model === IndividualEventAttending
-    ? query.populate("facultyId")
+    ? query
     : query.populate("employee");
 
 const buildSubmissionItem = (item, formType, resolvedEmployee) => {
@@ -108,7 +108,7 @@ const buildSubmissionItem = (item, formType, resolvedEmployee) => {
   return {
     id: item._id,
     formType,
-    ...(item.externalTransportRequired === true
+    ...(isExternalTransportRequest(item)
       ? { department: "Externaltransport" }
       : {}),
     // Prefer resolved name, fallback to resolved email, then populated item name/email,
@@ -141,6 +141,14 @@ const normalizeRole = (role = "") =>
     .replace(/\s+/g, " ")
     .trim();
 
+const isExternalTransportHeadUser = (user = {}) =>
+  normalizeRole(user.role) === "head" &&
+  ["externaltransport", "external transport"].includes(normalizeRole(user.department));
+
+const isExternalTransportRequest = (item = {}) =>
+  String(item.transport || "").trim().toLowerCase() === "yes" &&
+  item.transportRequired === true;
+
 const isReviewerRole = (role = "") => {
   const normalizedRole = normalizeRole(role);
   return [
@@ -153,6 +161,7 @@ const isReviewerRole = (role = "") => {
     "super admin",
     "super admin 1",
     "super admin 2",
+    "super admin 3",
     "admin secretary",
   ].includes(normalizedRole);
 };
@@ -169,7 +178,7 @@ const isHodRole = (role = "") => {
 
 const isSuperAdminRole = (role = "") => {
   const normalizedRole = normalizeRole(role);
-  return ["super admin", "super admin 1", "super admin 2", "admin secretary"].includes(normalizedRole);
+  return ["super admin", "super admin 1", "super admin 2", "super admin 3", "admin secretary"].includes(normalizedRole);
 };
 
 const buildApprovalEntry = (user, roleLabel, action, reason) => ({
@@ -265,7 +274,7 @@ const getModuleHeadRole = (model, item = null) => {
   if (model === IndividualTransport) return "transport head";
   if (model === IndividualMedia) return "media head";
   if (model === IndividualEventAttending) {
-    return item?.externalTransportRequired === true
+    return isExternalTransportRequest(item)
       ? "external transport head"
       : "event attending head";
   }
@@ -274,7 +283,7 @@ const getModuleHeadRole = (model, item = null) => {
 };
 
 const applySuperAdminApprovalOutcome = (item, model) => {
-  if (model === IndividualEventAttending && item.externalTransportRequired !== true) {
+  if (model === IndividualEventAttending && !isExternalTransportRequest(item)) {
     item.workflowStage = "Completed";
     item.finalStatus = "Completed";
     setSubmissionStatus(item, "Completed");
@@ -551,20 +560,15 @@ const buildSubmissionFilter = async ({
 
   const normalizedModule = String(module || "").toLowerCase().trim();
   const normalizedDepartment = String(user?.department || "").toLowerCase().trim();
-
-  if (
-    ["eventattending", "event-attending"].includes(normalizedModule) &&
-    role === "external transport head"
-  ) {
-    filter.externalTransportRequired = true;
-  }
+  const isExternalTransportHead = isExternalTransportHeadUser(user);
 
   const isModuleHead =
     normalizedModule &&
     (role === `${normalizedModule} head` ||
       (isDepartmentHead && normalizedDepartment === normalizedModule));
 
-  const isActualDepartmentHead = isDepartmentHead && !isModuleHead;
+  const isActualDepartmentHead =
+    isDepartmentHead && !isModuleHead && !isExternalTransportHead;
 
 
 
@@ -572,6 +576,7 @@ const buildSubmissionFilter = async ({
     "super admin": "SuperAdmin1",
     "super admin 1": "SuperAdmin1",
     "super admin 2": "SuperAdmin2",
+    "super admin 3": "SuperAdmin2",
     "admin secretary": "SuperAdmin1",
   };
 
@@ -650,6 +655,16 @@ const buildSubmissionFilter = async ({
       // Regular reviewers only see admin-approved submissions for the requested module.
       Object.assign(filter, buildAdminApprovedFilter(normalizedModule));
     }
+  }
+
+  if (
+    ["eventattending", "event-attending"].includes(normalizedModule) &&
+    isExternalTransportHead
+  ) {
+    filter.$and = [
+      ...(filter.$and || []),
+      { transport: /^\s*yes\s*$/i, transportRequired: true },
+    ];
   }
 
   // console.log("buildSubmissionFilter generated filter:", filter);
@@ -872,7 +887,11 @@ const getAllIndividualSubmissions = async (req, res) => {
     const { facultyId, module, includeAll } = req.query;
     const currentUser = req.user || {};
 
-    const normalizedModule = String(module || getModuleKeyFromHeadRole(currentUser.role))
+    const normalizedModule = String(
+      module ||
+        getModuleKeyFromHeadRole(currentUser.role) ||
+        (isExternalTransportHeadUser(currentUser) ? "eventattending" : ""),
+    )
       .toLowerCase()
       .trim();
 
@@ -973,6 +992,17 @@ const getIndividualSubmissionById = async (req, res) => {
     }
 
     const { item, Model } = submission;
+    if (
+      isExternalTransportHeadUser(req.user) &&
+      Model === IndividualEventAttending &&
+      !isExternalTransportRequest(item)
+    ) {
+      return res.status(404).json({
+        success: false,
+        message: "Individual submission not found",
+      });
+    }
+
     let formType = "Unknown";
 
     if (Model === IndividualFood) formType = "Food";
@@ -1048,7 +1078,11 @@ const getRequestByFacultyModule = async (req, res) => {
       eventattending: IndividualEventAttending,
     };
 
-    const moduleKeyFromQuery = String(module || getModuleKeyFromHeadRole(currentUser.role))
+    const moduleKeyFromQuery = String(
+      module ||
+        getModuleKeyFromHeadRole(currentUser.role) ||
+        (isExternalTransportHeadUser(currentUser) ? "eventattending" : ""),
+    )
       .toLowerCase()
       .trim();
     const targetModules = moduleKeyFromQuery
@@ -1079,7 +1113,7 @@ const getRequestByFacultyModule = async (req, res) => {
         requestId: item._id,
         id: item._id,
         formType,
-        ...(item.externalTransportRequired === true
+        ...(isExternalTransportRequest(item)
           ? { department: "Externaltransport" }
           : {}),
         requestNo: item.requestNo || null,
@@ -1133,6 +1167,13 @@ const getRequestByFacultyModule = async (req, res) => {
           resolved.Model,
         ).lean();
         foundModelKey = getModuleKeyFromModel(resolved.Model) || null;
+      }
+
+      if (
+        isExternalTransportHeadUser(currentUser) &&
+        (foundModelKey !== "eventattending" || !isExternalTransportRequest(submission))
+      ) {
+        return res.status(404).json({ success: false, message: "Individual submission not found" });
       }
 
       const formType = foundModelKey ? parseFormType(foundModelKey) : "Unknown";
@@ -1409,7 +1450,7 @@ const superAdminApproval = async (req, res) => {
     if (!isSuperAdminRole(role)) {
       return res.status(403).json({
         success: false,
-        message: "Only Super Admin 1 and Super Admin 2 users can perform this action",
+        message: "Only Super Admin users can perform this action",
       });
     }
 
@@ -1462,7 +1503,7 @@ const superAdminApproval = async (req, res) => {
     upsertApprovalHistoryEntry(
       item,
       buildApprovalHistoryEntry({
-        role: role === "super admin 1" ? "super admin 1" : "super admin 2",
+        role,
         approvedBy: currentUser._id,
         action: action === "approve" ? "Approved" : "Rejected",
         remarks: action === "approve" ? "Approved" : reason,
@@ -1560,17 +1601,16 @@ const headApproval = async (req, res) => {
       });
     }
 
-    const isExternalTransportRequest =
-      submission.Model === IndividualEventAttending && item.externalTransportRequired === true;
+    const isExternalTransportRequestItem =
+      submission.Model === IndividualEventAttending && isExternalTransportRequest(item);
     const expectedHeadRole = getModuleHeadRole(submission.Model, item);
     const moduleKey = getModuleKeyFromModel(submission.Model);
     const normalizedDepartment = String(currentUser.department || "")
       .toLowerCase()
       .trim();
 
-    const allowedAsHead = isExternalTransportRequest
-      ? role === "external transport head" ||
-        (role === "head" && ["externaltransport", "external transport"].includes(normalizedDepartment))
+    const allowedAsHead = isExternalTransportRequestItem
+      ? isExternalTransportHeadUser(currentUser)
       : isModuleHeadRole(role, submission.Model) ||
         (isHodRole(role) && normalizedDepartment === moduleKey);
 
@@ -1581,7 +1621,7 @@ const headApproval = async (req, res) => {
       });
     }
 
-    const allowedActions = isExternalTransportRequest
+    const allowedActions = isExternalTransportRequestItem
       ? ["approve", "acknowledge", "complete", "reject"]
       : ["acknowledge", "complete", "reject"];
     if (!allowedActions.includes(action)) {

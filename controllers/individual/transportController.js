@@ -364,8 +364,8 @@ exports.getSingleTransport = async (req, res) => {
 exports.updateTransport = async (req, res) => {
   try {
     const role = String(req.user?.role || "").toLowerCase().replace(/\s+/g, " ");
-    const isSuperAdmin = ["super admin", "super admin 1", "super admin 2", "admin secretary"].includes(role);
-    const isAdminLike = ["super admin","super admin 1","super admin 2","superadmin1","superadmin2","superadmin","admin secretary","admin","administrator"].includes(role);
+    const isSuperAdmin = ["super admin", "super admin 1", "super admin 2", "super admin 3", "admin secretary"].includes(role);
+    const isAdminLike = ["super admin","super admin 1","super admin 2","super admin 3","superadmin1","superadmin2","superadmin3","superadmin","admin secretary","admin","administrator"].includes(role);
 
     if (Object.prototype.hasOwnProperty.call(req.body || {}, "guests")) {
       const parsedGuests = parseJsonField(req.body.guests);

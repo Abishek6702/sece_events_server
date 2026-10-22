@@ -68,7 +68,12 @@ assert.strictEqual(mediaItem.status, "Completed");
 controller.setSubmissionStatus(mediaItem, "Rejected");
 assert.strictEqual(mediaItem.status, "Rejected");
 
-const internalEvent = { constructor: { modelName: "IndividualEventAttending" }, externalTransportRequired: false };
+const internalEvent = {
+  constructor: { modelName: "IndividualEventAttending" },
+  transport: "No",
+  transportRequired: false,
+  externalTransportRequired: true,
+};
 assert.strictEqual(
   controller.applySuperAdminApprovalOutcome(internalEvent, IndividualEventAttending),
   null,
@@ -77,7 +82,11 @@ assert.strictEqual(internalEvent.workflowStage, "Completed");
 assert.strictEqual(internalEvent.finalStatus, "Completed");
 assert.strictEqual(internalEvent.status, "Completed");
 
-const externalEvent = { constructor: { modelName: "IndividualEventAttending" }, externalTransportRequired: true };
+const externalEvent = {
+  constructor: { modelName: "IndividualEventAttending" },
+  transport: "Yes",
+  transportRequired: true,
+};
 assert.strictEqual(
   controller.applySuperAdminApprovalOutcome(externalEvent, IndividualEventAttending),
   "external transport head",
@@ -87,7 +96,8 @@ assert.strictEqual(externalEvent.finalStatus, "Pending");
 
 const externalHeadApprovedEvent = {
   constructor: { modelName: "IndividualEventAttending" },
-  externalTransportRequired: true,
+  transport: "Yes",
+  transportRequired: true,
   approvalHistory: [],
 };
 controller.applyExternalTransportHeadApproval(externalHeadApprovedEvent, "head-1");
@@ -98,14 +108,14 @@ assert.strictEqual(externalHeadApprovedEvent.headApproval.status, "Completed");
 assert.strictEqual(externalHeadApprovedEvent.approvalHistory[0].role, "external transport head");
 
 const externalTransportResponse = controller.buildSubmissionItem(
-  { _id: "request-1", externalTransportRequired: true },
+  { _id: "request-1", transport: "Yes", transportRequired: true },
   "Event Attending",
   null,
 );
 assert.strictEqual(externalTransportResponse.department, "Externaltransport");
 
 const internalTransportResponse = controller.buildSubmissionItem(
-  { _id: "request-2", externalTransportRequired: false },
+  { _id: "request-2", transport: "No", transportRequired: false },
   "Event Attending",
   null,
 );
@@ -114,11 +124,45 @@ assert.strictEqual(Object.hasOwn(internalTransportResponse, "department"), false
 (async () => {
   const externalHeadFilter = await controller.buildSubmissionFilter({
     module: "eventattending",
-    user: { role: "External Transport Head" },
+    user: { role: "head", department: "Externaltransport" },
     applyReviewFilter: true,
   });
-  assert.strictEqual(externalHeadFilter.externalTransportRequired, true);
   assert.strictEqual(externalHeadFilter.employee, undefined);
+  assert(
+    externalHeadFilter.$and.some(
+      (condition) => condition.transport?.toString() === "/^\\s*yes\\s*$/i" && condition.transportRequired === true,
+    ),
+  );
+
+  const internalEventWithTransportFlag = {
+    constructor: { modelName: "IndividualEventAttending" },
+    transport: "No",
+    transportRequired: false,
+    externalTransportRequired: true,
+  };
+  assert.strictEqual(
+    controller.applySuperAdminApprovalOutcome(
+      internalEventWithTransportFlag,
+      IndividualEventAttending,
+    ),
+    null,
+  );
+  assert.strictEqual(internalEventWithTransportFlag.workflowStage, "Completed");
+
+  for (const event of [
+    { transport: "Yes", transportRequired: false },
+    { transport: "No", transportRequired: true },
+  ]) {
+    const request = {
+      constructor: { modelName: "IndividualEventAttending" },
+      ...event,
+    };
+    assert.strictEqual(
+      controller.applySuperAdminApprovalOutcome(request, IndividualEventAttending),
+      null,
+    );
+    assert.strictEqual(request.workflowStage, "Completed");
+  }
 
   console.log("workflow history tests passed");
 })().catch((error) => {
