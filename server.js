@@ -33,6 +33,7 @@ const eventClosingDocumentRoutes = require("./routes/eventClosingDocumentRoutes"
 const eventExpenditureRoutes = require("./routes/eventExpenditureRoutes");
 const individualTicketingRoutes = require("./routes/individualTicketingRoutes");
 const individualEventAttendingRoutes = require("./routes/individual/individualEventAttendingRoutes");
+const individualAttendanceRoutes = require("./routes/individual/individualAttendanceRoutes");
 const {
   startBackupService,
   stopBackupService,
@@ -118,6 +119,7 @@ app.use("/api/event-closing-documents", eventClosingDocumentRoutes);
 app.use("/api/event-expenditures", eventExpenditureRoutes);
 app.use("/api/individual-ticketing", individualTicketingRoutes);
 app.use("/api/individual-event-attending", individualEventAttendingRoutes);
+app.use("/api/individual-attendance", individualAttendanceRoutes);
 
 const PORT = process.env.PORT || 5000;
 

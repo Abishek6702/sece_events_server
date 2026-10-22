@@ -60,6 +60,7 @@ const expenditureSchema = new mongoose.Schema(
     purchase: { type: [expenditureItemSchema], default: undefined },
     media: { type: [expenditureItemSchema], default: undefined },
     others: { type: [expenditureItemSchema], default: undefined },
+    eventattending: { type: [expenditureItemSchema], default: undefined },
     supportingDocument: { type: supportingDocumentSchema, default: null },
     remarks: { type: String, trim: true, default: "" },
     superAdmin1Approval: { type: expenditureApprovalSchema, default: () => ({}) },

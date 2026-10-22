@@ -21,6 +21,10 @@ const normalizeDashboardRole = (role = "") =>
     .toLowerCase()
     .replace(/[_\s-]+/g, "");
 
+const isExternalTransportHead = (user = {}) =>
+  normalizeDashboardRole(user.role) === "head" &&
+  normalizeDashboardRole(user.department) === "externaltransport";
+
 const getIndividualScopeQuery = (req = {}) => {
   const role = normalizeDashboardRole(String(req?.user?.role || ""));
 
@@ -58,6 +62,7 @@ const isAdminLikeRole = (role = "") => {
   return [
     "superadmin1",
     "superadmin2",
+    "superadmin3",
     "superadmin",
     "adminsecretary",
     "admin",
@@ -145,7 +150,11 @@ const buildScopedQuery = (req, extraQuery = {}) => {
 };
 
 const getIndividualModuleStats = async (Model, req) => {
-  const baseQuery = buildScopedQuery(req);
+  const externalTransportQuery =
+    Model === IndividualEventAttending && isExternalTransportHead(req.user)
+      ? { transport: /^\s*yes\s*$/i, transportRequired: true }
+      : {};
+  const baseQuery = buildScopedQuery(req, externalTransportQuery);
 
   const records = await Model.find(baseQuery)
     .select("finalStatus overallStatus status")
@@ -217,6 +226,10 @@ const getIndividualHeadStats = async (Model, req) => {
     ],
   };
 
+  if (Model === IndividualEventAttending && isExternalTransportHead(req.user)) {
+    query.$and.push({ transport: /^\s*yes\s*$/i, transportRequired: true });
+  }
+
   const [total, pending, acknowledged, completed] = await Promise.all([
     Model.countDocuments(query),
     Model.countDocuments({ $and: [query, { "headApproval.status": "Pending" }] }),
@@ -233,7 +246,11 @@ const getIndividualHeadStats = async (Model, req) => {
 };
 
 const getIndividualModuleBreakdowns = async (Model, req) => {
-  let query = Model.find(buildScopedQuery(req));
+  const externalTransportQuery =
+    Model === IndividualEventAttending && isExternalTransportHead(req.user)
+      ? { transport: /^\s*yes\s*$/i, transportRequired: true }
+      : {};
+  let query = Model.find(buildScopedQuery(req, externalTransportQuery));
 
   if (Model === IndividualEventAttending) {
     query = query.populate({ path: "facultyId", select: "name department email" });

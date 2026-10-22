@@ -19,7 +19,7 @@ const normalizeRole = (role) =>
   String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
 
 const isSuperAdmin = (req) =>
-  ["super admin", "super admin 1", "super admin 2", "admin secretary"].includes(normalizeRole(req.user?.role));
+  ["super admin", "super admin 1", "super admin 2", "super admin 3", "admin secretary"].includes(normalizeRole(req.user?.role));
 
 const isFaculty = (req) => normalizeRole(req.user?.role) === "faculty";
 
@@ -244,7 +244,7 @@ const getSectionFile = (req, sectionName, itemIndex = 0) => {
 };
 
 const getCombinedExpenditure = (body, req) => {
-  const sections = ["food", "transport", "purchase", "media", "others"].filter(
+  const sections = ["food", "transport", "purchase", "media", "others", "eventattending"].filter(
     (section) => body?.[section] !== undefined,
   );
   if (!sections.length) return null;
@@ -337,6 +337,11 @@ const buildOverallExpenditureSummary = (requestDoc, expenditure, facultyOwner) =
         : expenditureDetails.food
           ? [expenditureDetails.food]
           : [],
+      eventattending: Array.isArray(expenditureDetails.eventattending)
+        ? expenditureDetails.eventattending
+        : expenditureDetails.eventattending
+          ? [expenditureDetails.eventattending]
+          : [],
       others: Array.isArray(expenditureDetails.others)
         ? expenditureDetails.others
         : expenditureDetails.others
@@ -352,7 +357,7 @@ const getOverallExpenditure = async (req, res) => {
   if (!isSuperAdmin(req)) {
     return res.status(403).json({
       success: false,
-      message: "Only Super Admin 1 and Super Admin 2 can view overall expenditure details",
+      message: "Only Super Admin users can view overall expenditure details",
     });
   }
 
@@ -391,6 +396,7 @@ const getOverallExpenditure = async (req, res) => {
               requestId: String(request?._id || requestId),
               module: request?.module || "combined",
               food: [],
+              eventattending: [],
               others: [],
               supportingDocument: {},
               remarks: "",
@@ -551,7 +557,7 @@ const getFacultyExpenditureList = async (req, res) => {
 
 const getExpenditure = async (req, res) => {
   if (!isSuperAdmin(req) && !isFaculty(req)) {
-    return res.status(403).json({ success: false, message: "Only faculty, Super Admin 1 and Super Admin 2 can view expenditure details" });
+    return res.status(403).json({ success: false, message: "Only faculty and Super Admin users can view expenditure details" });
   }
 
   try {
@@ -597,10 +603,11 @@ const createExpenditure = async (req, res) => {
       ...req.body,
       food: parseStructuredField(req.body?.food),
       others: parseStructuredField(req.body?.others),
+      eventattending: parseStructuredField(req.body?.eventattending),
       supportingDocument: parseStructuredField(req.body?.supportingDocument),
     };
 
-    const requestId = preparedBody.requestId;
+    const requestId = preparedBody.requestId || preparedBody.eventId;
     const result = await ensureApprovedRequest(requestId);
     if (result.error) return res.status(result.error.status).json({ success: false, message: result.error.message });
 
@@ -675,6 +682,7 @@ const updateExpenditure = async (req, res) => {
       ...req.body,
       food: parseStructuredField(req.body?.food),
       others: parseStructuredField(req.body?.others),
+      eventattending: parseStructuredField(req.body?.eventattending),
       supportingDocument: parseStructuredField(req.body?.supportingDocument),
     };
 
@@ -746,7 +754,7 @@ const reviewExpenditure = async (req, res, action) => {
   if (!isSuperAdmin(req)) {
     return res.status(403).json({
       success: false,
-      message: "Only Super Admin 1 and Super Admin 2 can review expenditure details",
+      message: "Only Super Admin users can review expenditure details",
     });
   }
 
@@ -810,7 +818,7 @@ const deleteExpenditure = async (req, res) => {
   if (!isSuperAdmin(req)) {
     return res.status(403).json({
       success: false,
-      message: "Only Super Admin 1 and Super Admin 2 can delete expenditure details",
+      message: "Only Super Admin users can delete expenditure details",
     });
   }
 
