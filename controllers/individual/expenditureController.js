@@ -244,7 +244,7 @@ const getSectionFile = (req, sectionName, itemIndex = 0) => {
 };
 
 const getCombinedExpenditure = (body, req) => {
-  const sections = ["food", "transport", "purchase", "media", "others"].filter(
+  const sections = ["food", "transport", "purchase", "media", "others", "eventattending"].filter(
     (section) => body?.[section] !== undefined,
   );
   if (!sections.length) return null;
@@ -337,6 +337,11 @@ const buildOverallExpenditureSummary = (requestDoc, expenditure, facultyOwner) =
         : expenditureDetails.food
           ? [expenditureDetails.food]
           : [],
+      eventattending: Array.isArray(expenditureDetails.eventattending)
+        ? expenditureDetails.eventattending
+        : expenditureDetails.eventattending
+          ? [expenditureDetails.eventattending]
+          : [],
       others: Array.isArray(expenditureDetails.others)
         ? expenditureDetails.others
         : expenditureDetails.others
@@ -391,6 +396,7 @@ const getOverallExpenditure = async (req, res) => {
               requestId: String(request?._id || requestId),
               module: request?.module || "combined",
               food: [],
+              eventattending: [],
               others: [],
               supportingDocument: {},
               remarks: "",
@@ -597,10 +603,11 @@ const createExpenditure = async (req, res) => {
       ...req.body,
       food: parseStructuredField(req.body?.food),
       others: parseStructuredField(req.body?.others),
+      eventattending: parseStructuredField(req.body?.eventattending),
       supportingDocument: parseStructuredField(req.body?.supportingDocument),
     };
 
-    const requestId = preparedBody.requestId;
+    const requestId = preparedBody.requestId || preparedBody.eventId;
     const result = await ensureApprovedRequest(requestId);
     if (result.error) return res.status(result.error.status).json({ success: false, message: result.error.message });
 
@@ -675,6 +682,7 @@ const updateExpenditure = async (req, res) => {
       ...req.body,
       food: parseStructuredField(req.body?.food),
       others: parseStructuredField(req.body?.others),
+      eventattending: parseStructuredField(req.body?.eventattending),
       supportingDocument: parseStructuredField(req.body?.supportingDocument),
     };
 
