@@ -804,9 +804,6 @@ exports.updateEvent = async (req, res) => {
       await assignIQACNumber(event);
 
       // await handleTransportSubmission(event);
-      
-      // ðŸ“§ Send notification for event creation/submission
-      await notifyEventCreation(event);
     }
 
     // =====================================
@@ -841,6 +838,10 @@ exports.updateEvent = async (req, res) => {
     await validateAccommodationAvailability(event, event._id);
 
     const updatedEvent = await event.save();
+    if (becomingSubmitted) {
+      await notifyEventCreation(updatedEvent);
+    }
+
     res
       .status(200)
       .json({ message: "Event updated successfully", data: updatedEvent });
@@ -961,9 +962,6 @@ exports.submitEvent = async (req, res) => {
 
     if (!wasSubmitted) {
       await assignIQACNumber(event);
-      
-      // ðŸ“§ Send notification for event creation/submission
-      await notifyEventCreation(event);
     }
 
     if (!event.timeline) {
@@ -988,6 +986,10 @@ exports.submitEvent = async (req, res) => {
     validateInternalStudentsBreakdown(event);
 
     const updatedEvent = await event.save();
+    if (!wasSubmitted) {
+      await notifyEventCreation(updatedEvent);
+    }
+
     res
       .status(200)
       .json({ message: "Event submitted successfully", data: updatedEvent });
@@ -1241,6 +1243,8 @@ exports.updateEventStatus = async (req, res) => {
       media: "mediaRequirementDetails",
     };
 
+    let shouldNotifySubmission = false;
+
     switch (action) {
       case "submit":
         await validateVenueAvailability(event, event._id);
@@ -1257,8 +1261,7 @@ exports.updateEventStatus = async (req, res) => {
           };
         }
         event.timeline.submittedAt = new Date();
-        // ðŸ“§ Send notification for event creation/submission
-        await notifyEventCreation(event);
+        shouldNotifySubmission = true;
         break;
 
       case "hodApprove":
@@ -1517,6 +1520,9 @@ exports.updateEventStatus = async (req, res) => {
     }
 
     await event.save();
+    if (shouldNotifySubmission) {
+      await notifyEventCreation(event);
+    }
 
     res.status(200).json({
       message: "Status updated successfully",
