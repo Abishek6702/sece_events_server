@@ -418,12 +418,15 @@ const getOverallExpenditure = async (req, res) => {
       });
     }
 
-    const modelList = requestModels;
+    const expenditureDocs = await IndividualExpenditure.find({}).lean();
 
+    const requestIds = expenditureDocs
+      .map((expenditure) => String(expenditure.requestId || ""))
+      .filter(Boolean);
     const requestEntries = (
       await Promise.all(
-        modelList.map(async ({ module, Model, ownerField }) => {
-          const docs = await Model.find({ finalStatus: "Approved" }).populate({
+        requestModels.map(async ({ module, Model, ownerField }) => {
+          const docs = await Model.find({ _id: { $in: requestIds } }).populate({
             path: ownerField,
             select: "_id name email phoneNumber department",
           }).lean();
@@ -448,11 +451,6 @@ const getOverallExpenditure = async (req, res) => {
         })
       )
     ).flat();
-
-    const requestIds = requestEntries.map((entry) => entry.requestId).filter(Boolean);
-    const expenditureDocs = await IndividualExpenditure.find({
-      requestId: { $in: requestIds },
-    }).lean();
 
     const expenditureMap = new Map();
     expenditureDocs.forEach((expenditure) => {
