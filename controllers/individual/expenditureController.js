@@ -15,6 +15,7 @@ const requestModels = [
   { module: "eventattending", Model: IndividualEventAttending, ownerField: "facultyId" },
 ];
 
+
 const normalizeRole = (role) =>
   String(role || "").toLowerCase().trim().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
 
