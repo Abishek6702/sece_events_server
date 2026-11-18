@@ -41,6 +41,7 @@ const {
 
 const ictsStaffAllocationRoutes = require("./routes/ictsStaffAllocationRoutes");
 const audioStaffAllocationRoutes = require("./routes/audioStaffAllocationRoutes");
+const consolidatedReportRoutes = require("./routes/consolidatedReportRoutes");
 
 dotenv.config();
 const app = express();
@@ -107,6 +108,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/media-staff-change", mediaStaffChangeRoutes);
 app.use("/api/icts-staff-allocation", ictsStaffAllocationRoutes);
 app.use("/api/audio-staff-allocation", audioStaffAllocationRoutes);
+app.use("/api/consolidated-reports", consolidatedReportRoutes);
 // app.use("/api/transport-inventory", transportInventoryRoutes);
 app.use("/api/table", tableRoutes);
 app.use("/api/eventTypes", eventTypeRoutes);
